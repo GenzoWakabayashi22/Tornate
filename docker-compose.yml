@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # Servizio per l'applicazione Node.js
+  app:
+    image: node:18
+    container_name: kilwinning-app
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=kilwinning_user
+      - DB_PASSWORD=kilwinning_password
+      - DB_NAME=kilwinning_db
+      - SESSION_SECRET=kilwinning_presenze_secret_2025_docker_local
+    depends_on:
+      - db
+    command: >
+      bash -c "npm install && npm start"
+    restart: unless-stopped
+    networks:
+      - kilwinning-network
+
+  # Servizio per il database MySQL
+  db:
+    image: mysql:8.0
+    container_name: kilwinning-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=kilwinning_db
+      - MYSQL_USER=kilwinning_user
+      - MYSQL_PASSWORD=kilwinning_password
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    networks:
+      - kilwinning-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Servizio phpMyAdmin opzionale per gestire il database tramite interfaccia web
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: kilwinning-phpmyadmin
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - MYSQL_ROOT_PASSWORD=root_password
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - kilwinning-network
+    restart: unless-stopped
+
+networks:
+  kilwinning-network:
+    driver: bridge
+
+volumes:
+  db-data:
