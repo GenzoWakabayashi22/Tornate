@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Ruoli Fissi - Kilwinning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo h1 {
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .ruoli-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .fratelli-list, .ruoli-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .fratello-item {
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .fratello-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .fratello-nome {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .fratello-grado {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .fratello-ruolo {
+            font-size: 11px;
+            color: #007bff;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        
+        .ruolo-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+        }
+        
+        .ruoli-disponibili {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .ruolo-item {
+            padding: 8px 12px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ruolo-item.assegnato {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        
+        .ruolo-item.libero {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .ruolo-nome {
+            font-weight: bold;
+        }
+        
+        .ruolo-titolare {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .save-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .ruoli-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .fratello-item {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .ruolo-select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <h1>🏛️ Gestione Ruoli Fissi</h1>
+            </div>
+            <div class="nav-buttons">
+                <a href="/admin/presenze" class="btn btn-primary">✍️ Registra Presenze</a>
+                <a href="/admin/tornate" class="btn btn-secondary">📅 Gestione Tornate</a>
+                <a href="/admin/dashboard" class="btn btn-secondary">← Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Info -->
+        <div class="card">
+            <h3>ℹ️ Informazioni</h3>
+            <p>In questa sezione puoi assegnare i <strong>ruoli fissi annuali</strong> ai fratelli della loggia. 
+            Questi ruoli verranno automaticamente assegnati nelle presenze quando il fratello è presente.</p>
+        </div>
+
+        <!-- Gestione Ruoli -->
+        <div class="card">
+            <h3>👥 Assegnazione Ruoli</h3>
+            <div class="ruoli-grid">
+                <!-- Lista Fratelli -->
+                <div>
+                    <h4>Fratelli della Loggia</h4>
+                    <div class="fratelli-list" id="fratelliList">
+                        <div class="loading">Caricamento fratelli...</div>
+                    </div>
+                </div>
+
+                <!-- Ruoli Disponibili -->
+                <div>
+                    <h4>Ruoli della Loggia</h4>
+                    <div class="ruoli-list">
+                        <ul class="ruoli-disponibili" id="ruoliDisponibili">
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">👑 Ven.mo Maestro</div>
+                                    <div class="ruolo-titolare" id="titolare-maestro-venerabile">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">🔨 Primo Sorvegliante</div>
+                                    <div class="ruolo-titolare" id="titolare-primo-sorvegliante">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">🔨 Secondo Sorvegliante</div>
+                                    <div class="ruolo-titolare" id="titolare-secondo-sorvegliante">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">📖 Oratore</div>
+                                    <div class="ruolo-titolare" id="titolare-oratore">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">📜 Segretario</div>
+                                    <div class="ruolo-titolare" id="titolare-segretario">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">💰 Tesoriere</div>
+                                    <div class="ruolo-titolare" id="titolare-tesoriere">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">⚔️ Copritore</div>
+                                    <div class="ruolo-titolare" id="titolare-copritore">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">🪢 Esperto</div>
+                                    <div class="ruolo-titolare" id="titolare-esperto">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">🎼 Compagno d'Armonia</div>
+                                    <div class="ruolo-titolare" id="titolare-compagno-armonia">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">🕊️ Primo Diacono</div>
+                                    <div class="ruolo-titolare" id="titolare-primo-diacono">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">🕊️ Secondo Diacono</div>
+                                    <div class="ruolo-titolare" id="titolare-secondo-diacono">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">🏥 Ospedaliere</div>
+                                    <div class="ruolo-titolare" id="titolare-ospedaliere">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">📢 Narratore Rituali</div>
+                                    <div class="ruolo-titolare" id="titolare-narratore-rituali">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">📚 Bibliotecario</div>
+                                    <div class="ruolo-titolare" id="titolare-bibliotecario">Non assegnato</div>
+                                </div>
+                            </li>
+                            <li class="ruolo-item">
+                                <div>
+                                    <div class="ruolo-nome">🏡 Maestro di Casa</div>
+                                    <div class="ruolo-titolare" id="titolare-maestro-casa">Non assegnato</div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Salvataggio -->
+        <div class="save-section">
+            <h3>💾 Salva Modifiche</h3>
+            <p>Le modifiche ai ruoli fissi saranno applicate a tutte le future registrazioni di presenze.</p>
+            <button class="btn btn-success" onclick="salvaRuoli()">💾 Salva Ruoli Fissi</button>
+        </div>
+    </div>
+
+    <script src="/js/admin-ruoli.js"></script>
+</body>
+</html>

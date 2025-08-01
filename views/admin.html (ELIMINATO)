@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Presenze R∴L∴ Kilwinning</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <h2>Accesso Area Admin</h2>
+    <form id="loginForm">
+        <input type="text" name="username" placeholder="Utente" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
+    <script src="/public/js/admin-login.js"></script>
+</body>
+</html>

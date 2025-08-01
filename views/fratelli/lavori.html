@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I Miei Lavori - Loggia Kilwinning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .back-btn {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #6c757d;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 25px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card .stat-number {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .content-tabs {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .tabs-header {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-btn.active {
+            background: white;
+            color: #333;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background: #e9ecef;
+        }
+        
+        .tab-content {
+            padding: 25px;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .lavoro-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s;
+        }
+        
+        .lavoro-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .lavoro-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .lavoro-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .lavoro-date {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .lavoro-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .type-tavola {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .type-conferenza {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .type-discussione {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .type-relazione {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+        
+        .lavoro-abstract {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .lavoro-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .detail-icon {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .detail-label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .detail-value {
+            color: #666;
+        }
+        
+        .lavoro-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .timeline-container {
+            position: relative;
+        }
+        
+        .timeline-item {
+            display: flex;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 45px;
+            bottom: -30px;
+            width: 2px;
+            background: #e9ecef;
+        }
+        
+        .timeline-item:last-child::before {
+            display: none;
+        }
+        
+        .timeline-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            margin-right: 20px;
+            flex-shrink: 0;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .timeline-content {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .timeline-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .timeline-date {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        
+        .timeline-description {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .contributi-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .contributo-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .contributo-numero {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .contributo-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+            font-style: italic;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header-stats {
+                justify-content: center;
+            }
+            
+            .tabs-header {
+                flex-direction: column;
+            }
+            
+            .lavoro-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .lavoro-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .lavoro-actions {
+                justify-content: center;
+            }
+            
+            .timeline-item {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .timeline-marker {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .timeline-item::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <a href="/fratelli/dashboard" class="back-btn">← Dashboard</a>
+                <div>
+                    <h1 class="page-title">💼 I Miei Lavori</h1>
+                    <p style="color: #666; margin-top: 5px;">Contributi e partecipazione attiva</p>
+                </div>
+            </div>
+            
+            <div class="header-stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="statTotaliLavori">-</div>
+                    <div>Lavori Totali</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="statAnnoCorrente">-</div>
+                    <div>Anno 2025</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="statUltimoLavoro">-</div>
+                    <div>Ultimo Lavoro</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiche -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-number" id="statTavole">-</div>
+                <div class="stat-label">Tavole Architettoniche</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">🎤</div>
+                <div class="stat-number" id="statConferenze">-</div>
+                <div class="stat-label">Conferenze</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">💬</div>
+                <div class="stat-number" id="statDiscussioni">-</div>
+                <div class="stat-label">Discussioni</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-number" id="statRelazioni">-</div>
+                <div class="stat-label">Relazioni</div>
+            </div>
+        </div>
+
+        <!-- Contenuto a Tab -->
+        <div class="content-tabs">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="lavori">📝 I Miei Lavori</button>
+                <button class="tab-btn" data-tab="cronologia">📅 Cronologia</button>
+                <button class="tab-btn" data-tab="contributi">📊 Statistiche</button>
+            </div>
+            
+            <!-- Tab Lavori -->
+            <div class="tab-content active" id="tab-lavori">
+                <div id="lavoriContainer">
+                    <div class="loading">Caricamento lavori...</div>
+                </div>
+            </div>
+            
+            <!-- Tab Cronologia -->
+            <div class="tab-content" id="tab-cronologia">
+                <div id="cronologiaContainer">
+                    <div class="loading">Caricamento cronologia...</div>
+                </div>
+            </div>
+            
+            <!-- Tab Contributi -->
+            <div class="tab-content" id="tab-contributi">
+                <div class="contributi-stats">
+                    <div class="contributo-item">
+                        <div class="contributo-numero" id="mediaAnno">-</div>
+                        <div class="contributo-label">Media Lavori/Anno</div>
+                    </div>
+                    
+                    <div class="contributo-item">
+                        <div class="contributo-numero" id="impegno">-%</div>
+                        <div class="contributo-label">Indice Partecipazione</div>
+                    </div>
+                    
+                    <div class="contributo-item">
+                        <div class="contributo-numero" id="riconoscimenti">-</div>
+                        <div class="contributo-label">Riconoscimenti</div>
+                    </div>
+                    
+                    <div class="contributo-item">
+                        <div class="contributo-numero" id="collaborazioni">-</div>
+                        <div class="contributo-label">Collaborazioni</div>
+                    </div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-top: 20px;">
+                    <h4 style="color: #333; margin-bottom: 15px;">📈 Analisi del Contributo</h4>
+                    <p style="color: #666; line-height: 1.6;">
+                        I tuoi contributi alla Loggia dimostrano un impegno costante nella crescita personale e collettiva. 
+                        Continua a condividere le tue ricerche e riflessioni per arricchire il patrimonio culturale della nostra comunità fraterna.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+<script src="/js/error-manager.js"></script>
+    <script>
+        // Dati fratello autenticato
+        let fratelliAuth = null;
+        let lavoriData = [];
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            setupTabs();
+            loadLavoriData();
+        });
+
+        // Verifica autenticazione
+        function checkAuth() {
+            const authData = sessionStorage.getItem('fratelliAuth');
+            
+            if (!authData) {
+                window.location.href = '/fratelli/login';
+                return;
+            }
+            
+            try {
+                fratelliAuth = JSON.parse(authData);
+            } catch (error) {
+                console.error('Errore parsing auth data:', error);
+                window.location.href = '/fratelli/login';
+            }
+        }
+
+        // Setup tabs
+        function setupTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    switchTab(tabId);
+                });
+            });
+        }
+
+        // Cambia tab
+        function switchTab(tabId) {
+            // Rimuovi active da tutti i tab
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Attiva tab selezionato
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // Carica dati lavori
+        async function loadLavoriData() {
+            try {
+                // Simula chiamata API
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Dati di esempio basati sul fratello
+                lavoriData = [
+                    {
+                        id: 1,
+                        titolo: "Il simbolismo della squadra e del compasso",
+                        tipo: "tavola",
+                        data: "2024-11-15",
+                        abstract: "Approfondimento sui simboli fondamentali della Massoneria, analizzando il significato esoterico e filosofico della squadra e del compasso come strumenti di perfezionamento dell'uomo.",
+                        durata: "45 minuti",
+                        grado: "Primo",
+                        tornata: "Tornata Ordinaria",
+                        feedback: "Ottimo",
+                        note: "Apprezzato dai fratelli per la chiarezza espositiva"
+                    },
+                    {
+                        id: 2,
+                        titolo: "La geometria sacra nel tempio massonico",
+                        tipo: "conferenza",
+                        data: "2024-09-20",
+                        abstract: "Analisi delle proporzioni architettoniche del tempio massonico e del loro significato simbolico, con riferimenti alla tradizione pitagorica e ai canoni dell'architettura sacra.",
+                        durata: "60 minuti",
+                        grado: "Secondo",
+                        tornata: "Tornata Straordinaria",
+                        feedback: "Eccellente",
+                        note: "Richiesta di approfondimento futuro"
+                    },
+                    {
+                        id: 3,
+                        titolo: "Riflessioni sul primo grado",
+                        tipo: "discussione",
+                        data: "2024-06-10",
+                        abstract: "Condivisione dell'esperienza di iniziazione e riflessioni sui simboli e insegnamenti del primo grado, con particolare attenzione al percorso di crescita personale.",
+                        durata: "20 minuti",
+                        grado: "Primo",
+                        tornata: "Tornata Ordinaria",
+                        feedback: "Buono",
+                        note: "Contributo sentito e personale"
+                    },
+                    {
+                        id: 4,
+                        titolo: "I landmark della Massoneria universale",
+                        tipo: "relazione",
+                        data: "2024-03-15",
+                        abstract: "Studio comparativo sui landmark fondamentali della tradizione massonica, analizzando le diverse interpretazioni nelle varie giurisdizioni massoniche mondiali.",
+                        durata: "50 minuti",
+                        grado: "Terzo",
+                        tornata: "Tornata Ordinaria",
+                        feedback: "Ottimo",
+                        note: "Lavoro di ricerca approfondito"
+                    }
+                ];
+                
+                renderLavori();
+                renderCronologia();
+                updateStats();
+                
+            } catch (error) {
+                console.error('Errore caricamento lavori:', error);
+                document.getElementById('lavoriContainer').innerHTML = '<div class="no-data">Errore nel caricamento dei lavori</div>';
+            }
+        }
+
+        // Renderizza lavori
+        function renderLavori() {
+            const container = document.getElementById('lavoriContainer');
+            
+            if (lavoriData.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        Nessun lavoro ancora presentato.<br>
+                        <small>I tuoi contributi alla Loggia appariranno qui una volta registrati.</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            lavoriData.forEach(lavoro => {
+                const lavoroCard = createLavoroCard(lavoro);
+                container.appendChild(lavoroCard);
+            });
+        }
+
+        // Crea card lavoro
+        function createLavoroCard(lavoro) {
+            const card = document.createElement('div');
+            card.className = 'lavoro-card';
+            
+            let tipoClass = 'type-tavola';
+            if (lavoro.tipo === 'conferenza') tipoClass = 'type-conferenza';
+            else if (lavoro.tipo === 'discussione') tipoClass = 'type-discussione';
+            else if (lavoro.tipo === 'relazione') tipoClass = 'type-relazione';
+            
+            card.innerHTML = `
+                <div class="lavoro-header">
+                    <div>
+                        <h3 class="lavoro-title">${lavoro.titolo}</h3>
+                        <div class="lavoro-date">📅 ${new Date(lavoro.data).toLocaleDateString('it-IT', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        })}</div>
+                    </div>
+                    <span class="lavoro-type ${tipoClass}">${lavoro.tipo}</span>
+                </div>
+                
+                <p class="lavoro-abstract">${lavoro.abstract}</p>
+                
+                <div class="lavoro-details">
+                    <div class="detail-item">
+                        <span class="detail-icon">⏱️</span>
+                        <span class="detail-label">Durata:</span>
+                        <span class="detail-value">${lavoro.durata}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">🎯</span>
+                        <span class="detail-label">Grado:</span>
+                        <span class="detail-value">${lavoro.grado}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">📅</span>
+                        <span class="detail-label">Tornata:</span>
+                        <span class="detail-value">${lavoro.tornata}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">⭐</span>
+                        <span class="detail-label">Feedback:</span>
+                        <span class="detail-value">${lavoro.feedback}</span>
+                    </div>
+                </div>
+                
+                ${lavoro.note ? `
+                    <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #28a745;">
+                        <strong>💬 Note:</strong> ${lavoro.note}
+                    </div>
+                ` : ''}
+                
+                <div class="lavoro-actions">
+                    <button class="btn btn-primary" onclick="visualizzaLavoro(${lavoro.id})">👁️ Dettagli</button>
+                    <button class="btn btn-secondary" onclick="condividiLavoro(${lavoro.id})">📤 Condividi</button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Renderizza cronologia
+        function renderCronologia() {
+            const container = document.getElementById('cronologiaContainer');
+            
+            // Ordina per data (più recente prima)
+            const cronologia = [...lavoriData].sort((a, b) => new Date(b.data) - new Date(a.data));
+            
+            container.innerHTML = '';
+            
+            if (cronologia.length === 0) {
+                container.innerHTML = '<div class="no-data">Nessuna attività registrata</div>';
+                return;
+            }
+            
+            const timelineContainer = document.createElement('div');
+            timelineContainer.className = 'timeline-container';
+            
+            cronologia.forEach((lavoro, index) => {
+                const timelineItem = document.createElement('div');
+                timelineItem.className = 'timeline-item';
+                
+                timelineItem.innerHTML = `
+                    <div class="timeline-marker">${index + 1}</div>
+                    <div class="timeline-content">
+                        <h4 class="timeline-title">${lavoro.titolo}</h4>
+                        <div class="timeline-date">${new Date(lavoro.data).toLocaleDateString('it-IT', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        })}</div>
+                        <p class="timeline-description">
+                            <strong>Tipo:</strong> ${lavoro.tipo.charAt(0).toUpperCase() + lavoro.tipo.slice(1)} • 
+                            <strong>Durata:</strong> ${lavoro.durata} • 
+                            <strong>Feedback:</strong> ${lavoro.feedback}
+                        </p>
+                    </div>
+                `;
+                
+                timelineContainer.appendChild(timelineItem);
+            });
+            
+            container.appendChild(timelineContainer);
+        }
+
+        // Aggiorna statistiche
+        function updateStats() {
+            const totali = lavoriData.length;
+            const anno2025 = lavoriData.filter(l => l.data.startsWith('2024')).length; // Simula 2025
+            const ultimoLavoro = lavoriData.length > 0 ? 
+                Math.ceil((new Date() - new Date(lavoriData[0].data)) / (1000 * 60 * 60 * 24)) + ' gg fa' : 
+                'Mai';
+            
+            // Conteggi per tipo
+            const tavole = lavoriData.filter(l => l.tipo === 'tavola').length;
+            const conferenze = lavoriData.filter(l => l.tipo === 'conferenza').length;
+            const discussioni = lavoriData.filter(l => l.tipo === 'discussione').length;
+            const relazioni = lavoriData.filter(l => l.tipo === 'relazione').length;
+            
+            // Aggiorna header stats
+            document.getElementById('statTotaliLavori').textContent = totali;
+            document.getElementById('statAnnoCorrente').textContent = anno2025;
+            document.getElementById('statUltimoLavoro').textContent = ultimoLavoro;
+            
+            // Aggiorna stats per tipo
+            document.getElementById('statTavole').textContent = tavole;
+            document.getElementById('statConferenze').textContent = conferenze;
+            document.getElementById('statDiscussioni').textContent = discussioni;
+            document.getElementById('statRelazioni').textContent = relazioni;
+            
+            // Statistiche avanzate
+            const anniAttivita = new Set(lavoriData.map(l => new Date(l.data).getFullYear())).size;
+            const mediaAnno = anniAttivita > 0 ? (totali / anniAttivita).toFixed(1) : 0;
+            const indicePartecipazione = Math.min(100, (totali * 20)); // Formula semplificata
+            
+            document.getElementById('mediaAnno').textContent = mediaAnno;
+            document.getElementById('impegno').textContent = indicePartecipazione + '%';
+            document.getElementById('riconoscimenti').textContent = lavoriData.filter(l => l.feedback === 'Eccellente').length;
+            document.getElementById('collaborazioni').textContent = lavoriData.filter(l => l.tipo === 'conferenza' || l.tipo === 'relazione').length;
+        }
+
+        // Visualizza dettagli lavoro
+        function visualizzaLavoro(lavoroId) {
+            const lavoro = lavoriData.find(l => l.id === lavoroId);
+            if (!lavoro) return;
+            
+            alert(`📖 Dettagli Lavoro\n\n${lavoro.titolo}\n\nData: ${new Date(lavoro.data).toLocaleDateString('it-IT')}\nTipo: ${lavoro.tipo}\nDurata: ${lavoro.durata}\n\nAbstract:\n${lavoro.abstract}\n\nNote: ${lavoro.note || 'Nessuna nota aggiuntiva'}`);
+        }
+
+        // Condividi lavoro
+        function condividiLavoro(lavoroId) {
+            const lavoro = lavoriData.find(l => l.id === lavoroId);
+            if (!lavoro) return;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: lavoro.titolo,
+                    text: lavoro.abstract,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback per browser senza Web Share API
+                const shareText = `${lavoro.titolo}\n\n${lavoro.abstract}\n\nPresentato il ${new Date(lavoro.data).toLocaleDateString('it-IT')} presso la Loggia Kilwinning`;
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(shareText).then(() => {
+                        alert('✅ Contenuto copiato negli appunti!');
+                    });
+                } else {
+                    alert(`📤 Condividi questo lavoro:\n\n${shareText}`);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

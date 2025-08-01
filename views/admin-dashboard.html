@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Presenze Kilwinning</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        /* ========== LAYOUT PRINCIPALE ========== */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* ========== MENU LATERALE ========== */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #1e40af 0%, #4338ca 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-logo {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+        
+        .nav-item {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border-left-color: #60a5fa;
+        }
+        
+        .nav-item i {
+            width: 20px;
+            margin-right: 10px;
+        }
+        
+        /* ========== CONTENUTO PRINCIPALE ========== */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: margin-left 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .main-content.expanded {
+            margin-left: 0;
+        }
+        
+        .topbar {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+        
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+        }
+        
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+        
+        .content-area {
+            padding: 20px;
+        }
+        
+        /* ========== SEZIONI CONTENUTO ========== */
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        /* ========== STATISTICHE DASHBOARD ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .stat-icon {
+            font-size: 24px;
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-change {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .stat-change.positive {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .stat-change.negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* ========== GRAFICI ========== */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* ========== AZIONI RAPIDE ========== */
+        .quick-actions {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .action-btn {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            color: inherit;
+        }
+        
+        .action-btn:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+        
+        .action-icon {
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .action-text {
+            flex: 1;
+        }
+        
+        .action-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .action-desc {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* ========== ATTIVITÀ RECENTI ========== */
+        .activity-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .activity-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .activity-item:hover {
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin: 0 -10px;
+            padding: 12px 10px;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 16px;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .activity-time {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* ========== BOTTONI ========== */
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* ========== TABELLE ========== */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        /* ========== FORM ========== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* ========== MODAL ========== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .modal-close:hover {
+            color: #374151;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* ========== LOADING E ALERT ========== */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block !important;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .activity-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* ========== OVERLAY MOBILE ========== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Overlay Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Menu Laterale -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    🏛️ KILWINNING ADMIN
+                </div>
+            </div>
+           <!-- TROVA QUESTA SEZIONE NEL TUO admin-dashboard.html (intorno alla riga 643): -->
+
+<div class="sidebar-nav">
+    <a href="/admin/dashboard" class="nav-item active">
+        <i>🏠</i> Dashboard
+    </a>
+    <a href="/admin/tornate" class="nav-item">
+        <i>📅</i> Gestione Tornate
+    </a>
+    <a href="/admin/presenze" class="nav-item">
+        <i>✍️</i> Registra Presenze
+    </a>
+    <a href="/admin/fratelli" class="nav-item">
+        <i>👥</i> Gestione Fratelli
+    </a>
+    <a href="/admin/gradi-fratelli" class="nav-item">
+        <i>👑</i> Gradi Fratelli
+    </a>
+    <a href="/admin/tavole" class="nav-item">
+        <i>📖</i> Gestione Tavole
+    </a>
+</div>
+        </nav>
+        
+        <!-- Contenuto Principale -->
+        <main class="main-content" id="mainContent">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <h1 class="page-title" id="pageTitle">🏛️ Dashboard Amministrativo</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="user-info">
+                        👤 <span id="currentUser">Admin</span>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            
+            <!-- Area Contenuto -->
+            <div class="content-area">
+                <!-- SEZIONE DASHBOARD - UNICA SEZIONE -->
+                <div id="section-dashboard" class="content-section active">
+                    <!-- Statistiche Principali -->
+                    <div class="stats-grid">
+                        <div class="stat-card" onclick="window.location.href='/admin/fratelli'">
+                            <div class="stat-header">
+                                <div class="stat-icon" style="background: #007bff;">👥</div>
+                            </div>
+                            <div class="stat-number" id="stat-fratelli">16</div>
+                            <div class="stat-label">Fratelli Attivi</div>
+                            <div class="stat-change positive">+2 questo mese</div>
+                        </div>
+                        
+                        <div class="stat-card" onclick="window.location.href='/admin/tornate'">
+                            <div class="stat-header">
+                                <div class="stat-icon" style="background: #28a745;">📅</div>
+                            </div>
+                            <div class="stat-number" id="stat-tornate">12</div>
+                            <div class="stat-label">Tornate 2025</div>
+                            <div class="stat-change positive">1 programmata</div>
+                        </div>
+                        
+                        <div class="stat-card" onclick="window.location.href='/admin/presenze'">
+                            <div class="stat-header">
+                                <div class="stat-icon" style="background: #ffc107;">📊</div>
+                            </div>
+                            <div class="stat-number" id="stat-presenze">86%</div>
+                            <div class="stat-label">Presenza Media</div>
+                            <div class="stat-change positive">+5% vs 2024</div>
+                        </div>
+                        
+                        <div class="stat-card" onclick="window.location.href='/admin/ruoli'">
+                            <div class="stat-header">
+                                <div class="stat-icon" style="background: #6c757d;">🏛️</div>
+                            </div>
+                            <div class="stat-number" id="stat-ruoli">14</div>
+                            <div class="stat-label">Ruoli Assegnati</div>
+                            <div class="stat-change positive">93% copertura</div>
+                        </div>
+                    </div>
+
+                    <!-- Azioni Rapide -->
+                    <div class="quick-actions">
+                        <h3>⚡ Azioni Rapide</h3>
+                        <div class="actions-grid">
+                            <a href="/admin/tornate" class="action-btn">
+                                <div class="action-icon" style="background: #007bff;">📅</div>
+                                <div class="action-text">
+                                    <div class="action-title">Gestione Tornate</div>
+                                    <div class="action-desc">Programma e gestisci le tornate</div>
+                                </div>
+                            </a>
+                            
+                            <a href="/admin/presenze" class="action-btn">
+                                <div class="action-icon" style="background: #28a745;">✍️</div>
+                                <div class="action-text">
+                                    <div class="action-title">Registra Presenze</div>
+                                    <div class="action-desc">Segna presenti alle tornate</div>
+                                </div>
+                            </a>
+                            
+                            <a href="/admin/fratelli" class="action-btn">
+                                <div class="action-icon" style="background: #ffc107;">👤</div>
+                                <div class="action-text">
+                                    <div class="action-title">Gestione Fratelli</div>
+                                    <div class="action-desc">Amministra fratelli della loggia</div>
+                                </div>
+                            </a>
+                            
+                            
+                        </div>
+                    </div>
+
+                    <!-- Grafici -->
+                    <div class="charts-section">
+                        <div class="chart-card">
+                            <div class="chart-title">📈 Trend Presenze Ultime 6 Tornate</div>
+                            <div class="chart-container">
+                                <canvas id="presenzeChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-title">👥 Distribuzione per Grado</div>
+                            <div class="chart-container">
+                                <canvas id="gradiChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attività Recenti -->
+                    <div class="activity-section">
+                        <div class="activity-card">
+                            <h3>🔥 Attività Recenti</h3>
+                            <div id="recent-activities">
+                                <div class="activity-item" onclick="window.location.href='/admin/tornate'">
+                                    <div class="activity-icon" style="background: #28a745; color: white;">📅</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Tornata del 17/06/2025 programmata</div>
+                                        <div class="activity-time">Oggi</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item" onclick="window.location.href='/admin/presenze'">
+                                    <div class="activity-icon" style="background: #007bff; color: white;">✍️</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Presenze aggiornate - 14 fratelli presenti</div>
+                                        <div class="activity-time">2 giorni fa</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item" onclick="window.location.href='/admin/fratelli'">
+                                    <div class="activity-icon" style="background: #ffc107; color: white;">👤</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Paolo Giulio Gazzano - Ruolo aggiornato</div>
+                                        <div class="activity-time">1 settimana fa</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item" onclick="alert('Funzione backup in sviluppo')">
+                                    <div class="activity-icon" style="background: #6c757d; color: white;">💾</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Database ottimizzato e backup creato</div>
+                                        <div class="activity-time">1 settimana fa</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-card">
+                            <h3>📊 Statistiche Rapide</h3>
+                            <div id="statistiche-rapide">
+                                <div class="activity-item">
+                                    <div class="activity-icon" style="background: #28a745; color: white;">🏆</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Presenza più alta: 94%</div>
+                                        <div class="activity-time">Tornata del 15/05/2025</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item">
+                                    <div class="activity-icon" style="background: #007bff; color: white;">👤</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Fratello più assiduo</div>
+                                        <div class="activity-time">Paolo Giulio Gazzano (100%)</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item">
+                                    <div class="activity-icon" style="background: #ffc107; color: white;">📅</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Prossima tornata</div>
+                                        <div class="activity-time">17/06/2025 alle 20:30</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="activity-item">
+                                    <div class="activity-icon" style="background: #6c757d; color: white;">🎯</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Obiettivo 2025</div>
+                                        <div class="activity-time">Mantenere 85% presenze</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- FINE SEZIONE DASHBOARD -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal rimosso, non necessario per il dashboard -->
+<script src="/js/error-manager.js"></script>
+    <script>
+        // Variabili globali
+        let currentSection = 'dashboard';
+        
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            initDashboard();
+            setupEventListeners();
+            initCharts();
+            loadDashboardData();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Menu toggle mobile
+            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+        }
+
+        // Inizializza dashboard
+        function initDashboard() {
+            // Solo dashboard, nessuna gestione SPA
+            console.log('Dashboard inizializzato');
+        }
+
+        // Inizializza i grafici
+        function initCharts() {
+            // Grafico presenze
+            const presenzeCtx = document.getElementById('presenzeChart');
+            if (presenzeCtx) {
+                new Chart(presenzeCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'],
+                        datasets: [{
+                            label: 'Presenze (%)',
+                            data: [85, 78, 92, 88, 94, 86],
+                            borderColor: '#007bff',
+                            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Grafico distribuzione gradi
+            const gradiCtx = document.getElementById('gradiChart');
+            if (gradiCtx) {
+                new Chart(gradiCtx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Maestri', 'Compagni', 'Apprendisti'],
+                        datasets: [{
+                            data: [8, 5, 3],
+                            backgroundColor: ['#28a745', '#ffc107', '#007bff']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Carica dati dashboard
+        async function loadDashboardData() {
+            try {
+                // Simula chiamate API
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Aggiorna statistiche
+                updateStats();
+            } catch (error) {
+                console.error('Errore caricamento dashboard:', error);
+            }
+        }
+
+        // Aggiorna statistiche
+        function updateStats() {
+            // Simula dati reali
+            document.getElementById('stat-fratelli').textContent = '16';
+            document.getElementById('stat-tornate').textContent = '12';
+            document.getElementById('stat-presenze').textContent = '86%';
+            document.getElementById('stat-ruoli').textContent = '14';
+        }
+
+        // Gestione navigazione - RIMOSSA, usa links normali
+        
+        // Gestione sidebar mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        // Logout
+async function logout() {
+    if (confirm('Sei sicuro di voler effettuare il logout?')) {
+        try {
+            console.log('🚪 Tentativo logout admin...');
+            
+            const response = await fetch('/admin/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Logout admin successful:', data);
+                
+                // Redirect alla homepage
+                window.location.href = '/';
+            } else {
+                console.error('❌ Errore logout response:', response.status);
+                // Fallback: redirect diretto
+                window.location.href = '/admin/logout';
+            }
+            
+        } catch (error) {
+            console.error('❌ Errore logout admin:', error);
+            // Fallback: redirect diretto
+            window.location.href = '/admin/logout';
+        }
+    }
+}
+    </script>
+</body>
+</html>

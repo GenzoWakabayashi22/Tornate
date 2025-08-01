@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Mie Tornate - Loggia Kilwinning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .back-btn {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #6c757d;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .filters-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 120px;
+        }
+        
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .tornate-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .tornata-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border-left: 5px solid transparent;
+        }
+        
+        .tornata-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+        }
+        
+        .tornata-card.prossima {
+            border-left-color: #667eea;
+            background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
+        }
+        
+        .tornata-card.passata {
+            border-left-color: #28a745;
+        }
+        
+        .tornata-card.mancata {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+        }
+        
+        .tornata-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .tornata-date {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .tornata-time {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .tornata-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .type-ordinaria {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .type-straordinaria {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .type-cerimonia {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .tornata-status {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+        
+        .presenza-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .presenza-presente {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .presenza-assente {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .presenza-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+        
+        .presenza-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .presenza-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        
+        .presenza-btn.presente {
+            background: #28a745;
+            color: white;
+        }
+        
+        .presenza-btn.assente {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .presenza-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .tornata-content {
+            margin-bottom: 20px;
+        }
+        
+        .tornata-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .tornata-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .tornata-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .detail-icon {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .detail-label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .detail-value {
+            color: #666;
+        }
+        
+        .tornata-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .partecipanti-info {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .partecipanti-numero {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .filters-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .tornata-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .tornata-status {
+                align-items: flex-start;
+            }
+            
+            .tornata-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .tornata-footer {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <a href="/fratelli/dashboard" class="back-btn">← Dashboard</a>
+                <div>
+                    <h1 class="page-title">📅 Le Mie Tornate</h1>
+                    <p style="color: #666; margin-top: 5px;">Gestione completa delle partecipazioni</p>
+                </div>
+            </div>
+            
+            <div class="header-stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="statTotali">0</div>
+                    <div>Totali</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="statPresenti">0</div>
+                    <div>Presenti</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="statPercentuale">0%</div>
+                    <div>Presenza</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtri -->
+        <div class="filters">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label>📅 Anno:</label>
+                    <select id="filtroAnno">
+                        <option value="">Tutti gli anni</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>📋 Tipo:</label>
+                    <select id="filtroTipo">
+                        <option value="">Tutti i tipi</option>
+                        <option value="ordinaria">Ordinarie</option>
+                        <option value="straordinaria">Straordinarie</option>
+                        <option value="cerimonia">Cerimonie</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>✅ Presenza:</label>
+                    <select id="filtroPresenza">
+                        <option value="">Tutte</option>
+                        <option value="presente">Solo presenti</option>
+                        <option value="assente">Solo assenti</option>
+                        <option value="pending">Da confermare</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-primary" onclick="applicaFiltri()">🔍 Filtra</button>
+                <button class="btn btn-secondary" onclick="resetFiltri()">🔄 Reset</button>
+            </div>
+        </div>
+
+        <!-- Alert Area -->
+        <div id="alertContainer"></div>
+
+        <!-- Lista Tornate -->
+        <div class="tornate-grid" id="tornateContainer">
+            <div class="loading">Caricamento tornate...</div>
+        </div>
+    </div>
+<script src="/js/error-manager.js"></script>
+    <script>
+        // Dati fratello autenticato
+        let fratelliAuth = null;
+        let tornateData = [];
+        let tornateFiltered = [];
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadTornateData();
+            setupFilters();
+        });
+
+        // Verifica autenticazione
+        function checkAuth() {
+            const authData = sessionStorage.getItem('fratelliAuth');
+            
+            if (!authData) {
+                window.location.href = '/fratelli/login';
+                return;
+            }
+            
+            try {
+                fratelliAuth = JSON.parse(authData);
+                console.log('👤 Fratello autenticato:', fratelliAuth.nome);
+            } catch (error) {
+                console.error('Errore parsing auth data:', error);
+                window.location.href = '/fratelli/login';
+            }
+        }
+
+        // Setup filtri
+        function setupFilters() {
+            document.getElementById('filtroAnno').addEventListener('change', applicaFiltri);
+            document.getElementById('filtroTipo').addEventListener('change', applicaFiltri);
+            document.getElementById('filtroPresenza').addEventListener('change', applicaFiltri);
+        }
+
+        // Carica dati tornate dall'API
+        async function loadTornateData() {
+            try {
+                console.log('🔍 Caricamento tornate dall\'API...');
+                
+                const response = await fetch(`/api/tornate/fratelli/${fratelliAuth.id}/tornate`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const tornateAPI = await response.json();
+                console.log(`✅ Ricevute ${tornateAPI.length} tornate dall'API`);
+                
+                // Converte i dati API nel formato per la pagina
+             tornateData = tornateAPI.map(t => ({
+    id: t.id,
+    data: t.data,
+    ora: t.ora || t.orario_inizio || '19:30',
+    titolo: t.titolo,
+    tipo: t.tipo || 'ordinaria',
+    descrizione: t.argomento || t.discussione || t.titolo,
+    luogo: t.location || 'Tolfa',
+    istruzione: t.argomento_istruzione,
+    orario_istruzione: t.orario_istruzione,
+    cena: t.cena === 1,
+    costo_cena: t.costo_cena,
+    descrizione_cena: t.descrizione_cena,
+    presenza: t.presenza_confermata === 1 ? true : (t.presenza_confermata === 0 ? false : null),
+    stato: determinaStato(t.data),
+    note: t.note,
+    chi_introduce_nome: t.chi_introduce_nome || null,  // 👈 AGGIUNTO QUESTO
+    link_audio: t.link_audio || null,        // ← AGGIUNGI QUESTA
+link_pagina: t.link_pagina || null       // ← AGGIUNGI QUESTA
+}));
+                
+                console.log(`📋 Tornate convertite:`, tornateData.length);
+                
+                tornateFiltered = [...tornateData];
+                renderTornate();
+                updateStats();
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento tornate:', error);
+                
+                const container = document.getElementById('tornateContainer');
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #dc3545;">
+                        <h3>⚠️ Errore nel caricamento</h3>
+                        <p>Impossibile caricare le tornate dal server.</p>
+                        <button onclick="loadTornateData()" class="btn btn-primary">🔄 Riprova</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Determina stato della tornata
+        function determinaStato(data) {
+            const oggi = new Date();
+            const dataTornata = new Date(data);
+            
+            return dataTornata > oggi ? 'prossima' : 'passata';
+        }
+
+        // Renderizza tornate
+    function renderTornate() {
+    const container = document.getElementById('tornateContainer');
+
+    if (tornateFiltered.length === 0) {
+        container.innerHTML = '<div class="no-data">Nessuna tornata trovata con i filtri selezionati.</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    // Ordina dalla più recente alla più vecchia
+    tornateFiltered.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+    tornateFiltered.forEach(tornata => {
+        const tornataElement = createTornataCard(tornata);
+        container.appendChild(tornataElement);
+    });
+}
+
+        // SOSTITUIRE la funzione createTornataCard nel file tornate.html
+
+function createTornataCard(tornata) {
+    const card = document.createElement('div');
+    
+    let cardClass = 'tornata-card';
+    if (tornata.stato === 'prossima') cardClass += ' prossima';
+    else if (tornata.presenza === true) cardClass += ' passata';
+    else if (tornata.presenza === false) cardClass += ' mancata';
+    
+    card.className = cardClass;
+    
+    // Stato presenza
+    let presenzaSection = '';
+    if (tornata.stato === 'prossima') {
+        if (tornata.presenza === null) {
+            presenzaSection = `
+                <div class="presenza-badge presenza-pending">⏳ Da Confermare</div>
+                <div class="presenza-controls">
+                    <button class="presenza-btn presente" onclick="confermaPresenza(${tornata.id}, true)">
+                        ✅ Presente
+                    </button>
+                    <button class="presenza-btn assente" onclick="confermaPresenza(${tornata.id}, false)">
+                        ❌ Assente
+                    </button>
+                </div>
+            `;
+        } else if (tornata.presenza === true) {
+            presenzaSection = `
+                <div class="presenza-badge presenza-presente">✅ Confermato Presente</div>
+                <button class="btn btn-secondary" onclick="cambiaPresenza(${tornata.id})" style="font-size: 11px; padding: 4px 8px;">Cambia</button>
+            `;
+        } else {
+            presenzaSection = `
+                <div class="presenza-badge presenza-assente">❌ Confermato Assente</div>
+                <button class="btn btn-secondary" onclick="cambiaPresenza(${tornata.id})" style="font-size: 11px; padding: 4px 8px;">Cambia</button>
+            `;
+        }
+    } else {
+        if (tornata.presenza === true) {
+            presenzaSection = '<div class="presenza-badge presenza-presente">✅ Presente</div>';
+        } else if (tornata.presenza === false) {
+            presenzaSection = '<div class="presenza-badge presenza-assente">❌ Assente</div>';
+        } else {
+            presenzaSection = '<div class="presenza-badge presenza-pending">⏳ Non registrata</div>';
+        }
+    }
+    
+    // Tipo tornata
+    let tipoClass = 'type-ordinaria';
+    if (tornata.tipo === 'straordinaria') tipoClass = 'type-straordinaria';
+    else if (tornata.tipo === 'cerimonia') tipoClass = 'type-cerimonia';
+    
+    card.innerHTML = `
+        <div class="tornata-header">
+            <div>
+                <div class="tornata-date">
+                    📅 ${new Date(tornata.data).toLocaleDateString('it-IT', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    })} • 🕰️ Ore ${tornata.ora}
+                </div>
+                <span class="tornata-type ${tipoClass}">${tornata.tipo}</span>
+            </div>
+            <div class="tornata-status">
+                ${presenzaSection}
+            </div>
+        </div>
+        
+        <div class="tornata-content">
+            <h3 class="tornata-title">${tornata.titolo}</h3>
+            
+            <div class="tornata-details">
+                ${tornata.chi_introduce_nome ? `
+                <div style="grid-column: 1 / -1; background: #e8f4fd; padding: 15px; border-radius: 8px; font-size: 15px;">
+                    <strong>👤 Introduce:</strong> <strong>${tornata.chi_introduce_nome}</strong>
+                </div>` : ''}
+                
+             <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 10px; background: #fff3e0; border-radius: 8px;">
+    <span>📍</span>
+    <strong>Luogo:</strong>
+    <span>${tornata.luogo}</span>
+</div>
+                
+               ${tornata.cena ? `
+<div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+    <span>🍽️</span>
+    <strong>Cena:</strong>
+    <span>${tornata.costo_cena ? tornata.costo_cena + '€' : 'Inclusa'}${tornata.descrizione_cena ? ' - ' + tornata.descrizione_cena : ''}</span>
+</div>` : ''}
+                
+                ${tornata.istruzione ? `
+                <div style="grid-column: 1 / -1; background: #f1f3f5; padding: 15px; border-radius: 8px; font-size: 15px;">
+                    <strong>📚 Istruzione${tornata.orario_istruzione ? ' (ore ' + tornata.orario_istruzione + ')' : ''}:</strong><br>
+                    ${tornata.istruzione}
+                </div>
+                ` : ''}
+                
+                ${(tornata.link_audio || tornata.link_pagina) ? `
+<div style="grid-column: 1 / -1; background: #e8f5e8; padding: 15px; border-radius: 8px; font-size: 15px;">
+    <strong>🔗 Risorse Tornata:</strong><br>
+    <div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap;">
+        ${tornata.link_audio ? `
+        <a href="${tornata.link_audio}" target="_blank" style="
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            padding: 8px 12px; 
+            background: #28a745; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            font-size: 14px;
+            font-weight: 500;
+        ">
+            🎧 Audio Tornata
+        </a>` : ''}
+        ${tornata.link_pagina ? `
+        <a href="${tornata.link_pagina}" target="_blank" style="
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            padding: 8px 12px; 
+            background: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            font-size: 14px;
+            font-weight: 500;
+        ">
+            📄 Pagina Istruzione
+        </a>` : ''}
+    </div>
+</div>
+` : ''}
+                
+            </div>
+        </div>
+        
+        <div class="tornata-footer" style="padding-top: 10px; border-top: none;"></div>
+    `;
+    
+    return card;
+}
+        // Aggiorna statistiche
+        function updateStats() {
+            const totali = tornateData.filter(t => t.stato === 'passata').length;
+            const presenti = tornateData.filter(t => t.stato === 'passata' && t.presenza === true).length;
+            const percentuale = totali > 0 ? Math.round((presenti / totali) * 100) : 0;
+            
+            document.getElementById('statTotali').textContent = totali;
+            document.getElementById('statPresenti').textContent = presenti;
+            document.getElementById('statPercentuale').textContent = percentuale + '%';
+        }
+
+        // Applica filtri
+        function applicaFiltri() {
+            const anno = document.getElementById('filtroAnno').value;
+            const tipo = document.getElementById('filtroTipo').value;
+            const presenza = document.getElementById('filtroPresenza').value;
+            
+            tornateFiltered = tornateData.filter(tornata => {
+                // Filtro anno
+                if (anno && !tornata.data.startsWith(anno)) return false;
+                
+                // Filtro tipo
+                if (tipo && tornata.tipo !== tipo) return false;
+                
+                // Filtro presenza
+                if (presenza) {
+                    if (presenza === 'presente' && tornata.presenza !== true) return false;
+                    if (presenza === 'assente' && tornata.presenza !== false) return false;
+                    if (presenza === 'pending' && tornata.presenza !== null) return false;
+                }
+                
+                return true;
+            });
+            
+            renderTornate();
+            showAlert(`Filtri applicati: ${tornateFiltered.length} tornate trovate`, 'info');
+        }
+
+        // Reset filtri
+        function resetFiltri() {
+            document.getElementById('filtroAnno').value = '2025';
+            document.getElementById('filtroTipo').value = '';
+            document.getElementById('filtroPresenza').value = '';
+            
+            tornateFiltered = [...tornateData];
+            renderTornate();
+            showAlert('Filtri resettati', 'info');
+        }
+
+        // Conferma presenza a tornata
+// SOSTITUIRE la funzione confermaPresenza nel file tornate.html
+
+async function confermaPresenza(tornataId, presente) {
+    try {
+        console.log(`🔄 Confermando presenza: Tornata ${tornataId}, Presente: ${presente}`);
+        
+        showAlert('Salvando presenza...', 'info');
+        
+        // ✅ Chiamata API corretta (la route esiste già!)
+        const response = await fetch('/api/presenze/conferma', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fratelloId: fratelliAuth.id,    // ✅ Corretto
+                tornataId: tornataId,           // ✅ Corretto  
+                presente: presente,             // ✅ Corretto (boolean)
+                timestamp: new Date().toISOString()
+            })
+        });
+
+        const result = await response.json();
+        
+        console.log('📥 Risposta API:', result);
+        
+        if (result.success) {
+            // ✅ Aggiorna dati locali
+            const tornata = tornateData.find(t => t.id === tornataId);
+            if (tornata) {
+                tornata.presenza = presente;
+            }
+            
+            // ✅ Aggiorna anche nei dati filtrati
+            const tornataFiltered = tornateFiltered.find(t => t.id === tornataId);
+            if (tornataFiltered) {
+                tornataFiltered.presenza = presente;
+            }
+            
+            const message = presente ? 
+                `✅ Presenza confermata!` : 
+                `❌ Assenza registrata.`;
+                
+            showAlert(message, 'success');
+            
+            // ✅ Ricarica vista e statistiche
+            renderTornate();
+            updateStats();
+            
+            console.log('✅ Presenza salvata con successo nel database');
+            
+        } else {
+            throw new Error(result.message || 'Errore sconosciuto dal server');
+        }
+        
+    } catch (error) {
+        console.error('❌ Errore conferma presenza:', error);
+        
+        // ✅ Messaggio di errore dettagliato
+        let errorMessage = 'Errore nel salvataggio della presenza';
+        if (error.message.includes('404')) {
+            errorMessage = 'API non trovata - contatta l\'amministratore';
+        } else if (error.message.includes('500')) {
+            errorMessage = 'Errore del server - riprova più tardi';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        showAlert(errorMessage, 'error');
+    }
+}
+        // Cambia presenza (torna ai bottoni originali)
+        function cambiaPresenza(tornataId) {
+            const tornata = tornateData.find(t => t.id === tornataId);
+            if (tornata) {
+                tornata.presenza = null;
+                renderTornate();
+                showAlert('Puoi ora selezionare una nuova presenza', 'info');
+            }
+        }
+
+        // Mostra alert
+    // SOSTITUIRE la funzione showAlert nel file tornate.html
+
+function showAlert(message, type = 'info') {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertId = 'alert-' + Date.now();
+    
+    let alertClass = 'alert-info';
+    let icon = 'ℹ️';
+    
+    if (type === 'success') {
+        alertClass = 'alert-success';
+        icon = '✅';
+    } else if (type === 'error') {
+        alertClass = 'alert-info'; // Usa info anche per errori per evitare CSS mancante
+        icon = '❌';
+    }
+    
+    alertContainer.innerHTML = `
+        <div id="${alertId}" class="alert ${alertClass}" style="
+            ${type === 'error' ? 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;' : ''}
+        ">
+            ${icon} ${message}
+        </div>
+    `;
+    
+    // Rimuovi alert dopo 4 secondi (6 secondi per errori)
+    const timeout = type === 'error' ? 6000 : 4000;
+    
+    setTimeout(() => {
+        const alertElement = document.getElementById(alertId);
+        if (alertElement) {
+            alertElement.style.opacity = '0.5';
+            setTimeout(() => {
+                alertElement.remove();
+            }, 500);
+        }
+    }, timeout);
+}
+
+    </script>
+</body>
+</html>

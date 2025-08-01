@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✍️ Registra Presenze - Kilwinning Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .logo h1 {
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .tornata-selector {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .tornata-selector select {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        .tornata-info {
+            text-align: center;
+        }
+        
+        .tornata-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .detail-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .presenze-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        
+        .fratelli-section, .ospiti-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 16px;
+            color: #495057;
+        }
+        
+        .fratelli-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .fratello-item {
+            background: white;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .fratello-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .fratello-nome {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .fratello-grado {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .fratello-ruolo-fisso {
+            font-size: 11px;
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .presenza-toggle {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .presenza-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .presenza-btn.presente {
+            background: #28a745;
+            color: white;
+        }
+        
+        .presenza-btn.assente {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .presenza-btn:not(.active) {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .ruolo-select {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            width: 140px;
+        }
+        
+        .ruolo-select:disabled {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .ospiti-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .ospite-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .ospite-form input, .ospite-form select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .ospite-item {
+            background: white;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stats-summary {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin-top: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .save-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .presenze-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .fratello-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .ospite-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .save-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <h1>✍️ Registra Presenze</h1>
+            </div>
+            <div class="nav-buttons">
+                <a href="/admin/tornate" class="btn btn-primary">📅 Gestione Tornate</a>
+                <a href="/admin/fratelli" class="btn btn-secondary">👥 Gestione Fratelli</a>
+                <a href="/admin/dashboard" class="btn btn-secondary">← Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Selezione Tornata -->
+        <div class="card">
+            <h3>🔍 Seleziona Tornata</h3>
+            <div class="tornata-selector">
+                <select id="tornataSelect">
+                    <option value="">-- Seleziona una tornata --</option>
+                </select>
+                <button class="btn btn-primary" onclick="caricaPresenze()">Carica Presenze</button>
+            </div>
+        </div>
+
+        <!-- Informazioni Tornata -->
+        <div id="tornataInfo" class="card" style="display: none;">
+            <div class="tornata-info">
+                <h4 id="tornataTitle">Tornata del ...</h4>
+                <div class="tornata-details" id="tornataDetails">
+                    <!-- Dettagli tornata popolati via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Presenze e Ospiti -->
+        <div id="presenzeContainer" class="card" style="display: none;">
+            <div class="presenze-grid">
+                <!-- Fratelli della Loggia -->
+                <div class="fratelli-section">
+                    <div class="section-header">
+                        <span>👥 Fratelli della Loggia</span>
+                        <span id="fratelliCount">0</span>
+                    </div>
+                    <div class="fratelli-list" id="fratelliList">
+                        <!-- Lista fratelli popolata via JS -->
+                    </div>
+                </div>
+
+                <!-- Ospiti -->
+                <div class="ospiti-section">
+                    <div class="section-header">
+                        <span>🎭 Ospiti</span>
+                        <span id="ospitiCount">0</span>
+                    </div>
+                    <div class="ospiti-list">
+                        <!-- Form nuovo ospite -->
+                        <div class="ospite-form">
+                            <input type="text" id="nuovoOspiteNome" placeholder="Nome ospite">
+                            <input type="text" id="nuovoOspiteLoggia" placeholder="Loggia di provenienza">
+                            <select id="nuovoOspiteGrado">
+                                <option value="">Grado...</option>
+                                <option value="Apprendista">Apprendista</option>
+                                <option value="Compagno">Compagno</option>
+                                <option value="Maestro">Maestro</option>
+                                <option value="Altro">Altro</option>
+                            </select>
+                            <button class="btn btn-success" onclick="aggiungiOspite()">➕ Aggiungi</button>
+                        </div>
+                        
+                        <!-- Lista ospiti -->
+                        <div id="ospitiList">
+                            <!-- Ospiti popolati via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiche -->
+            <div class="stats-summary">
+                <h4>📊 Riepilogo Presenze</h4>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="statPresenti">0</div>
+                        <div class="stat-label">Presenti</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="statAssenti">0</div>
+                        <div class="stat-label">Assenti</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="statOspiti">0</div>
+                        <div class="stat-label">Ospiti</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="statTotale">0</div>
+                        <div class="stat-label">Totale</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione Salvataggio -->
+        <div id="saveSection" class="save-section" style="display: none;">
+            <div>
+                <strong>💾 Salva le modifiche per registrare definitivamente le presenze</strong>
+            </div>
+            <div>
+                <button class="btn btn-warning" onclick="resetPresenze()">🔄 Reset</button>
+                <button class="btn btn-success" onclick="salvaPresenze()">💾 Salva Presenze</button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingPresenze" class="loading" style="display: none;">
+            Caricamento presenze in corso...
+        </div>
+    </div>
+<script src="/js/error-manager.js"></script>
+    <script src="/js/admin-presenze.js"></script>
+</body>
+</html>

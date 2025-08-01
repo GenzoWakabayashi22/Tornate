@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Tavole Architettoniche - Presenze Kilwinning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo h1 {
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-group label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-programmata {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-in_preparazione {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-completata {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-annullata {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-buttons .btn {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <h1>📚 Gestione Tavole Architettoniche</h1>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-success" onclick="openModal('nuova')">➕ Nuova Tavola</button>
+                <a href="/admin/dashboard" class="btn btn-secondary">← Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Statistiche -->
+        <div class="stats-container" id="statsContainer">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTavole">0</div>
+                <div class="stat-label">Tavole Totali</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="tavoleAnno">0</div>
+                <div class="stat-label">Tavole 2025</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="tavoleProgr">0</div>
+                <div class="stat-label">Programmate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="tavoleCompl">0</div>
+                <div class="stat-label">Completate</div>
+            </div>
+        </div>
+
+        <!-- Filtri -->
+        <div class="card">
+            <h3>🔍 Filtri</h3>
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Anno</label>
+                    <select id="filtroAnno">
+                        <option value="">Tutti</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Stato</label>
+                    <select id="filtroStato">
+                        <option value="">Tutti</option>
+                        <option value="programmata">Programmate</option>
+                        <option value="in_preparazione">In Preparazione</option>
+                        <option value="completata">Completate</option>
+                        <option value="annullata">Annullate</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary" onclick="applicaFiltri()">Applica Filtri</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabella Tavole -->
+        <div class="card">
+            <h3>📚 Elenco Tavole Architettoniche</h3>
+            <div id="loadingTavole" class="loading">
+                Caricamento tavole in corso...
+            </div>
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table id="tavoleTable">
+                    <thead>
+                        <tr>
+                            <th>Data Trattazione</th>
+                            <th>Titolo Discussione</th>
+                            <th>Relatore</th>
+                            <th>Stato</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tavoleTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                Nessuna tavola trovata con i filtri selezionati.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per Nuova/Modifica Tavola -->
+    <div id="tavolaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nuova Tavola Architettonica</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            
+            <form id="tavolaForm">
+                <div class="form-grid">
+                    <!-- Prima riga -->
+                    <div class="form-group">
+                        <label for="data_trattazione">Data Trattazione *</label>
+                        <input type="date" id="data_trattazione" name="data_trattazione" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stato">Stato</label>
+                        <select id="stato" name="stato">
+                            <option value="programmata">Programmata</option>
+                            <option value="in_preparazione">In Preparazione</option>
+                            <option value="completata">Completata</option>
+                            <option value="annullata">Annullata</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Seconda riga -->
+                    <div class="form-group full-width">
+                        <label for="titolo_discussione">Titolo Discussione *</label>
+                        <textarea id="titolo_discussione" name="titolo_discussione" placeholder="Titolo della tavola architettonica..." required></textarea>
+                    </div>
+                    
+                    <!-- Terza riga -->
+                    <div class="form-group">
+                        <label for="chi_introduce">Chi Introduce</label>
+                        <select id="chi_introduce" name="chi_introduce">
+                            <option value="">Seleziona fratello...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="link_tavola">Link Tavola</label>
+                        <input type="url" id="link_tavola" name="link_tavola" placeholder="https://...">
+                    </div>
+                    
+                    <!-- Quarta riga -->
+                    <div class="form-group full-width">
+                        <label for="spunti_suggeriti">Spunti Suggeriti</label>
+                        <textarea id="spunti_suggeriti" name="spunti_suggeriti" placeholder="Spunti di riflessione per la tavola..."></textarea>
+                    </div>
+                    
+                    <!-- Quinta riga -->
+                    <div class="form-group full-width">
+                        <label for="note">Note</label>
+                        <textarea id="note" name="note" placeholder="Note aggiuntive..."></textarea>
+                    </div>
+                </div>
+                
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Annulla</button>
+                    <button type="submit" class="btn btn-success">Salva Tavola</button>
+                </div>
+            </form>
+        </div>
+    </div>
+<script src="/js/error-manager.js"></script>
+<!-- poi gli altri script esistenti -->
+    <script src="/js/admin-tavole.js"></script>
+</body>
+</html>

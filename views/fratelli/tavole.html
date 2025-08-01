@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Mie Tavole - R∴L∴ Kilwinning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo h1 {
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-group label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-programmata {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-in_preparazione {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-completata {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-annullata {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-buttons .btn {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .my-tavole-only {
+            background: #e8f5e8;
+            border: 2px solid #28a745;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <h1>📚 Le Mie Tavole Architettoniche</h1>
+            </div>
+            <div class="nav-buttons">
+                <a href="/fratelli/dashboard" class="btn btn-secondary">← Dashboard</a>
+                <a href="/fratelli/tornate" class="btn btn-secondary">Tornate</a>
+            </div>
+        </div>
+
+        <!-- Info per utente -->
+        <div class="my-tavole-only">
+            <strong>🎯 Stai visualizzando solo le tue tavole architettoniche</strong><br>
+            Qui trovi le tavole che hai preparato o che ti sono state assegnate
+        </div>
+
+        <!-- Statistiche -->
+        <div class="stats-container" id="statsContainer">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTavole">0</div>
+                <div class="stat-label">Tavole Totali</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="tavoleAnno">0</div>
+                <div class="stat-label">Tavole 2025</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="tavoleProgr">0</div>
+                <div class="stat-label">Programmate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="tavoleCompl">0</div>
+                <div class="stat-label">Completate</div>
+            </div>
+        </div>
+
+        <!-- Filtri -->
+        <div class="card">
+            <h3>🔍 Filtri</h3>
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Anno</label>
+                    <select id="filtroAnno">
+                        <option value="">Tutti</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Stato</label>
+                    <select id="filtroStato">
+                        <option value="">Tutti</option>
+                        <option value="programmata">Programmate</option>
+                        <option value="in_preparazione">In Preparazione</option>
+                        <option value="completata">Completate</option>
+                        <option value="annullata">Annullate</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary" onclick="applicaFiltri()">Applica Filtri</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabella Tavole -->
+        <div class="card">
+            <h3>📚 Le Mie Tavole Architettoniche</h3>
+            <div id="loadingTavole" class="loading">
+                Caricamento tavole in corso...
+            </div>
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table id="tavoleTable">
+                    <thead>
+                        <tr>
+                            <th>Data Trattazione</th>
+                            <th>Titolo Discussione</th>
+                            <th>Stato</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tavoleTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                Nessuna tavola trovata. Non hai ancora tavole assegnate.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dettagli Tavola -->
+    <div id="tavolaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Dettagli Tavola</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Data Trattazione</label>
+                    <input type="text" id="detail_data_trattazione" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Stato</label>
+                    <input type="text" id="detail_stato" readonly>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label>Titolo Discussione</label>
+                    <textarea id="detail_titolo_discussione" readonly></textarea>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label>Spunti Suggeriti</label>
+                    <textarea id="detail_spunti_suggeriti" readonly></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Link Tavola</label>
+                    <input type="text" id="detail_link_tavola" readonly>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label>Note</label>
+                    <textarea id="detail_note" readonly></textarea>
+                </div>
+            </div>
+            
+            <div style="text-align: right; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Chiudi</button>
+            </div>
+        </div>
+    </div>
+<script src="/js/error-manager.js"></script>
+ <script>
+// Variabili globali
+let allTavoleData = [];
+let myTavoleData = [];
+let filteredData = [];
+let currentUser = null;
+
+// Inizializzazione pagina
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🏛️ Inizializzazione pagina tavole fratello');
+    
+    // ✅ OTTIENI UTENTE REALE DAL SESSION STORAGE
+    try {
+        const authData = sessionStorage.getItem('fratelliAuth');
+        if (!authData) {
+            console.log('❌ Nessuna autenticazione trovata, redirect al login');
+            window.location.href = '/fratelli/login';
+            return;
+        }
+        
+        currentUser = JSON.parse(authData);
+        console.log('✅ Utente autenticato:', currentUser.nome, 'ID:', currentUser.id);
+        
+    } catch (error) {
+        console.error('❌ Errore parsing auth data:', error);
+        window.location.href = '/fratelli/login';
+        return;
+    }
+    
+    // Carica subito le tavole
+    caricaTavole();
+    
+    // Event listeners per filtri
+    document.getElementById('filtroStato').addEventListener('change', applicaFiltri);
+    document.getElementById('filtroAnno').addEventListener('change', applicaFiltri);
+    
+    // Chiudi modal con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+});
+
+// ✅ CARICA TAVOLE (usa endpoint funzionante)
+async function caricaTavole() {
+    try {
+        console.log('📡 Caricamento tavole - USA ENDPOINT FUNZIONANTE');
+        showLoading();
+        
+        // ✅ USA LO STESSO ENDPOINT CHE FUNZIONA NELL'ADMIN
+        const response = await fetch('/api/tavole', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('📊 Risposta server:', data);
+        
+        if (data.success) {
+            allTavoleData = data.data || [];
+            console.log(`📚 Caricate ${allTavoleData.length} tavole totali`);
+            
+            // ✅ FILTRA SOLO LE TAVOLE DEL FRATELLO LOGGATO
+            if (currentUser && currentUser.id) {
+                myTavoleData = allTavoleData.filter(tavola => 
+                    tavola.chi_introduce && tavola.chi_introduce == currentUser.id
+                );
+                console.log(`🎯 Filtrate ${myTavoleData.length} tavole per ${currentUser.nome}`);
+                console.log('📋 Tavole trovate:', myTavoleData.map(t => `${t.titolo_discussione} (${t.stato})`));
+            } else {
+                myTavoleData = [];
+                console.log('❌ Nessun utente loggato, nessuna tavola mostrata');
+            }
+            
+            aggiornaStatistiche();
+            applicaFiltri();
+            
+        } else {
+            throw new Error(data.message || 'Errore nel caricamento');
+        }
+        
+    } catch (error) {
+        console.error('❌ Errore caricamento tavole:', error);
+        showError('Errore nel caricamento delle tavole: ' + error.message);
+    }
+}
+
+// Aggiorna statistiche (basate sulle tavole del fratello)
+function aggiornaStatistiche() {
+    const currentYear = new Date().getFullYear();
+    const stats = {
+        totali: myTavoleData.length,
+        anno_corrente: myTavoleData.filter(t => new Date(t.data_trattazione).getFullYear() === currentYear).length,
+        programmate: myTavoleData.filter(t => t.stato === 'programmata').length,
+        completate: myTavoleData.filter(t => t.stato === 'completata').length
+    };
+    
+    document.getElementById('totalTavole').textContent = stats.totali;
+    document.getElementById('tavoleAnno').textContent = stats.anno_corrente;
+    document.getElementById('tavoleProgr').textContent = stats.programmate;
+    document.getElementById('tavoleCompl').textContent = stats.completate;
+}
+
+// Applica filtri (sulle tavole del fratello)
+function applicaFiltri() {
+    const statoFilter = document.getElementById('filtroStato').value;
+    const annoFilter = document.getElementById('filtroAnno').value;
+    
+    filteredData = myTavoleData.filter(tavola => {
+        // Filtro stato
+        if (statoFilter && tavola.stato !== statoFilter) {
+            return false;
+        }
+        
+        // Filtro anno
+        if (annoFilter) {
+            const annoTavola = new Date(tavola.data_trattazione).getFullYear().toString();
+            if (annoTavola !== annoFilter) {
+                return false;
+            }
+        }
+        
+        return true;
+    });
+    
+    renderTabella();
+}
+
+// Renderizza tabella
+function renderTabella() {
+    const tbody = document.getElementById('tavoleTableBody');
+    const loadingDiv = document.getElementById('loadingTavole');
+    const emptyDiv = document.getElementById('emptyState');
+    const tableContainer = document.getElementById('tableContainer');
+    
+    // Nascondi loading
+    loadingDiv.style.display = 'none';
+    
+    if (filteredData.length === 0) {
+        // Mostra empty state
+        tableContainer.style.display = 'none';
+        emptyDiv.style.display = 'block';
+        
+        // Messaggio personalizzato
+        if (myTavoleData.length === 0) {
+            emptyDiv.innerHTML = `
+                <h3>📚 Nessuna Tavola Assegnata</h3>
+                <p>Non hai ancora tavole architettoniche assegnate.</p>
+                <p>Le tavole assegnate a te appariranno qui automaticamente.</p>
+            `;
+        } else {
+            emptyDiv.innerHTML = `
+                <h3>🔍 Nessuna Tavola Trovata</h3>
+                <p>Nessuna tavola trovata con i filtri selezionati.</p>
+                <button class="btn btn-secondary" onclick="resetFiltri()" style="margin-top: 15px;">
+                    Rimuovi Filtri
+                </button>
+            `;
+        }
+        return;
+    }
+    
+    // Mostra tabella
+    emptyDiv.style.display = 'none';
+    tableContainer.style.display = 'block';
+    
+    // Genera righe
+    tbody.innerHTML = filteredData.map(tavola => `
+        <tr>
+            <td>${formatDate(tavola.data_trattazione)}</td>
+            <td>${tavola.titolo_discussione || '-'}</td>
+            <td><span class="status-badge status-${tavola.stato}">${formatStato(tavola.stato)}</span></td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="mostraDettagli(${tavola.id})">Visualizza</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ✅ MOSTRA DETTAGLI (usa endpoint standard)
+async function mostraDettagli(tavolaId) {
+    try {
+        console.log('🔍 Caricamento dettagli tavola ID:', tavolaId);
+        
+        // ✅ USA ENDPOINT STANDARD CHE FUNZIONA
+        const response = await fetch(`/api/tavole/${tavolaId}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            popolaModal(data.data);
+            document.getElementById('tavolaModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        } else {
+            throw new Error(data.message || 'Errore nel caricamento dettagli');
+        }
+        
+    } catch (error) {
+        console.error('❌ Errore dettagli tavola:', error);
+        alert('Errore nel caricamento dei dettagli: ' + error.message);
+    }
+}
+
+// Popola modal con dati tavola
+function popolaModal(tavola) {
+    document.getElementById('detail_data_trattazione').value = formatDate(tavola.data_trattazione);
+    document.getElementById('detail_stato').value = formatStato(tavola.stato);
+    document.getElementById('detail_titolo_discussione').value = tavola.titolo_discussione || '';
+    document.getElementById('detail_spunti_suggeriti').value = tavola.spunti_suggeriti || 'Nessuno spunto fornito';
+    
+    // ✅ GESTIONE LINK CLICCABILE
+    const linkField = document.getElementById('detail_link_tavola');
+    if (tavola.link_tavola && tavola.link_tavola.trim() !== '') {
+        // Se c'è un link, crea un elemento cliccabile
+        linkField.style.display = 'none';
+        
+        // Trova il container del link
+        const linkContainer = linkField.parentElement;
+        
+        // Rimuovi eventuali link precedenti
+        const existingLink = linkContainer.querySelector('.tavola-link');
+        if (existingLink) {
+            existingLink.remove();
+        }
+        
+        // Crea link cliccabile
+        const linkElement = document.createElement('div');
+        linkElement.className = 'tavola-link';
+        linkElement.innerHTML = `
+            <a href="${tavola.link_tavola}" target="_blank" style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 15px;
+                background: #007bff;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+                font-weight: 500;
+                transition: all 0.3s;
+                margin-top: 5px;
+            " onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">
+                🔗 Apri Tavola Architettonica
+                <span style="font-size: 12px; opacity: 0.8;">↗</span>
+            </a>
+            <div style="margin-top: 8px; font-size: 12px; color: #666; word-break: break-all;">
+                ${tavola.link_tavola}
+            </div>
+        `;
+        
+        linkContainer.appendChild(linkElement);
+        
+    } else {
+        // Se non c'è link, mostra il campo normale
+        linkField.style.display = 'block';
+        linkField.value = 'Nessun link disponibile';
+        
+        // Rimuovi eventuali link precedenti
+        const linkContainer = linkField.parentElement;
+        const existingLink = linkContainer.querySelector('.tavola-link');
+        if (existingLink) {
+            existingLink.remove();
+        }
+    }
+    
+    document.getElementById('detail_note').value = tavola.note || 'Nessuna nota';
+}
+
+// Reset filtri
+function resetFiltri() {
+    document.getElementById('filtroStato').value = '';
+    document.getElementById('filtroAnno').value = '';
+    applicaFiltri();
+}
+
+// Chiudi modal
+function closeModal() {
+    document.getElementById('tavolaModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Funzioni di utilità
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('it-IT');
+}
+
+function formatStato(stato) {
+    const stati = {
+        'programmata': 'Programmata',
+        'in_preparazione': 'In Preparazione', 
+        'completata': 'Completata',
+        'annullata': 'Annullata'
+    };
+    return stati[stato] || stato;
+}
+
+function showLoading() {
+    document.getElementById('loadingTavole').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('tableContainer').style.display = 'none';
+}
+
+function showError(message) {
+    document.getElementById('loadingTavole').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('tableContainer').style.display = 'none';
+    
+    // Modifica empty state per mostrare errore
+    const emptyState = document.getElementById('emptyState');
+    emptyState.innerHTML = `
+        <h3 style="color: #e74c3c;">Errore di Caricamento</h3>
+        <p>${message}</p>
+        <button class="btn btn-secondary" onclick="caricaTavole()" style="margin-top: 20px;">
+            Riprova
+        </button>
+    `;
+}
+
+// Chiudi modal cliccando fuori
+window.onclick = function(event) {
+    const modal = document.getElementById('tavolaModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+</script>
+</body>
+</html>

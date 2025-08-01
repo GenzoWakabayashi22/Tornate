@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Tornate - Presenze Kilwinning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo h1 {
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-group label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        /* STILI PER LA COLONNA PRESENZE */
+        .presenze-cell {
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .presenze-number {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .presenze-zero {
+            color: #333;
+        }
+        
+        .presenze-loading {
+            color: #666;
+            font-style: italic;
+            font-size: 12px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-programmata {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-completata {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-annullata {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .tipo-badge {
+            padding: 3px 6px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .tipo-nostra {
+            background: #007bff;
+            color: white;
+        }
+        
+        .tipo-altra {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-buttons .btn {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <h1>🏛️ Gestione Tornate</h1>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-success" onclick="openModal('nuova')">➕ Nuova Tornata</button>
+                <a href="/admin/dashboard" class="btn btn-secondary">← Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Statistiche -->
+        <div class="stats-container" id="statsContainer">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTornate">0</div>
+                <div class="stat-label">Tornate Totali</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="tornateAnno">0</div>
+                <div class="stat-label">Tornate 2025</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="tornateProgr">0</div>
+                <div class="stat-label">Programmate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="tornateCompl">0</div>
+                <div class="stat-label">Completate</div>
+            </div>
+        </div>
+
+        <!-- Filtri -->
+        <div class="card">
+            <h3>🔍 Filtri</h3>
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Anno</label>
+                    <select id="filtroAnno">
+                        <option value="">Tutti</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Tipo Loggia</label>
+                    <select id="filtroTipoLoggia">
+                        <option value="">Tutte</option>
+                        <option value="nostra">Nostra Loggia</option>
+                        <option value="altra">Altra Loggia</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Stato</label>
+                    <select id="filtroStato">
+                        <option value="">Tutti</option>
+                        <option value="programmata">Programmate</option>
+                        <option value="completata">Completate</option>
+                        <option value="annullata">Annullate</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary" onclick="applicaFiltri()">Applica Filtri</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabella Tornate -->
+        <div class="card">
+            <h3>📅 Elenco Tornate</h3>
+            <div id="loadingTornate" class="loading">
+                Caricamento tornate in corso...
+            </div>
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table id="tornateTable">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Discussione</th>
+                            <th>Relatore</th>
+                            <th>Location</th>
+                            <th>Presenze</th>
+                            <th>Loggia</th>
+                            <th>Stato</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tornateTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                Nessuna tornata trovata con i filtri selezionati.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per Nuova/Modifica Tornata -->
+    <div id="tornataModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nuova Tornata</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            
+            <form id="tornataForm">
+                <div class="form-grid">
+                    <!-- Prima riga -->
+                    <div class="form-group">
+                        <label for="data">Data *</label>
+                        <input type="date" id="data" name="data" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="orario_inizio">Ora Inizio</label>
+                        <input type="time" id="orario_inizio" name="orario_inizio">
+                    </div>
+                    
+                    <!-- Seconda riga -->
+                    <div class="form-group full-width">
+                        <label for="discussione">Discussione</label>
+                        <textarea id="discussione" name="discussione" placeholder="Argomento della tornata..."></textarea>
+                    </div>
+                    
+                    <!-- Terza riga -->
+                    <div class="form-group">
+                        <label for="chi_introduce">Chi Introduce</label>
+                        <select id="chi_introduce" name="chi_introduce">
+                            <option value="">Seleziona fratello...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" placeholder="Sede della tornata...">
+                    </div>
+                    
+                    <!-- Quarta riga -->
+                    <div class="form-group">
+                        <label for="tipo">Tipo Tornata</label>
+                        <select id="tipo" name="tipo">
+                            <option value="ordinaria">Ordinaria</option>
+                            <option value="straordinaria">Straordinaria</option>
+                            <option value="istruzione">Istruzione</option>
+                            <option value="festa">Festa</option>
+                            <option value="cerimonia">Cerimonia</option>
+                            <option value="altro">Altro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo_loggia">Tipo Loggia</label>
+                        <select id="tipo_loggia" name="tipo_loggia">
+                            <option value="nostra">Nostra Loggia</option>
+                            <option value="altra">Altra Loggia</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Quinta riga - Cena -->
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="cena" name="cena">
+                            <label for="cena">Cena prevista</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="costo_cena">Costo Cena (€)</label>
+                        <input type="number" id="costo_cena" name="costo_cena" step="0.01" min="0">
+                    </div>
+                    
+                    <!-- Sesta riga - Descrizione Cena -->
+                    <div class="form-group full-width">
+                        <label for="descrizione_cena">Descrizione Cena</label>
+                        <input type="text" id="descrizione_cena" name="descrizione_cena" placeholder="es. Pasta, carne, pesce, pizza...">
+                    </div>
+                    
+                    <!-- Settima riga - Istruzione -->
+                    <div class="form-group full-width">
+                        <label for="argomento_istruzione">Argomento Istruzione</label>
+                        <textarea id="argomento_istruzione" name="argomento_istruzione" placeholder="Se prevista istruzione..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="orario_istruzione">Ora Istruzione</label>
+                        <input type="time" id="orario_istruzione" name="orario_istruzione">
+                    </div>
+                    <div class="form-group">
+                        <label for="stato">Stato</label>
+                        <select id="stato" name="stato">
+                            <option value="programmata">Programmata</option>
+                            <option value="completata">Completata</option>
+                            <option value="annullata">Annullata</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Link (solo per tornate completate) -->
+                    <div class="form-group full-width">
+                        <label for="link_audio">Link Audio Tornata</label>
+                        <input type="url" id="link_audio" name="link_audio" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="link_pagina">Link Pagina Istruzione</label>
+                        <input type="url" id="link_pagina" name="link_pagina" placeholder="https://...">
+                    </div>
+                    
+                    <!-- Note -->
+                    <div class="form-group full-width">
+                        <label for="note">Note</label>
+                        <textarea id="note" name="note" placeholder="Note aggiuntive..."></textarea>
+                    </div>
+                </div>
+                
+<div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Annulla</button>
+                    <button type="submit" class="btn btn-success">Salva Tornata</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+// 🎯 FUNZIONE SEMPLIFICATA - USA L'API ESISTENTE DELLE PRESENZE
+async function caricaPresenzePerTornata(tornataId) {
+    try {
+        console.log(`📊 Caricamento presenze per tornata ${tornataId}`);
+        
+        const response = await fetch(`/api/presenze/tornata/${tornataId}`);
+        if (!response.ok) {
+            console.error(`❌ Errore HTTP ${response.status} per tornata ${tornataId}`);
+            return 0;
+        }
+        
+        const data = await response.json();
+        if (data.success && data.data && data.data.presenze) {
+            const presenti = data.data.presenze.filter(p => p.presente === 1);
+            console.log(`✅ Tornata ${tornataId}: ${presenti.length} fratelli presenti`);
+            return presenti.length;
+        }
+        
+        return 0;
+    } catch (error) {
+        console.error(`💥 Errore caricamento presenze per tornata ${tornataId}:`, error);
+        return 0;
+    }
+}
+
+function aggiornaPresenzeCell(tornataId, count) {
+    const cell = document.getElementById(`presenze-${tornataId}`);
+    if (!cell) return;
+    
+    if (count === 0) {
+        cell.innerHTML = '<span class="presenze-zero">0</span>';
+    } else {
+        cell.innerHTML = `
+            <a href="/admin/presenze?tornata=${tornataId}" 
+               class="presenze-number" 
+               title="Clicca per gestire presenze">
+                ${count}
+            </a>
+        `;
+    }
+}
+
+// 🆕 FUNZIONI WHATSAPP
+
+// 🔧 FIX: ANTEPRIMA FORM NUOVA TORNATA
+function updateWhatsAppPreview() {
+    const checkbox = document.getElementById('send_whatsapp');
+    const preview = document.getElementById('whatsappPreview');
+    
+    if (!checkbox || !checkbox.checked) {
+        if (preview) preview.style.display = 'none';
+        return;
+    }
+    
+    const data = document.getElementById('data').value;
+    const discussione = document.getElementById('discussione').value;
+    const location = document.getElementById('location').value;
+    const cena = document.getElementById('cena').checked;
+    const costoCena = document.getElementById('costo_cena').value;
+    const orarioInizio = document.getElementById('orario_inizio').value || '21:00';
+    
+    // Fix data
+    let dataFormatted = 'Data da definire';
+    if (data) {
+        try {
+            const [year, month, day] = data.split('-');
+            const dataObj = new Date(year, month - 1, day);
+            
+            dataFormatted = dataObj.toLocaleDateString('it-IT', {
+                weekday: 'long',
+                year: 'numeric', 
+                month: 'long',
+                day: 'numeric'
+            });
+        } catch (error) {
+            console.error('Errore formattazione data:', error);
+            dataFormatted = 'Data non valida';
+        }
+    }
+    
+    // Ottieni nome introduttore
+    let nomeIntroduttore = '';
+    const selectIntroduce = document.getElementById('chi_introduce');
+    if (selectIntroduce && selectIntroduce.value) {
+        const selectedOption = selectIntroduce.options[selectIntroduce.selectedIndex];
+        nomeIntroduttore = selectedOption.text.split(' (')[0];
+    }
+    
+    // Genera messaggio CON TUTTE LE CORREZIONI
+    let message = `🏛️ NUOVA TORNATA PROGRAMMATA
+
+📅 Data: ${dataFormatted}
+🕐 Ore: ${orarioInizio}
+🗣️ Argomento: ${discussione || 'Da definire'}`;
+    
+    if (nomeIntroduttore) {
+        message += `\n👤 Introduce: ${nomeIntroduttore}`;
+    }
+    
+    message += `\n📍 ${location || 'Tempio Massonico'}`;
+    
+    if (cena) {
+        message += `\n🍽️ Cena: €${costoCena || 'TBD'} (facoltativa)`;
+    }
+    
+    message += `\n\n⚠️ CONFERMATE LA PRESENZA entro 48h:
+🔗 tornate.loggiakilwinning.com
+
+💙 Amicizia, Moralità e Amore Fraterno`;
+    
+    const messagePreview = document.getElementById('messagePreview');
+    if (messagePreview) {
+        messagePreview.textContent = message;
+    }
+    
+    if (preview) {
+        preview.style.display = 'block';
+    }
+}
+
+// 🆕 MODAL WHATSAPP CON TUTTI I FIX
+function showWhatsAppModal(whatsappData) {
+   
+    const modal = document.createElement('div');
+    modal.className = 'modal whatsapp-modal';
+    modal.style.display = 'block';
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>
+                    <i class="fab fa-whatsapp"></i>
+                    📱 Invia Annuncio WhatsApp
+                </h2>
+                <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+            </div>
+            
+            <div style="padding: 0;">
+                <!-- Informazioni Tornata MODIFICABILI -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h3 style="margin: 0 0 15px 0; color: #2c3e50;">📋 Verifica e Modifica Dettagli</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label><strong>📅 Data:</strong></label>
+                            <input type="date" id="whatsapp_data" value="${whatsappData.tornata.data}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                        <div>
+                            <label><strong>🕐 Ora:</strong></label>
+                            <input type="time" id="whatsapp_orario" value="${whatsappData.tornata.orario_inizio || '21:00'}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                        <div>
+                            <label><strong>📍 Luogo:</strong></label>
+                            <input type="text" id="whatsapp_location" value="${whatsappData.tornata.location || ''}" placeholder="Tempio Massonico" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                        <div>
+                            <label><strong>🍽️ Cena (€):</strong></label>
+                            <input type="number" id="whatsapp_cena" value="${whatsappData.tornata.costo_cena || ''}" placeholder="0" step="0.01" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label><strong>🗣️ Discussione:</strong></label>
+                            <textarea id="whatsapp_discussione" placeholder="Argomento della tornata..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; min-height: 60px;">${whatsappData.tornata.discussione || ''}</textarea>
+                        </div>
+                        <div>
+                            <label><strong>👤 Introduce:</strong></label>
+                            <input type="text" id="whatsapp_introduce" value="${whatsappData.tornata.nome_introduce || ''}" placeholder="Nome fratello" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                    </div>
+                    
+                    <button onclick="updateWhatsAppModalPreview()" style="margin-top: 15px; background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                        🔄 Aggiorna Anteprima
+                    </button>
+                </div>
+
+              
+    <!-- MESSAGGIO COMPLETAMENTE MODIFICABILE CON PULSANTE MODIFICA-->
+<!-- MESSAGGIO COMPLETAMENTE MODIFICABILE CON PULSANTE MODIFICA -->
+<div style="background: #e5f7e5; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h4 style="margin: 0; color: #155724;">📝 Messaggio WhatsApp</h4>
+        <button onclick="toggleMessageEdit()" id="editMessageBtn" style="background: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; cursor: pointer;">
+            <i class="fas fa-edit"></i> ✏️ Modifica Messaggio
+        </button>
+    </div>
+    <small style="color: #155724; opacity: 0.8; display: block; margin-bottom: 15px;">💡 Clicca "Modifica Messaggio" per personalizzare completamente il testo</small>
+    
+    <!-- ANTEPRIMA MESSAGGIO (READONLY) -->
+    <div id="message_preview_display" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #25D366; font-family: system-ui; line-height: 1.4; color: #2c3e50; white-space: pre-line; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 0.95rem; margin-bottom: 10px;">
+        ${whatsappData.message}
+    </div>
+    
+    <!-- TEXTAREA MODIFICABILE (NASCOSTA INIZIALMENTE) -->
+    <div id="message_edit_container" style="display: none;">
+        <textarea id="whatsapp_message_custom" style="width: 100%; min-height: 200px; padding: 15px; border: 1px solid #25D366; border-radius: 8px; font-family: system-ui; line-height: 1.4; resize: vertical;">${whatsappData.message}</textarea>
+        <div style="margin-top: 10px; display: flex; gap: 10px;">
+            <button onclick="saveMessageEdit()" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                💾 Salva Modifiche
+            </button>
+            <button onclick="cancelMessageEdit()" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                ❌ Annulla
+            </button>
+        </div>
+    </div>
+</div>
+                
+
+                <!-- Statistiche -->
+                <div style="background: #d4edda; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+                    <h4 style="margin: 0 0 10px 0; color: #155724;">📊 Destinatari</h4>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #155724;">
+                        ${whatsappData.total_fratelli} fratelli riceveranno il messaggio
+                    </div>
+                </div>
+
+                <!-- Lista Fratelli -->
+                <details style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 20px;">
+                    <summary style="cursor: pointer; font-weight: bold; padding: 5px;">
+                        📋 Lista Fratelli (${whatsappData.total_fratelli})
+                    </summary>
+                    <div style="max-height: 300px; overflow-y: auto; margin-top: 10px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f8f9fa;">
+                                <tr>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Fratello</th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">Telefono</th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">Test</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${whatsappData.links.map(link => `
+                                    <tr>
+                                        <td style="padding: 8px; border-bottom: 1px solid #eee;">${link.fratello_nome}</td>
+                                        <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee; font-family: monospace; font-size: 0.9rem;">${link.telefono}</td>
+                                        <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee;">
+                                            <button onclick="testSingleWhatsApp('${link.fratello_nome}', '${link.telefono}')" class="btn btn-whatsapp" style="padding: 4px 8px; font-size: 0.8rem;">
+                                                <i class="fab fa-whatsapp"></i> Test
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+
+                <!-- Pulsanti Azione -->
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button onclick="this.closest('.modal').remove()" 
+                            class="btn btn-secondary" 
+                            style="padding: 12px 20px; border-radius: 8px;">
+                        ❌ Annulla
+                    </button>
+                    <button onclick="sendCustomWhatsAppToAll()" 
+                            class="btn btn-success" 
+                            style="padding: 12px 25px; font-size: 1.1rem; border-radius: 8px; border: none; cursor: pointer;">
+                        <i class="fab fa-whatsapp"></i>
+                        📢 INVIA A TUTTI I ${whatsappData.total_fratelli} FRATELLI
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.onclick = function(event) {
+        if (event.target === modal) {
+            modal.remove();
+        }
+    };
+}
+
+// 🆕 AGGIORNA ANTEPRIMA NEL MODAL
+function updateWhatsAppModalPreview() {
+    const data = document.getElementById('whatsapp_data').value;
+    const discussione = document.getElementById('whatsapp_discussione').value;
+    const location = document.getElementById('whatsapp_location').value;
+    const introduce = document.getElementById('whatsapp_introduce').value;
+    const cena = document.getElementById('whatsapp_cena').value;
+    const orarioInizio = document.getElementById('whatsapp_orario')?.value || '21:00';
+    
+    // ✅ FIX DATA USANDO LA LOGICA DEL DATE_FORMAT
+    let dataFormatted = 'Data da definire';
+    if (data) {
+        try {
+            // Gestisce formato YYYY-MM-DD dal database
+            if (data.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const [year, month, day] = data.split('-');
+                const dataObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                
+                dataFormatted = dataObj.toLocaleDateString('it-IT', {
+                    weekday: 'long',
+                    year: 'numeric', 
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                console.log('✅ Data formattata:', dataFormatted);
+            } else {
+                dataFormatted = 'Formato data non valido';
+            }
+        } catch (error) {
+            console.error('❌ Errore formattazione data:', error);
+            dataFormatted = 'Data non valida';
+        }
+    }
+    
+    let message = `🏛️ NUOVA TORNATA PROGRAMMATA
+
+📅 Data: ${dataFormatted}
+🕐 Ore: ${orarioInizio}
+🗣️ Argomento: ${discussione || 'Da definire'}`;
+    
+    if (introduce) {
+        message += `\n👤 Introduce: ${introduce}`;
+    }
+    
+    message += `\n📍 ${location || 'Tempio Massonico'}`;
+    
+    if (cena && cena > 0) {
+        message += `\n🍽️ Cena: €${cena}`;
+    }
+    
+    message += `\n\n⚠️ CONFERMATE LA PRESENZA entro 48h:
+🔗 tornate.loggiakilwinning.com
+
+💙 Amicizia, Moralità e Amore Fraterno`;
+    
+    const customMessage = document.getElementById('whatsapp_message_custom');
+    if (customMessage) {
+        customMessage.value = message;
+    }
+}
+function sendCustomWhatsAppToAll() {
+    // Prende il messaggio dalla textarea (se in modalità edit) o dal preview
+    const editContainer = document.getElementById('message_edit_container');
+    let customMessage;
+    
+    if (editContainer && editContainer.style.display !== 'none') {
+        // Modalità modifica attiva
+        customMessage = document.getElementById('whatsapp_message_custom').value;
+    } else {
+        // Modalità anteprima - prende dall'anteprima
+        const previewDiv = document.getElementById('message_preview_display');
+        customMessage = previewDiv ? previewDiv.textContent : document.getElementById('whatsapp_message_custom').value;
+    }
+    
+    if (!customMessage.trim()) {
+        alert('❌ Il messaggio non può essere vuoto!');
+        return;
+    }
+    
+    const modal = document.querySelector('.whatsapp-modal');
+    const fratelliRows = modal.querySelectorAll('tbody tr');
+    
+    const links = [];
+    fratelliRows.forEach(row => {
+        const nome = row.cells[0].textContent.trim();
+        const telefono = row.cells[1].textContent.trim();
+        
+        links.push({
+            fratello_nome: nome,
+            telefono: telefono,
+            link: `https://wa.me/${telefono.replace(/[^\d+]/g, '')}?text=${encodeURIComponent(customMessage)}`
+        });
+    });
+    
+    if (!confirm(`Vuoi inviare il messaggio personalizzato a ${links.length} fratelli?`)) {
+        return;
+    }
+    
+    console.log(`📱 Invio messaggio personalizzato a ${links.length} fratelli...`);
+    
+    links.forEach((link, index) => {
+        setTimeout(() => {
+            console.log(`📱 Aprendo chat ${index + 1}/${links.length}: ${link.fratello_nome}`);
+            window.open(link.link, '_blank');
+        }, index * 1500);
+    });
+    
+    modal.remove();
+    alert(`✅ Apertura di ${links.length} chat WhatsApp in corso con il tuo messaggio personalizzato!`);
+}
+function testSingleWhatsApp(nome, telefono) {
+    // Prende il messaggio attuale (modificato o originale)
+    const editContainer = document.getElementById('message_edit_container');
+    let customMessage;
+    
+    if (editContainer && editContainer.style.display !== 'none') {
+        customMessage = document.getElementById('whatsapp_message_custom').value;
+    } else {
+        const previewDiv = document.getElementById('message_preview_display');
+        customMessage = previewDiv ? previewDiv.textContent : document.getElementById('whatsapp_message_custom').value;
+    }
+    
+    if (!customMessage.trim()) {
+        alert('❌ Scrivi prima un messaggio!');
+        return;
+    }
+    
+    const link = `https://wa.me/${telefono.replace(/[^\d+]/g, '')}?text=${encodeURIComponent(customMessage)}`;
+    
+    console.log(`📱 Test WhatsApp per ${nome}: ${telefono}`);
+    window.open(link, '_blank');
+}
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const modalTitle = document.getElementById('modalTitle');
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                const isNewTornata = modalTitle.textContent.includes('Nuova');
+                const whatsappSection = document.getElementById('whatsappSection');
+                if (whatsappSection) {
+                    whatsappSection.style.display = isNewTornata ? 'block' : 'none';
+                }
+            }
+        });
+    });
+    observer.observe(modalTitle, { childList: true });
+    
+    ['data', 'discussione', 'location', 'cena', 'costo_cena', 'orario_inizio'].forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('change', function() {
+                const checkbox = document.getElementById('send_whatsapp');
+                if (checkbox && checkbox.checked) {
+                    updateWhatsAppPreview();
+                }
+            });
+        }
+    });
+    
+    const whatsappCheckbox = document.getElementById('send_whatsapp');
+    if (whatsappCheckbox) {
+        whatsappCheckbox.addEventListener('change', toggleWhatsAppPreview);
+    }
+});
+// 🆕 FUNZIONI MODIFICA MESSAGGIO
+function toggleMessageEdit() {
+    const previewDiv = document.getElementById('message_preview_display');
+    const editContainer = document.getElementById('message_edit_container');
+    const editBtn = document.getElementById('editMessageBtn');
+    
+    if (editContainer.style.display === 'none') {
+        previewDiv.style.display = 'none';
+        editContainer.style.display = 'block';
+        editBtn.innerHTML = '<i class="fas fa-eye"></i> 👁️ Anteprima';
+        editBtn.style.background = '#6c757d';
+    } else {
+        previewDiv.style.display = 'block';
+        editContainer.style.display = 'none';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> ✏️ Modifica Messaggio';
+        editBtn.style.background = '#17a2b8';
+    }
+}
+
+function saveMessageEdit() {
+    const textarea = document.getElementById('whatsapp_message_custom');
+    const previewDiv = document.getElementById('message_preview_display');
+    
+    previewDiv.textContent = textarea.value;
+    toggleMessageEdit();
+    
+    console.log('✅ Messaggio aggiornato:', textarea.value);
+}
+
+function cancelMessageEdit() {
+    updateWhatsAppModalPreview();
+    toggleMessageEdit();
+}
+
+</script>
+<script src="/js/error-manager.js"></script>
+   <!-- Sostituisci la riga dello script con: -->
+<script src="/js/admin-tornate.js?v=20250614-FORCE-<?= time() ?>"></script>
+<script>
+// 🎯 SOSTITUISCI TUTTO IL CODICE WHATSAPP CON QUESTO
+// CANCELLA dalle righe 387 fino a 841 e metti questo:
+
+// FUNZIONE PRINCIPALE - RICHIAMA WHATSAPP DATA
+async function openWhatsAppModal(tornataId) {
+    try {
+        console.log(`📱 Apertura modal WhatsApp per tornata ${tornataId}`);
+        
+        const response = await fetch(`/api/tornate/${tornataId}/whatsapp`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Errore HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ Dati WhatsApp ricevuti:', result.data);
+            showWhatsAppModal(result.data);
+        } else {
+            throw new Error(result.message || 'Errore nella preparazione WhatsApp');
+        }
+        
+    } catch (error) {
+        console.error('❌ Errore apertura modal WhatsApp:', error);
+        alert(`Errore nella preparazione dei link WhatsApp: ${error.message}`);
+    }
+}
+
+// MODAL WHATSAPP CHE FUNZIONA
+function showWhatsAppModal(whatsappData) {
+    // Rimuovi modal esistenti
+    document.querySelectorAll('.modal').forEach(modal => {
+        if (modal.classList.contains('whatsapp-modal')) {
+            modal.remove();
+        }
+    });
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal whatsapp-modal';
+    modal.style.display = 'block';
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; padding: 20px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <i class="fab fa-whatsapp"></i>
+                    📱 Invia Annuncio WhatsApp
+                </h2>
+                <span class="close" onclick="closeWhatsAppModal()" style="color: white; opacity: 0.8; position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer;">&times;</span>
+            </div>
+            
+            <div style="padding: 0;">
+                <!-- MESSAGGIO WHATSAPP -->
+                <div style="background: #e5f7e5; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0; color: #155724;">📝 Messaggio WhatsApp</h4>
+                        <button onclick="toggleMessageEdit()" id="editMessageBtn" style="background: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; cursor: pointer;">
+                            <i class="fas fa-edit"></i> ✏️ Modifica Messaggio
+                        </button>
+                    </div>
+                    <small style="color: #155724; opacity: 0.8; display: block; margin-bottom: 15px;">💡 Clicca "Modifica Messaggio" per personalizzare completamente il testo</small>
+                    
+                    <!-- ANTEPRIMA MESSAGGIO -->
+                    <div id="message_preview_display" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #25D366; font-family: system-ui; line-height: 1.4; color: #2c3e50; white-space: pre-line; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 0.95rem; margin-bottom: 10px;">
+${whatsappData.message}
+                    </div>
+                    
+                    <!-- TEXTAREA MODIFICABILE -->
+                    <div id="message_edit_container" style="display: none;">
+                        <textarea id="whatsapp_message_custom" style="width: 100%; min-height: 200px; padding: 15px; border: 1px solid #25D366; border-radius: 8px; font-family: system-ui; line-height: 1.4; resize: vertical;">${whatsappData.message}</textarea>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button onclick="saveMessageEdit()" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                                💾 Salva Modifiche
+                            </button>
+                            <button onclick="cancelMessageEdit()" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                                ❌ Annulla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATISTICHE -->
+                <div style="background: #d4edda; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+                    <h4 style="margin: 0 0 10px 0; color: #155724;">📊 Destinatari</h4>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #155724;">
+                        ${whatsappData.total_fratelli} fratelli riceveranno il messaggio
+                    </div>
+                </div>
+
+                <!-- LISTA FRATELLI -->
+                <details style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 20px;">
+                    <summary style="cursor: pointer; font-weight: bold; padding: 5px;">
+                        📋 Lista Fratelli (${whatsappData.total_fratelli}) - Invio Singolo
+                    </summary>
+                    <div style="max-height: 300px; overflow-y: auto; margin-top: 10px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f8f9fa;">
+                                <tr>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Fratello</th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">Telefono</th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">Invia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${whatsappData.links.map(link => `
+                                    <tr>
+                                        <td style="padding: 8px; border-bottom: 1px solid #eee;">${link.fratello_nome}</td>
+                                        <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee; font-family: monospace; font-size: 0.9rem;">${link.telefono}</td>
+                                        <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee;">
+                                            <button onclick="inviaWhatsAppSingolo('${link.fratello_nome}', '${link.telefono}')" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; padding: 6px 12px; border-radius: 15px; font-size: 11px; cursor: pointer;">
+                                                <i class="fab fa-whatsapp"></i> Invia
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+
+                <!-- PULSANTI AZIONE -->
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button onclick="closeWhatsAppModal()" style="background: #6c757d; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer;">
+                        ❌ Salta per ora
+                    </button>
+                    <button onclick="sendWhatsAppToAll()" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; padding: 12px 25px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                        <i class="fab fa-whatsapp"></i>
+                        📢 INVIA A TUTTI I ${whatsappData.total_fratelli} FRATELLI
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Click fuori dal modal per chiudere
+    modal.onclick = function(event) {
+        if (event.target === modal) {
+            closeWhatsAppModal();
+        }
+    };
+    
+    // Salva i dati globalmente
+    window.currentWhatsAppData = whatsappData;
+}
+
+// FUNZIONI DI SUPPORTO
+function closeWhatsAppModal() {
+    const modal = document.querySelector('.whatsapp-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function toggleMessageEdit() {
+    const previewDiv = document.getElementById('message_preview_display');
+    const editContainer = document.getElementById('message_edit_container');
+    const editBtn = document.getElementById('editMessageBtn');
+    
+    if (editContainer.style.display === 'none') {
+        previewDiv.style.display = 'none';
+        editContainer.style.display = 'block';
+        editBtn.innerHTML = '<i class="fas fa-eye"></i> 👁️ Anteprima';
+        editBtn.style.background = '#6c757d';
+    } else {
+        previewDiv.style.display = 'block';
+        editContainer.style.display = 'none';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> ✏️ Modifica Messaggio';
+        editBtn.style.background = '#17a2b8';
+    }
+}
+
+function saveMessageEdit() {
+    const textarea = document.getElementById('whatsapp_message_custom');
+    const previewDiv = document.getElementById('message_preview_display');
+    
+    previewDiv.textContent = textarea.value;
+    toggleMessageEdit();
+    
+    console.log('✅ Messaggio aggiornato:', textarea.value);
+}
+
+function cancelMessageEdit() {
+    const textarea = document.getElementById('whatsapp_message_custom');
+    const previewDiv = document.getElementById('message_preview_display');
+    
+    textarea.value = previewDiv.textContent;
+    toggleMessageEdit();
+}
+
+// 🔄 CODICE WHATSAPP ORIGINALE - QUELLO CHE FUNZIONAVA
+
+function inviaWhatsAppSingolo(nome, telefono) {
+    const preview = document.getElementById('message_preview_display');
+    const messaggio = preview ? preview.textContent : window.currentWhatsAppData.message;
+    
+    const link = `https://wa.me/${telefono.replace(/[^\d+]/g, '')}?text=${encodeURIComponent(messaggio)}`;
+    
+    console.log(`📱 Invio singolo a ${nome}: ${telefono}`);
+    window.open(link, '_blank');
+}
+
+function sendWhatsAppToAll() {
+    const preview = document.getElementById('message_preview_display');
+    const messaggio = preview ? preview.textContent : window.currentWhatsAppData.message;
+    
+    if (!window.currentWhatsAppData) {
+        alert('❌ Dati WhatsApp non disponibili!');
+        return;
+    }
+    
+    if (!confirm(`Vuoi inviare il messaggio a ${window.currentWhatsAppData.total_fratelli} fratelli?`)) {
+        return;
+    }
+    
+    console.log(`📱 Invio multiplo a ${window.currentWhatsAppData.total_fratelli} fratelli...`);
+    
+    window.currentWhatsAppData.links.forEach((link, index) => {
+        setTimeout(() => {
+            const whatsappLink = `https://wa.me/${link.telefono.replace(/[^\d+]/g, '')}?text=${encodeURIComponent(messaggio)}`;
+            console.log(`📱 Aprendo chat ${index + 1}/${window.currentWhatsAppData.total_fratelli}: ${link.fratello_nome}`);
+            window.open(whatsappLink, '_blank');
+        }, index * 1500);
+    });
+    
+    closeWhatsAppModal();
+    alert(`✅ Apertura di ${window.currentWhatsAppData.total_fratelli} chat WhatsApp in corso!`);
+}
+console.log('🎉 MODAL WHATSAPP COMPLETO INSTALLATO!');
+</script>
+</body>
+</html>

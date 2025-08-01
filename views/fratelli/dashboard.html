@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area Riservata - Loggia Kilwinning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+html {
+    min-height: 100%;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    /* AGGIUNGI QUESTO per mobile: */
+    background-attachment: scroll; /* Invece di fixed */
+}
+        
+        .main-content {
+            flex: 1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .user-details h2 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+        
+        .user-details p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .user-ruolo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-admin { background: #6f42c1; color: white; }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-sublabel {
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .tornata-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border: 2px solid #f1f3f4;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+        
+        .tornata-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .tornata-info {
+            flex: 1;
+        }
+        
+        .tornata-data {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 6px;
+            font-size: 16px;
+        }
+        
+        .tornata-titolo {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+        
+        .tornata-dettagli {
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .tornata-badge {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .tornata-badge.ordinaria { background: #cce5ff; color: #0056b3; }
+        .tornata-badge.cerimonia { background: #fff3cd; color: #856404; }
+        .tornata-badge.straordinaria { background: #f8d7da; color: #721c24; }
+        
+        .presenza-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            min-width: 140px;
+        }
+        
+        .presenza-status {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .presenza-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 90px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .presenza-btn.presente {
+            background: #28a745;
+            color: white;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        }
+        
+        .presenza-btn.presente:hover:not(.confermato) {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+        
+        .presenza-btn.assente {
+            background: #dc3545;
+            color: white;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        }
+        
+        .presenza-btn.assente:hover:not(.confermato) {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+        
+        .presenza-btn.pending {
+            background: #ffc107;
+            color: #212529;
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+        }
+        
+        .presenza-btn.confermato {
+            opacity: 0.8;
+            cursor: default;
+            position: relative;
+        }
+        
+        .presenza-btn.confermato::after {
+            content: '✓';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+        }
+        
+        .presenza-status-text {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-style: italic;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .no-data-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* FOOTER STYLES MIGLIORATI */
+        .footer {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4c93 100%);
+            color: white;
+            padding: 40px 0 25px 0;
+            margin-top: 30px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 35px;
+            margin-bottom: 30px;
+        }
+        
+        .footer-section h4 {
+            color: #fff;
+            margin-bottom: 18px;
+            font-size: 17px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            padding-bottom: 10px;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .footer-section li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-section a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 0;
+            border-radius: 4px;
+        }
+        
+        .footer-section a:hover {
+            color: #fff;
+            transform: translateX(8px);
+            background: rgba(255,255,255,0.1);
+            padding-left: 10px;
+        }
+        
+        .footer-section span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 0;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.15);
+            padding-top: 25px;
+            text-align: center;
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .footer-bottom small {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .footer {
+                padding: 30px 0 20px 0;
+            }
+            
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+            
+            .footer-section h4 {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+            
+            .footer-section a:hover {
+                transform: none;
+                padding-left: 5px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tornata-item {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .presenza-controls {
+                width: 100%;
+            }
+            
+            .presenza-status {
+                justify-content: center;
+            }
+            
+            .tornata-dettagli {
+                justify-content: center;
+            }
+
+            .footer {
+                padding: 25px 0 15px 0;
+            }
+            
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">?</div>
+                    <div class="user-details">
+                        <h2 id="userName">Caricamento...</h2>
+                        <p id="userInfo">Verificando accesso...</p>
+                        <span class="user-ruolo" id="userRuolo">Caricamento ruolo...</span>
+                    </div>
+                </div>
+                <div class="header-buttons" id="headerButtons">
+                    <a href="/fratelli/tornate" class="btn btn-primary">📅 Tornate</a>
+                    <a href="/fratelli/presenze" class="btn btn-success">📊 Presenze</a>
+                    <a href="/fratelli/tavole" class="btn btn-info">📚 Tavole</a>
+                    <button class="btn btn-danger" onclick="logout()">🚪 Esci</button>
+                </div>
+            </div>
+
+            <!-- Statistiche Personali -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🏛️</div>
+                    <div class="stat-number" id="statRuolo">-</div>
+                    <div class="stat-label">Ruolo in Loggia</div>
+                    <div class="stat-sublabel">Carica istituzionale</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-number" id="statPresenze">-%</div>
+                    <div class="stat-label">Presenze 2025</div>
+                    <div class="stat-sublabel" id="statPresenzeDettaglio">- tornate su -</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-number" id="statTornate">-</div>
+                    <div class="stat-label">Tornate Partecipate</div>
+                    <div class="stat-sublabel">Anno corrente</div>
+                </div>
+            </div>
+
+            <!-- Alert Area -->
+            <div id="alertContainer"></div>
+
+            <!-- Prossime Tornate -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📅 Prossime Tornate</h3>
+                    <a href="/fratelli/tornate" class="btn btn-primary" style="font-size: 12px; padding: 6px 12px;">Vedi Tutte</a>
+                </div>
+                
+                <div id="tornateContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Caricamento prossime tornate...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informazioni Loggia -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">ℹ️ Informazioni Loggia</h3>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div>
+                        <h4 style="color: #333; margin-bottom: 10px;">📍 Sede della Loggia</h4>
+                        <p style="color: #666; line-height: 1.6;">
+                            R∴L∴ Kilwinning<br>
+                            📍 Via XX Settembre, 22 - Tolfa (RM)<br>
+                            📧 segreteria@loggiakilwinning.com
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: #333; margin-bottom: 10px;">⏰ Calendario Tornate</h4>
+                        <p style="color: #666; line-height: 1.6;">
+                            🗓️ Secondo martedì del mese<br>
+                            🗓️ Quarto giovedì del mese<br>
+                            🕰️ Inizio Lavori: ore 19:30<br>
+                            📧 Conferme: entro 5 giorni dalla tornata
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: #333; margin-bottom: 10px;">👥 Loggia Kilwinning</h4>
+                        <p style="color: #666; line-height: 1.6;">
+                            📊 22 fratelli attivi<br>
+                            🎯 15 cariche istituzionali<br>
+                            📈 86% presenza media 2025<br>
+                            🏛️ Oriente di Tolfa (RM)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- FOOTER CORRETTO -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-grid">
+                <!-- Sito Principale -->
+                <div class="footer-section">
+                    <h4>🌐 Sito Ufficiale</h4>
+                    <ul>
+                        <li><a href="https://loggiakilwinning.com" target="_blank">🏛️ Loggia Kilwinning</a></li>
+                        <li><a href="https://finanze.loggiakilwinning.com" target="_blank">💰 Area Finanze</a></li>
+                        <li><a href="https://loggiakilwinning.com/category/tavole/" target="_blank">📚 Tavole Architettoniche</a></li>
+                        <li><a href="https://loggiakilwinning.com/category/approfondimenti/" target="_blank">📖 Approfondimenti</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Sistema Gestionale -->
+                <div class="footer-section">
+                    <h4>⚙️ Sistema Gestionale</h4>
+                    <ul>
+                        <li><a href="/fratelli/tornate">📅 Calendario Tornate</a></li>
+                        <li><a href="/fratelli/presenze">📊 Le Mie Presenze</a></li>
+                        <li><a href="/fratelli/tavole">📚 Archivio Tavole</a></li>
+                        <li><a href="/fratelli/riepilogo-fratelli">👥 Riepilogo Fratelli</a></li>
+                        <li id="adminFooterLink" style="display: none;"><a href="/admin/dashboard">🔧 Amministrazione</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Info e Supporto -->
+                <div class="footer-section">
+                    <h4>ℹ️ Informazioni</h4>
+                    <ul>
+                        <li><a href="mailto:segreteria@loggiakilwinning.com">📧 Supporto Tecnico</a></li>
+                        <li><a href="#" onclick="logout()">🚪 Logout Rapido</a></li>
+                        <li><span style="color: rgba(255,255,255,0.6); font-size: 13px;">💾 Sistema v2.1</span></li>
+                        <li><span id="lastUpdate" style="color: rgba(255,255,255,0.6); font-size: 13px;">⏱️ Aggiornato: --:--</span></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p>© 2025 R∴L∴ Kilwinning - Oriente di Tolfa (RM)<br>
+                <small>Sistema di gestione presenze e tornate</small></p>
+            </div>
+        </div>
+    </footer>
+<script src="/js/error-manager.js"></script>
+    <script>
+        // Dati fratello autenticato
+        let fratelliAuth = null;
+
+        // ID dei fratelli che hanno accesso admin
+        const ADMIN_USERS = [16, 12]; // Paolo Giulio Gazzano (16), Emiliano Menicucci (12)
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadFratelliData();
+            updateLastUpdate();
+        });
+
+        // Aggiorna timestamp ultimo aggiornamento
+        function updateLastUpdate() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('lastUpdate').innerHTML = `⏱️ Aggiornato: ${timeString}`;
+        }
+
+        // Verifica autenticazione
+        function checkAuth() {
+            const authData = sessionStorage.getItem('fratelliAuth');
+            
+            if (!authData) {
+                window.location.href = '/fratelli/login';
+                return;
+            }
+            
+            try {
+                fratelliAuth = JSON.parse(authData);
+                setupUserInterface();
+            } catch (error) {
+                console.error('Errore parsing auth data:', error);
+                logout();
+            }
+        }
+
+        // Setup interfaccia utente
+        function setupUserInterface() {
+            if (!fratelliAuth) return;
+
+            // Aggiorna header
+            document.getElementById('userAvatar').textContent = fratelliAuth.nome.charAt(0).toUpperCase();
+            document.getElementById('userName').textContent = fratelliAuth.nome;
+            
+            let userInfoText = `${fratelliAuth.grado}`;
+            if (fratelliAuth.ruolo) {
+                userInfoText += ` • Loggia Kilwinning`;
+            }
+            document.getElementById('userInfo').textContent = userInfoText;
+            
+            // Mostra ruolo correttamente
+            const ruoloText = fratelliAuth.ruolo || 'Fratello di Loggia';
+            document.getElementById('userRuolo').textContent = ruoloText;
+            document.getElementById('statRuolo').textContent = ruoloText;
+
+            // Setup accesso admin
+            setupAdminAccess();
+
+            // Mostra benvenuto
+            showAlert(`🏛️ Benvenuto, Fr∴ ${fratelliAuth.nome}!`, 'success');
+        }
+
+        // Setup accesso admin
+        function setupAdminAccess() {
+            const userId = parseInt(fratelliAuth.id);
+            
+            if (ADMIN_USERS.includes(userId)) {
+                // Mostra link admin nel footer
+                document.getElementById('adminFooterLink').style.display = 'block';
+                
+                createAdminSession().then(() => {
+                    const headerButtons = document.getElementById('headerButtons');
+                    const logoutBtn = headerButtons.querySelector('.btn-danger');
+                    
+                    let adminBtn = headerButtons.querySelector('.btn-admin');
+                    if (adminBtn) return;
+                    
+                    adminBtn = document.createElement('button');
+                    adminBtn.className = 'btn btn-admin';
+                    adminBtn.innerHTML = '🔧 Amministrazione';
+                    
+                    adminBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        accessoAdmin();
+                    });
+                    
+                    headerButtons.insertBefore(adminBtn, logoutBtn);
+                });
+            }
+        }
+
+        // Crea sessione admin nel server
+        async function createAdminSession() {
+            try {
+                const response = await fetch('/api/fratelli/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: fratelliAuth.nome })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Sessione admin creata:', result.admin_access);
+                }
+            } catch (error) {
+                console.error('❌ Errore nella creazione sessione admin:', error);
+            }
+        }
+
+        // Accesso admin
+        function accessoAdmin() {
+            const userId = parseInt(fratelliAuth.id);
+            if (!ADMIN_USERS.includes(userId)) {
+                alert('Non hai i privilegi per accedere all\'area amministrativa');
+                return;
+            }
+            
+            window.location.href = '/admin/dashboard';
+        }
+
+        // Carica dati fratello
+        async function loadFratelliData() {
+            if (!fratelliAuth) return;
+
+            try {
+                await Promise.all([
+                    loadStatistiche(),
+                    loadProssimeTornate()
+                ]);
+                
+            } catch (error) {
+                console.error('Errore caricamento dati:', error);
+                showAlert('Errore nel caricamento dei dati', 'warning');
+            }
+        }
+
+ // Carica statistiche personali
+async function loadStatistiche() {
+    try {
+        const response = await fetch(`/api/fratelli/${fratelliAuth.id}/statistiche?tipo_loggia=nostra&anno=2025`);
+        if (response.ok) {
+            const stats = await response.json();
+            
+            // Assicurati che i campi esistano
+            const percentuale = stats.percentuale || stats.percentuale_presenze || 0;
+            const presenze = stats.presenzeCount || stats.presenze_totali || 0;
+            const totali = stats.totaliTornate || stats.tornate_totali || 0;
+            
+            document.getElementById('statPresenze').textContent = Math.round(percentuale) + '%';
+            document.getElementById('statPresenzeDettaglio').textContent = `${presenze} tornate su ${totali}`;
+            document.getElementById('statTornate').textContent = presenze;
+            
+            console.log('✅ Statistiche caricate:', { percentuale, presenze, totali });
+            
+        } else {
+            console.error('❌ API statistiche ha restituito errore:', response.status);
+            throw new Error('API statistiche non disponibile');
+        }
+    } catch (error) {
+        console.error('❌ Errore caricamento statistiche:', error);
+        
+        // Prova API di fallback
+        try {
+            const fallbackResponse = await fetch(`/api/fratelli/${fratelliAuth.id}/presenze?anno=2025`);
+            if (fallbackResponse.ok) {
+                const presenzeData = await fallbackResponse.json();
+                const presenze = presenzeData.filter(p => p.presente === 1).length;
+                const totali = presenzeData.length;
+                const percentuale = totali > 0 ? Math.round((presenze / totali) * 100) : 0;
+                
+                document.getElementById('statPresenze').textContent = percentuale + '%';
+                document.getElementById('statPresenzeDettaglio').textContent = `${presenze} tornate su ${totali}`;
+                document.getElementById('statTornate').textContent = presenze;
+                
+                console.log('✅ Statistiche da fallback:', { percentuale, presenze, totali });
+            } else {
+                throw new Error('Anche fallback fallito');
+            }
+        } catch (fallbackError) {
+            console.error('❌ Anche fallback fallito:', fallbackError);
+            // Dati di emergenza
+            document.getElementById('statPresenze').textContent = '0%';
+            document.getElementById('statPresenzeDettaglio').textContent = '0 tornate su 0';
+            document.getElementById('statTornate').textContent = '0';
+        }
+    }
+}
+
+        // Carica prossime tornate DAL DATABASE
+        async function loadProssimeTornate() {
+            try {
+              const response = await fetch(`/api/tornate/prossime?fratello_id=${fratelliAuth.id}`);
+                
+                if (response.ok) {
+                    const tornateAPI = await response.json();
+                    
+                   // 🔧 FIX FILTRO DATE - SOSTITUISCI NELLA DASHBOARD
+
+// Filtra solo le future e prendi le prime 2
+const oggi = new Date();
+oggi.setHours(0, 0, 0, 0); // Reset ore per confronto corretto
+
+console.log('📅 DEBUG: Data di oggi:', oggi.toISOString().split('T')[0]);
+
+const tornateFuture = tornateAPI.filter(t => {
+    const dataTornata = new Date(t.data + 'T00:00:00'); // Forza timezone locale
+    dataTornata.setHours(0, 0, 0, 0);
+    
+    const isFutura = dataTornata > oggi; // Cambiato da >= a > per escludere oggi
+   
+console.log(`📋 Tornata ${t.id}: ${t.data} - Futura: ${isFutura}`);
+    
+    return isFutura; // ✅ SOLO QUESTO FILTRO!
+}).slice(0, 3); // ✅ AUMENTA A 3 TORNATE
+                    if (tornateFuture && tornateFuture.length > 0) {
+                        renderTornate(tornateFuture);
+                    } else {
+                        renderNoTornate();
+                    }
+                } else {
+                    await loadTornateFallback();
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento tornate:', error);
+                await loadTornateFallback();
+            }
+        }
+
+        // Fallback con API fratelli
+        async function loadTornateFallback() {
+            try {
+                const response = await fetch(`/api/fratelli/${fratelliAuth.id}/tornate?future=true&limit=2`);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const tornate = result.data && result.data.tornate ? result.data.tornate : [];
+                    
+                    if (tornate.length > 0) {
+                        renderTornate(tornate);
+                    } else {
+                        renderNoTornate();
+                    }
+                } else {
+                    renderNoTornate();
+                }
+                
+            } catch (error) {
+                console.error('❌ Anche il fallback è fallito:', error);
+                renderNoTornate();
+            }
+        }
+
+        // Renderizza le tornate reali
+        function renderTornate(tornate) {
+            const container = document.getElementById('tornateContainer');
+            
+            if (!container) {
+                console.error('❌ Container tornateContainer non trovato!');
+                return;
+            }
+            
+            const tornateHTML = tornate.map(tornata => createTornataHTML(tornata)).join('');
+            container.innerHTML = tornateHTML;
+            
+            console.log(`✅ Renderizzate ${tornate.length} prossime tornate dal database`);
+        }
+
+        // Gestisce il caso "nessuna tornata"
+        function renderNoTornate() {
+            const container = document.getElementById('tornateContainer');
+            
+            container.innerHTML = `
+                <div class="no-data">
+                    <div class="no-data-icon">📅</div>
+                    <strong>Non ci sono in programma altre Tornate</strong>
+                    <p style="margin-top: 10px; font-size: 14px;">
+                        Controlla il calendario ufficiale o contatta il Segretario per informazioni.
+                    </p>
+                </div>
+            `;
+            
+            console.log('📅 Nessuna tornata futura trovata nel database');
+        }
+
+
+// 🎪 MODAL PRESENZE TORNATA - VERSIONE CORRETTA
+// 1️⃣ FUNZIONE createTornataHTML con gestione apostrofi
+
+function createTornataHTML(tornata) {
+    const dataFormatted = formatDateItalian(tornata.data);
+    const orario = tornata.orario || tornata.orario_inizio || '19:30:00';
+    const orarioFormatted = orario.substring(0,5);
+    const luogo = tornata.luogo || tornata.location || 'Tolfa';
+    const titolo = tornata.titolo || tornata.discussione || 'Tornata Ordinaria';
+    const tipo = tornata.tipo || 'ordinaria';
+    
+    // ✅ AGGIUNGI INDICATORE TIPO LOGGIA
+    const tipoLoggia = tornata.tipo_loggia || 'nostra';
+    const loggiaIndicator = tipoLoggia === 'altra' ? 
+        '<span style="background: #17a2b8; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 10px;">📍 VISITA</span>' : 
+        '<span style="background: #007bff; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 10px;">🏛️ NOSTRA</span>';
+    
+    // Verifica se il fratello ha già confermato la presenza
+    const presenzaConfermata = tornata.presenza_confermata;
+    const statoPresenza = presenzaConfermata === 1 ? 'confermato-presente' : 
+                         presenzaConfermata === 0 ? 'confermato-assente' : 'non-confermato';
+    
+    // 🔧 FIX APOSTROFI: Escape delle stringhe per evitare errori JavaScript
+    const titoloSafe = titolo.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    const dataSafe = dataFormatted.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    
+    return `
+        <div class="tornata-item" data-tornata-id="${tornata.id}">
+            <!-- ✅ CLICK CORRETTO CON GESTIONE APOSTROFI -->
+            <div class="tornata-info" onclick="apriModalPresenze(${tornata.id}, '${titoloSafe}', '${dataSafe}')" style="cursor: pointer;">
+                <div class="tornata-data">📅 ${dataFormatted}</div>
+                <div class="tornata-titolo">${titolo}</div>
+                <div class="tornata-dettagli">
+                    <span>🕐 ${orarioFormatted}</span>
+                    <span>📍 ${luogo}</span>
+                    <span class="tornata-badge ${tipo}">${tipo.toUpperCase()}</span>
+                    ${loggiaIndicator}
+                    <span style="background: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">👥 VEDI PRESENZE</span>
+                </div>
+            </div>
+            <div class="presenza-controls">
+                <div class="presenza-status">
+                    <button class="presenza-btn presente ${statoPresenza === 'confermato-presente' ? 'confermato' : ''}" 
+                            onclick="confermaPresenza('${tornata.id}', true)"
+                            ${statoPresenza === 'confermato-presente' ? 'disabled' : ''}>
+                        ✅ PRESENTE
+                    </button>
+                    <button class="presenza-btn assente ${statoPresenza === 'confermato-assente' ? 'confermato' : ''}" 
+                            onclick="confermaPresenza('${tornata.id}', false)"
+                            ${statoPresenza === 'confermato-assente' ? 'disabled' : ''}>
+                        ❌ ASSENTE
+                    </button>
+                </div>
+                ${statoPresenza !== 'non-confermato' ? 
+                    `<div class="presenza-status-text">
+                        ${statoPresenza === 'confermato-presente' ? '✅ Presenza confermata' : '❌ Assenza registrata'}
+                    </div>` : ''
+                }
+            </div>
+        </div>
+    `;
+}
+
+// 2️⃣ FUNZIONE PER APRIRE IL MODAL
+
+async function apriModalPresenze(tornataId, titoloTornata, dataTornata) {
+    console.log(`📋 Apertura modal presenze per tornata ${tornataId}`);
+    
+    try {
+        // Mostra loading
+        const modalHTML = `
+            <div id="modalPresenzeTornata" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+                <div style="background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 2px solid #f1f3f4;">
+                        <h2 style="margin: 0; color: #333;">📋 PRESENZE TORNATA</h2>
+                        <span onclick="chiudiModalPresenze()" style="font-size: 2rem; cursor: pointer; color: #999; line-height: 1;">&times;</span>
+                    </div>
+                    <div id="modalBody" style="padding: 20px;">
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px;"></div>
+                            <p>Caricamento presenze...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Chiamata API per ottenere presenze
+        const response = await fetch(`/api/presenze/tornata/${tornataId}`);
+        
+        if (!response.ok) {
+            throw new Error('Errore nel caricamento presenze');
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Errore dal server');
+        }
+        
+        const { presenze, fratelli } = result.data;
+        
+        // Organizza i dati
+        const presenti = [];
+        const assenti = [];
+        const nonRisposto = [];
+        
+        // Crea mappa delle presenze
+        const presenzeMap = {};
+        presenze.forEach(p => {
+            presenzeMap[p.fratello_id] = p.presente;
+        });
+        
+        // Classifica tutti i fratelli
+        fratelli.forEach(fratello => {
+            if (!fratello.attivo) return; // Salta fratelli non attivi
+            
+            const statoPresenza = presenzeMap[fratello.id];
+            
+            if (statoPresenza === 1) {
+                presenti.push(fratello);
+            } else if (statoPresenza === 0) {
+                assenti.push(fratello);
+            } else {
+                nonRisposto.push(fratello);
+            }
+        });
+        
+        // Calcola percentuale
+        const totaleAttivi = presenti.length + assenti.length + nonRisposto.length;
+        const percentuale = totaleAttivi > 0 ? Math.round((presenti.length / totaleAttivi) * 100) : 0;
+        
+        // Genera HTML del modal
+        const modalContent = generaContentModalPresenze(
+            titoloTornata, 
+            dataTornata, 
+            presenti, 
+            assenti, 
+            nonRisposto, 
+            percentuale
+        );
+        
+        // Aggiorna il modal
+        document.getElementById('modalBody').innerHTML = modalContent;
+        
+    } catch (error) {
+        console.error('❌ Errore caricamento presenze:', error);
+        
+        const errorHTML = `
+            <div style="text-align: center; padding: 40px; color: #dc3545;">
+                <h3>❌ Errore</h3>
+                <p>Impossibile caricare le presenze: ${error.message}</p>
+                <button onclick="chiudiModalPresenze()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px;">
+                    Chiudi
+                </button>
+            </div>
+        `;
+        
+        const modalBody = document.getElementById('modalBody');
+        if (modalBody) {
+            modalBody.innerHTML = errorHTML;
+        }
+    }
+}
+
+// 3️⃣ FUNZIONE PER GENERARE IL CONTENUTO
+
+function generaContentModalPresenze(titolo, data, presenti, assenti, nonRisposto, percentuale) {
+    const formatFratello = (fratello) => {
+        const ruolo = fratello.ruolo || 'Fratello';
+        const grado = fratello.grado || '';
+        return `<li style="padding: 8px 0; border-bottom: 1px solid #f1f3f4;">
+                    <strong>${fratello.nome}</strong> - ${ruolo}
+                    ${grado ? `<span style="color: #666; font-size: 0.9em;"> (${grado})</span>` : ''}
+                </li>`;
+    };
+    
+    return `
+        <div style="margin-bottom: 20px; text-align: center; background: #f8f9fa; padding: 15px; border-radius: 10px;">
+            <h3 style="margin: 0 0 5px 0; color: #333;">${titolo}</h3>
+            <p style="margin: 0; color: #666; font-size: 1.1rem;">${data}</p>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+            
+            <!-- PRESENTI -->
+            <div style="background: linear-gradient(135deg, #d4edda, #c3e6cb); border-radius: 12px; padding: 15px;">
+                <h4 style="margin: 0 0 15px 0; color: #155724; display: flex; align-items: center; gap: 8px;">
+                    ✅ PRESENTI (${presenti.length})
+                </h4>
+                <ul style="list-style: none; margin: 0; padding: 0; max-height: 200px; overflow-y: auto;">
+                    ${presenti.length > 0 ? presenti.map(formatFratello).join('') : '<li style="color: #6c757d; font-style: italic;">Nessun presente</li>'}
+                </ul>
+            </div>
+            
+            <!-- ASSENTI -->
+            <div style="background: linear-gradient(135deg, #f8d7da, #f5c6cb); border-radius: 12px; padding: 15px;">
+                <h4 style="margin: 0 0 15px 0; color: #721c24; display: flex; align-items: center; gap: 8px;">
+                    ❌ ASSENTI (${assenti.length})
+                </h4>
+                <ul style="list-style: none; margin: 0; padding: 0; max-height: 200px; overflow-y: auto;">
+                    ${assenti.length > 0 ? assenti.map(formatFratello).join('') : '<li style="color: #6c757d; font-style: italic;">Nessun assente</li>'}
+                </ul>
+            </div>
+            
+            <!-- NON HANNO RISPOSTO -->
+            <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); border-radius: 12px; padding: 15px;">
+                <h4 style="margin: 0 0 15px 0; color: #856404; display: flex; align-items: center; gap: 8px;">
+                    ⏳ NON HANNO RISPOSTO (${nonRisposto.length})
+                </h4>
+                <ul style="list-style: none; margin: 0; padding: 0; max-height: 200px; overflow-y: auto;">
+                    ${nonRisposto.length > 0 ? nonRisposto.map(formatFratello).join('') : '<li style="color: #6c757d; font-style: italic;">Tutti hanno risposto</li>'}
+                </ul>
+            </div>
+        </div>
+        
+        <!-- RIEPILOGO -->
+        <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-radius: 12px; padding: 20px; text-align: center;">
+            <h3 style="margin: 0 0 10px 0; color: #1565c0;">📊 RIEPILOGO</h3>
+            <p style="margin: 0; font-size: 1.2rem; color: #333;">
+                <strong>${presenti.length} presenti</strong> su <strong>${presenti.length + assenti.length + nonRisposto.length} fratelli attivi</strong>
+            </p>
+            <p style="margin: 5px 0 0 0; font-size: 1.5rem; font-weight: bold; color: ${percentuale >= 70 ? '#28a745' : percentuale >= 50 ? '#ffc107' : '#dc3545'};">
+                ${percentuale}% di partecipazione
+            </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="chiudiModalPresenze()" style="background: #6c757d; color: white; padding: 12px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+                Chiudi
+            </button>
+        </div>
+    `;
+}
+
+// 4️⃣ FUNZIONE PER CHIUDERE IL MODAL
+
+function chiudiModalPresenze() {
+    const modal = document.getElementById('modalPresenzeTornata');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// 5️⃣ AGGIUNGI EVENTO CLICK FUORI DAL MODAL:
+
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('modalPresenzeTornata');
+    if (modal && event.target === modal) {
+        chiudiModalPresenze();
+    }
+});
+
+// 6️⃣ AGGIUNGI GESTIONE ESC:
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        chiudiModalPresenze();
+    }
+});
+        // Conferma presenza per una tornata
+        async function confermaPresenza(tornataId, presente) {
+            try {
+                console.log(`📝 Confermando ${presente ? 'presenza' : 'assenza'} per tornata ${tornataId}`);
+                
+                // Mostra loading sui bottoni
+                const tornataElement = document.querySelector(`[data-tornata-id="${tornataId}"]`);
+                const buttons = tornataElement.querySelectorAll('.presenza-btn');
+                
+                buttons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.6';
+                    if (btn.classList.contains(presente ? 'presente' : 'assente')) {
+                        btn.innerHTML = '⏳ Salvando...';
+                    }
+                });
+                
+                // Chiamata API per salvare la presenza
+                const response = await fetch('/api/presenze/conferma', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fratelloId: fratelliAuth.id,
+                        tornataId: tornataId,
+                        presente: presente,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('💾 Risposta server:', result);
+                    
+                    // Aggiorna l'interfaccia con successo
+                    updatePresenceUI(tornataId, presente);
+                    
+                    // Mostra messaggio di successo
+                    const messaggio = presente ? 
+                        `✅ Presenza confermata per la tornata!` : 
+                        `❌ Assenza registrata per la tornata.`;
+                    
+                    showAlert(messaggio, presente ? 'success' : 'warning');
+                    
+                    // Ricarica le statistiche per aggiornare i conteggi
+                    setTimeout(() => {
+                        loadStatistiche();
+                        updateLastUpdate(); // Aggiorna timestamp
+                    }, 500);
+                    
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Errore nel salvataggio');
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore conferma presenza:', error);
+                
+                // Ripristina i bottoni in caso di errore
+                const tornataElement = document.querySelector(`[data-tornata-id="${tornataId}"]`);
+                const buttons = tornataElement.querySelectorAll('.presenza-btn');
+                
+                buttons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                });
+                
+                // Ripristina il testo dei bottoni
+                const presenteBtn = tornataElement.querySelector('.presenza-btn.presente');
+                const assenteBtn = tornataElement.querySelector('.presenza-btn.assente');
+                presenteBtn.innerHTML = '✅ PRESENTE';
+                assenteBtn.innerHTML = '❌ ASSENTE';
+                
+                showAlert('❌ Errore nel salvataggio della presenza. Riprova.', 'error');
+            }
+        }
+
+        // Aggiorna UI dopo conferma presenza
+        function updatePresenceUI(tornataId, presente) {
+            const tornataElement = document.querySelector(`[data-tornata-id="${tornataId}"]`);
+            if (!tornataElement) return;
+            
+            const presenteBtn = tornataElement.querySelector('.presenza-btn.presente');
+            const assenteBtn = tornataElement.querySelector('.presenza-btn.assente');
+            const statusContainer = tornataElement.querySelector('.presenza-controls');
+            
+            // Rimuovi classi precedenti
+            presenteBtn.classList.remove('confermato');
+            assenteBtn.classList.remove('confermato');
+            presenteBtn.disabled = false;
+            assenteBtn.disabled = false;
+            
+            // Applica nuovo stato
+            if (presente) {
+                presenteBtn.classList.add('confermato');
+                presenteBtn.disabled = true;
+                presenteBtn.innerHTML = '✅ PRESENTE';
+                assenteBtn.innerHTML = '❌ ASSENTE';
+            } else {
+                assenteBtn.classList.add('confermato');
+                assenteBtn.disabled = true;
+                assenteBtn.innerHTML = '❌ ASSENTE';
+                presenteBtn.innerHTML = '✅ PRESENTE';
+            }
+            
+            // Aggiorna/aggiungi il testo di stato
+            let statusText = statusContainer.querySelector('.presenza-status-text');
+            if (!statusText) {
+                statusText = document.createElement('div');
+                statusText.className = 'presenza-status-text';
+                statusContainer.appendChild(statusText);
+            }
+            
+            statusText.innerHTML = presente ? 
+                '✅ Presenza confermata' : 
+                '❌ Assenza registrata';
+            
+            // Reset opacità
+            presenteBtn.style.opacity = '1';
+            assenteBtn.style.opacity = '1';
+        }
+
+        // Formatta data italiana
+        function formatDateItalian(dateString) {
+            try {
+                // Estrai solo YYYY-MM-DD
+                const dateOnly = dateString.substring(0, 10);
+                const [year, month, day] = dateOnly.split('-');
+                
+                const mesi = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
+                             'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+                
+                const giorni = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+                
+                // Crea data con anno, mese-1, giorno (locale)
+                const localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                
+                return `${giorni[localDate.getDay()]} ${parseInt(day)} ${mesi[parseInt(month) - 1]} ${year}`;
+                
+            } catch (error) {
+                console.error('Errore formattazione:', error);
+                return dateString;
+            }
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Sei sicuro di voler uscire dall\'area riservata?')) {
+                sessionStorage.removeItem('fratelliAuth');
+                window.location.href = '/';
+            }
+        }
+
+        // Mostra alert con stili migliorati
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            // Icone per i diversi tipi di alert
+            const icons = {
+                success: '✅',
+                warning: '⚠️',
+                error: '❌',
+                info: 'ℹ️'
+            };
+            
+            const icon = icons[type] || 'ℹ️';
+            
+            alertContainer.innerHTML = `
+                <div id="${alertId}" class="alert alert-${type}" style="transform: translateY(-10px); opacity: 0;">
+                    ${icon} ${message}
+                </div>
+            `;
+            
+            // Animazione di entrata
+            setTimeout(() => {
+                const alertElement = document.getElementById(alertId);
+                if (alertElement) {
+                    alertElement.style.transform = 'translateY(0)';
+                    alertElement.style.opacity = '1';
+                    alertElement.style.transition = 'all 0.3s ease';
+                }
+            }, 10);
+            
+            // Rimuovi alert dopo 5 secondi
+            setTimeout(() => {
+                const alertElement = document.getElementById(alertId);
+                if (alertElement) {
+                    alertElement.style.opacity = '0';
+                    alertElement.style.transform = 'translateY(-10px)';
+                    setTimeout(() => alertElement.remove(), 300);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 Gestione Gradi Fratelli - Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-title h1 {
+            color: #2d3748;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header-title p {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .filters-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .table-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-title {
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .fratello-name {
+            font-weight: 600;
+            color: #2d3748;
+            min-width: 150px;
+        }
+
+        .grado-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .grado-maestro {
+            background: #68d391;
+            color: #22543d;
+        }
+
+        .grado-compagno {
+            background: #fbb6ce;
+            color: #97266d;
+        }
+
+        .grado-apprendista {
+            background: #90cdf4;
+            color: #2a4365;
+        }
+
+        .date-input {
+            width: 110px;
+            padding: 6px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .date-input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .date-input.filled {
+            background: #f0fff4;
+            border-color: #68d391;
+        }
+
+        .save-btn {
+            padding: 4px 8px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .save-btn:hover {
+            background: #38a169;
+            transform: scale(1.05);
+        }
+
+        .save-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            color: #22543d;
+            border: 1px solid #68d391;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1200px) {
+            .date-input {
+                width: 100px;
+                font-size: 0.75rem;
+            }
+            
+            th, td {
+                padding: 8px 6px;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filters-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-input {
+                width: 90px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <a href="/admin/dashboard" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Dashboard Admin
+                </a>
+                <div class="header-title">
+                    <h1><i class="fas fa-crown"></i> Gestione Gradi Fratelli</h1>
+                    <p>Amministrazione date iniziazioni e avanzamenti massonici</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtri -->
+        <div class="filters-card">
+            <div class="filters-content">
+                <div class="filter-group">
+                    <label for="filtroGrado">Filtra per Grado</label>
+                    <select id="filtroGrado">
+                        <option value="">Tutti i gradi</option>
+                        <option value="Maestro">Maestri</option>
+                        <option value="Compagno">Compagni</option>
+                        <option value="Apprendista">Apprendisti</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filtroCompleto">Mostra solo</label>
+                    <select id="filtroCompleto">
+                        <option value="">Tutti</option>
+                        <option value="completi">Con date complete</option>
+                        <option value="incompleti">Con date mancanti</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="ricercaNome">Cerca Fratello</label>
+                    <input type="text" id="ricercaNome" placeholder="Nome fratello...">
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary" onclick="applicaFiltri()">
+                        <i class="fas fa-filter"></i>
+                        Applica Filtri
+                    </button>
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-success" onclick="salvaTutti()">
+                        <i class="fas fa-save"></i>
+                        Salva Tutto
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiche -->
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="stat-number" id="totalFratelli">-</div>
+                <div class="stat-label">Fratelli Totali</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="fratelliCompleti">-</div>
+                <div class="stat-label">Date Complete</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="fratelliIncompleti">-</div>
+                <div class="stat-label">Date Mancanti</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="modificheNonSalvate">0</div>
+                <div class="stat-label">Modifiche da Salvare</div>
+            </div>
+        </div>
+
+        <!-- Alert Area -->
+        <div id="alertContainer"></div>
+
+        <!-- Tabella Gradi -->
+        <div class="table-card">
+            <div class="table-header">
+                <h3 class="table-title">👑 Gestione Date Gradi Massonici</h3>
+            </div>
+            
+            <div id="loadingGradi" class="loading">
+                <div class="loading-spinner"></div>
+                Caricamento dati fratelli...
+            </div>
+            
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table id="gradiTable">
+                    <thead>
+                        <tr>
+                            <th>Fratello</th>
+                            <th>Grado Attuale</th>
+                            <th>Iniziazione<br><small>Apprendista</small></th>
+                            <th>Passaggio<br><small>Compagno</small></th>
+                            <th>Elevazione<br><small>Maestro</small></th>
+                            <th>Ex Venerabile</th>
+                            <th>Eccellentissimo<br><small>Maestro</small></th>
+                            <th>Maestro<br><small>Arco Reale</small></th>
+                            <th>Royal Ark<br><small>Mariner</small></th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gradiTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<script src="/js/error-manager.js"></script>
+    <script>
+        let fratelliData = [];
+        let modificheNonSalvate = 0;
+
+        // Carica dati all'avvio
+        document.addEventListener('DOMContentLoaded', function() {
+            caricaDati();
+        });
+
+        async function caricaDati() {
+            try {
+                console.log('🔄 Caricamento dati fratelli...');
+                
+                const response = await fetch('/api/fratelli');
+                const result = await response.json();
+                fratelliData = result.success ? result.data : [];
+                
+                console.log('✅ Dati caricati:', fratelliData.length, 'fratelli');
+                
+                // Mostra tabella
+                document.getElementById('loadingGradi').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+                
+                // Aggiorna visualizzazione
+                aggiornaTabella();
+                aggiornaStatistiche();
+                
+            } catch (error) {
+                console.error('💥 Errore caricamento dati:', error);
+                mostraAlert('Errore nel caricamento dei dati', 'error');
+            }
+        }
+
+        function aggiornaTabella() {
+            const tbody = document.getElementById('gradiTableBody');
+            tbody.innerHTML = '';
+            
+            // Applica filtri
+            let fratelliFiltered = [...fratelliData];
+            
+            const filtroGrado = document.getElementById('filtroGrado').value;
+            const filtroCompleto = document.getElementById('filtroCompleto').value;
+            const ricercaNome = document.getElementById('ricercaNome').value.toLowerCase();
+            
+            if (filtroGrado) {
+                fratelliFiltered = fratelliFiltered.filter(f => f.grado === filtroGrado);
+            }
+            
+            if (ricercaNome) {
+                fratelliFiltered = fratelliFiltered.filter(f => 
+                    f.nome.toLowerCase().includes(ricercaNome)
+                );
+            }
+            
+            if (filtroCompleto === 'completi') {
+                fratelliFiltered = fratelliFiltered.filter(f => f.data_iniziazione);
+            } else if (filtroCompleto === 'incompleti') {
+                fratelliFiltered = fratelliFiltered.filter(f => !f.data_iniziazione);
+            }
+            
+            // Ordina per nome
+            fratelliFiltered.sort((a, b) => a.nome.localeCompare(b.nome));
+            
+            fratelliFiltered.forEach(fratello => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="fratello-name">${fratello.nome}</div>
+                    </td>
+                    <td>
+                        <span class="grado-badge grado-${fratello.grado.toLowerCase()}">
+                            ${fratello.grado}
+                        </span>
+                    </td>
+                    <td>
+                        <input type="date" 
+                               class="date-input ${fratello.data_iniziazione ? 'filled' : ''}" 
+                               value="${fratello.data_iniziazione || ''}"
+                               data-fratello="${fratello.id}"
+                               data-campo="data_iniziazione"
+                               onchange="modificaData(this)">
+                    </td>
+                    <td>
+                        <input type="date" 
+                               class="date-input ${fratello.data_passaggio ? 'filled' : ''}" 
+                               value="${fratello.data_passaggio || ''}"
+                               data-fratello="${fratello.id}"
+                               data-campo="data_passaggio"
+                               onchange="modificaData(this)">
+                    </td>
+                    <td>
+                        <input type="date" 
+                               class="date-input ${fratello.data_elevazione ? 'filled' : ''}" 
+                               value="${fratello.data_elevazione || ''}"
+                               data-fratello="${fratello.id}"
+                               data-campo="data_elevazione"
+                               onchange="modificaData(this)">
+                    </td>
+                    <td>
+                        <input type="date" 
+                               class="date-input ${fratello.data_ex_venerabile ? 'filled' : ''}" 
+                               value="${fratello.data_ex_venerabile || ''}"
+                               data-fratello="${fratello.id}"
+                               data-campo="data_ex_venerabile"
+                               onchange="modificaData(this)">
+                    </td>
+                    <td>
+                        <input type="date" 
+                               class="date-input ${fratello.data_eccellentissimo ? 'filled' : ''}" 
+                               value="${fratello.data_eccellentissimo || ''}"
+                               data-fratello="${fratello.id}"
+                               data-campo="data_eccellentissimo"
+                               onchange="modificaData(this)">
+                    </td>
+                    <td>
+                        <input type="date" 
+                               class="date-input ${fratello.data_arco_reale ? 'filled' : ''}" 
+                               value="${fratello.data_arco_reale || ''}"
+                               data-fratello="${fratello.id}"
+                               data-campo="data_arco_reale"
+                               onchange="modificaData(this)">
+                    </td>
+                    <td>
+                        <input type="date" 
+                               class="date-input ${fratello.data_royal_ark ? 'filled' : ''}" 
+                               value="${fratello.data_royal_ark || ''}"
+                               data-fratello="${fratello.id}"
+                               data-campo="data_royal_ark"
+                               onchange="modificaData(this)">
+                    </td>
+                    <td>
+                        <button class="save-btn" onclick="salvaFratello(${fratello.id})" id="save-${fratello.id}">
+                            <i class="fas fa-save"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function modificaData(input) {
+            const fratelloId = input.dataset.fratello;
+            const campo = input.dataset.campo;
+            const nuovoValore = input.value;
+            
+            // Trova il fratello nei dati
+            const fratello = fratelliData.find(f => f.id == fratelloId);
+            if (fratello) {
+                fratello[campo] = nuovoValore;
+                
+                // Aggiorna stile
+                input.classList.toggle('filled', !!nuovoValore);
+                
+                // Marca come modificato
+                modificheNonSalvate++;
+                aggiornaStatistiche();
+                
+                // Evidenzia bottone salva
+                const saveBtn = document.getElementById(`save-${fratelloId}`);
+                if (saveBtn) {
+                    saveBtn.style.background = '#e53e3e';
+                    saveBtn.innerHTML = '<i class="fas fa-exclamation"></i>';
+                }
+            }
+        }
+
+        async function salvaFratello(fratelloId) {
+            const fratello = fratelliData.find(f => f.id == fratelloId);
+            if (!fratello) return;
+            
+            try {
+                const saveBtn = document.getElementById(`save-${fratelloId}`);
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                const response = await fetch(`/api/fratelli/${fratelloId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        data_iniziazione: fratello.data_iniziazione,
+                        data_passaggio: fratello.data_passaggio,
+                        data_elevazione: fratello.data_elevazione,
+                        data_ex_venerabile: fratello.data_ex_venerabile,
+                        data_eccellentissimo: fratello.data_eccellentissimo,
+                        data_arco_reale: fratello.data_arco_reale,
+                        data_royal_ark: fratello.data_royal_ark
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    saveBtn.style.background = '#48bb78';
+                    saveBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    modificheNonSalvate--;
+                    aggiornaStatistiche();
+                    mostraAlert(`Date salvate per ${fratello.nome}`, 'success');
+                } else {
+                    throw new Error(result.message);
+                }
+                
+            } catch (error) {
+                console.error('Errore salvataggio:', error);
+                mostraAlert('Errore nel salvataggio', 'error');
+                
+                const saveBtn = document.getElementById(`save-${fratelloId}`);
+                saveBtn.style.background = '#e53e3e';
+                saveBtn.innerHTML = '<i class="fas fa-exclamation"></i>';
+            } finally {
+                const saveBtn = document.getElementById(`save-${fratelloId}`);
+                saveBtn.disabled = false;
+            }
+        }
+
+        async function salvaTutti() {
+            const fratelliModificati = fratelliData.filter(f => {
+                const saveBtn = document.getElementById(`save-${f.id}`);
+                return saveBtn && saveBtn.style.background === 'rgb(229, 62, 62)';
+            });
+            
+            if (fratelliModificati.length === 0) {
+                mostraAlert('Nessuna modifica da salvare', 'error');
+                return;
+            }
+            
+            mostraAlert(`Salvando ${fratelliModificati.length} fratelli...`, 'success');
+            
+            for (const fratello of fratelliModificati) {
+                await salvaFratello(fratello.id);
+                // Piccola pausa per non sovraccaricare il server
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            mostraAlert('Tutte le modifiche sono state salvate!', 'success');
+        }
+
+        function applicaFiltri() {
+            aggiornaTabella();
+            aggiornaStatistiche();
+        }
+
+        function aggiornaStatistiche() {
+            const totalFratelli = fratelliData.length;
+            const fratelliCompleti = fratelliData.filter(f => f.data_iniziazione).length;
+            const fratelliIncompleti = totalFratelli - fratelliCompleti;
+            
+            document.getElementById('totalFratelli').textContent = totalFratelli;
+            document.getElementById('fratelliCompleti').textContent = fratelliCompleti;
+            document.getElementById('fratelliIncompleti').textContent = fratelliIncompleti;
+            document.getElementById('modificheNonSalvate').textContent = modificheNonSalvate;
+        }
+
+        function mostraAlert(messaggio, tipo) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo}`;
+            alert.textContent = messaggio;
+            
+            container.innerHTML = '';
+            container.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // Auto-salvataggio ogni 30 secondi se ci sono modifiche
+        setInterval(() => {
+            if (modificheNonSalvate > 0) {
+                console.log(`💾 Auto-save: ${modificheNonSalvate} modifiche non salvate`);
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

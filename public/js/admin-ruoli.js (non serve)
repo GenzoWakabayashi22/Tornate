@@ -1,0 +1,206 @@
+// Variabili globali
+let fratelliData = [];
+let ruoliModificati = {};
+
+// Mapping ruoli per ID (ICONE CORRETTE!)
+const ruoliMapping = {
+    'Ven.mo Maestro': 'maestro-venerabile',
+    'Primo Sorvegliante': 'primo-sorvegliante', 
+    'Secondo Sorvegliante': 'secondo-sorvegliante',
+    'Oratore': 'oratore',
+    'Segretario': 'segretario',
+    'Tesoriere': 'tesoriere',
+    'Copritore': 'copritore',
+    'Esperto': 'esperto',
+    'Compagno d\'Armonia': 'compagno-armonia',
+    'Primo Diacono': 'primo-diacono',
+    'Secondo Diacono': 'secondo-diacono',
+    'Ospedaliere': 'ospedaliere',
+    'Narratore Rituali': 'narratore-rituali',
+    'Bibliotecario': 'bibliotecario',
+    'Maestro di Casa': 'maestro-casa'
+};
+
+// Inizializzazione
+document.addEventListener('DOMContentLoaded', function() {
+    loadFratelli();
+});
+
+// Carica lista fratelli
+async function loadFratelli() {
+    try {
+        const response = await fetch('/api/fratelli');
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+            fratelliData = data.sort((a, b) => a.nome.localeCompare(b.nome));
+            renderFratelliList();
+            updateRuoliStatus();
+        }
+    } catch (error) {
+        console.error('Errore caricamento fratelli:', error);
+        showError('Errore nel caricamento dei fratelli');
+    }
+}
+
+// Renderizza lista fratelli
+function renderFratelliList() {
+    const container = document.getElementById('fratelliList');
+    
+    container.innerHTML = '';
+    
+    fratelliData.forEach(fratello => {
+        const item = document.createElement('div');
+        item.className = 'fratello-item';
+        
+        const ruoloAttuale = fratello.cariche_fisse || '';
+        
+        item.innerHTML = `
+            <div class="fratello-info">
+                <div class="fratello-nome">${fratello.nome}</div>
+                <div class="fratello-grado">${fratello.grado}</div>
+                ${ruoloAttuale ? `<div class="fratello-ruolo">📋 ${ruoloAttuale}</div>` : ''}
+            </div>
+            <select class="ruolo-select" onchange="updateFratelloRuolo(${fratello.id}, this.value)">
+                <option value="">Nessun ruolo fisso</option>
+                <option value="Ven.mo Maestro" ${ruoloAttuale === 'Ven.mo Maestro' ? 'selected' : ''}>👑 Ven.mo Maestro</option>
+                <option value="Primo Sorvegliante" ${ruoloAttuale === 'Primo Sorvegliante' ? 'selected' : ''}>🔨 Primo Sorvegliante</option>
+                <option value="Secondo Sorvegliante" ${ruoloAttuale === 'Secondo Sorvegliante' ? 'selected' : ''}>🔨 Secondo Sorvegliante</option>
+                <option value="Oratore" ${ruoloAttuale === 'Oratore' ? 'selected' : ''}>📖 Oratore</option>
+                <option value="Segretario" ${ruoloAttuale === 'Segretario' ? 'selected' : ''}>📜 Segretario</option>
+                <option value="Tesoriere" ${ruoloAttuale === 'Tesoriere' ? 'selected' : ''}>💰 Tesoriere</option>
+                <option value="Copritore" ${ruoloAttuale === 'Copritore' ? 'selected' : ''}>⚔️ Copritore</option>
+                <option value="Esperto" ${ruoloAttuale === 'Esperto' ? 'selected' : ''}>🪢 Esperto</option>
+                <option value="Compagno d'Armonia" ${ruoloAttuale === 'Compagno d\'Armonia' ? 'selected' : ''}>🎼 Compagno d'Armonia</option>
+                <option value="Primo Diacono" ${ruoloAttuale === 'Primo Diacono' ? 'selected' : ''}>🕊️ Primo Diacono</option>
+                <option value="Secondo Diacono" ${ruoloAttuale === 'Secondo Diacono' ? 'selected' : ''}>🕊️ Secondo Diacono</option>
+                <option value="Ospedaliere" ${ruoloAttuale === 'Ospedaliere' ? 'selected' : ''}>🏥 Ospedaliere</option>
+                <option value="Narratore Rituali" ${ruoloAttuale === 'Narratore Rituali' ? 'selected' : ''}>📢 Narratore Rituali</option>
+                <option value="Bibliotecario" ${ruoloAttuale === 'Bibliotecario' ? 'selected' : ''}>📚 Bibliotecario</option>
+                <option value="Maestro di Casa" ${ruoloAttuale === 'Maestro di Casa' ? 'selected' : ''}>🏡 Maestro di Casa</option>
+                <option value="Altro" ${ruoloAttuale && !ruoliMapping[ruoloAttuale] ? 'selected' : ''}>➕ Altro</option>
+            </select>
+        `;
+        
+        container.appendChild(item);
+    });
+}
+
+// Aggiorna ruolo di un fratello
+function updateFratelloRuolo(fratelloId, nuovoRuolo) {
+    // Trova il fratello
+    const fratello = fratelliData.find(f => f.id === fratelloId);
+    if (!fratello) return;
+    
+    // Controlla se un altro fratello ha già questo ruolo
+    if (nuovoRuolo && nuovoRuolo !== 'Altro') {
+        const altroFratelloConRuolo = fratelliData.find(f => 
+            f.id !== fratelloId && 
+            (f.cariche_fisse === nuovoRuolo || ruoliModificati[f.id] === nuovoRuolo)
+        );
+        
+        if (altroFratelloConRuolo) {
+            if (!confirm(`Il ruolo "${nuovoRuolo}" è già assegnato a ${altroFratelloConRuolo.nome}. Vuoi riassegnarlo a ${fratello.nome}?`)) {
+                // Ripristina il valore precedente
+                renderFratelliList();
+                return;
+            }
+            
+            // Rimuovi il ruolo dall'altro fratello
+            ruoliModificati[altroFratelloConRuolo.id] = '';
+        }
+    }
+    
+    // Salva la modifica
+    ruoliModificati[fratelloId] = nuovoRuolo;
+    
+    // Aggiorna l'oggetto fratello localmente per il rendering
+    fratello.cariche_fisse = nuovoRuolo;
+    
+    // Re-renderizza per aggiornare la vista
+    renderFratelliList();
+    updateRuoliStatus();
+}
+
+// Aggiorna status dei ruoli
+function updateRuoliStatus() {
+    // Reset tutti i ruoli come non assegnati
+    Object.keys(ruoliMapping).forEach(ruolo => {
+        const elementId = `titolare-${ruoliMapping[ruolo]}`;
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = 'Non assegnato';
+            element.parentElement.parentElement.className = 'ruolo-item libero';
+        }
+    });
+    
+    // Aggiorna con i ruoli assegnati
+    fratelliData.forEach(fratello => {
+        const ruolo = ruoliModificati[fratello.id] !== undefined ? 
+                     ruoliModificati[fratello.id] : 
+                     fratello.cariche_fisse;
+        
+        if (ruolo && ruolo !== 'Altro' && ruoliMapping[ruolo]) {
+            const elementId = `titolare-${ruoliMapping[ruolo]}`;
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = fratello.nome;
+                element.parentElement.parentElement.className = 'ruolo-item assegnato';
+            }
+        }
+    });
+}
+
+// Salva modifiche ruoli
+async function salvaRuoli() {
+    if (Object.keys(ruoliModificati).length === 0) {
+        showError('Nessuna modifica da salvare');
+        return;
+    }
+    
+    try {
+        const numModifiche = Object.keys(ruoliModificati).length;
+        
+        // Prepara le chiamate API
+        const promises = Object.entries(ruoliModificati).map(async ([fratelloId, ruolo]) => {
+            const response = await fetch(`/api/fratelli/${fratelloId}/ruolo`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    cariche_fisse: ruolo || null
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Errore aggiornamento fratello ${fratelloId}`);
+            }
+            
+            return response.json();
+        });
+        
+        await Promise.all(promises);
+        
+        // Reset modifiche
+        ruoliModificati = {};
+        
+        showSuccess(`Ruoli fissi aggiornati con successo! (${numModifiche} fratelli aggiornati)`);
+        
+        // Ricarica i dati
+        await loadFratelli();
+        
+    } catch (error) {
+        console.error('Errore salvataggio ruoli:', error);
+        showError('Errore nel salvataggio dei ruoli: ' + error.message);
+    }
+}
+
+// Utility functions
+function showSuccess(message) {
+    alert('✅ ' + message);
+}
+
+function showError(message) {
+    alert('❌ ' + message);
+}

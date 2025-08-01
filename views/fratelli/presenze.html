@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Mie Presenze - Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-title h1 {
+            color: #2d3748;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header-title p {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .stats-overview {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .stats-overview .stat {
+            text-align: center;
+        }
+
+        .stats-overview .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stats-grid-top {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .stats-grid-bottom {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .card-icon.success { background: linear-gradient(135deg, #48bb78, #38a169); }
+        .card-icon.danger { background: linear-gradient(135deg, #f56565, #e53e3e); }
+        .card-icon.info { background: linear-gradient(135deg, #4299e1, #3182ce); }
+        .card-icon.warning { background: linear-gradient(135deg, #ed8936, #dd6b20); }
+
+        .card-title {
+            color: #2d3748;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .big-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #2d3748;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .big-number.success { color: #48bb78; }
+        .big-number.danger { color: #f56565; }
+        .big-number.info { color: #4299e1; }
+        .big-number.warning { color: #ed8936; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .status-badge.success { background: #c6f6d5; color: #22543d; }
+        .status-badge.stable { background: #bee3f8; color: #2a4365; }
+        .status-badge.decreasing { background: #fed7d7; color: #742a2a; }
+        .status-badge.warning { background: #faf089; color: #744210; }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            font-size: 0.9rem;
+            color: #2d3748;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+        }
+
+        .btn-secondary {
+            background: #718096;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        /* NUOVO: Grid a due colonne per tornate */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .tornate-list {
+            padding: 20px;
+        }
+
+        .tornata-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 0;
+            margin-bottom: 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Cerchio colorato - identico a quello dell'immagine */
+        .presence-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #28a745;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        /* Cerchio rosso per non partecipate */
+        .tornata-item.non-partecipata .presence-indicator {
+            background: #dc3545;
+        }
+
+        /* Data - stile identico */
+        .tornata-date {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6366f1;
+            min-width: 80px;
+            background: #e0e7ff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        /* Data per non partecipate */
+        .tornata-item.non-partecipata .tornata-date {
+            color: #dc3545;
+            background: #fee;
+        }
+
+        .tornata-info {
+            flex: 1;
+        }
+
+        /* Titolo tornata */
+        .tornata-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        /* Dettagli sotto il titolo */
+        .tornata-role {
+            font-size: 13px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tornata-role i {
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #718096;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: #f7fafc;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .loading-state i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+
+        .progress-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-percentage {
+            position: absolute;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .fratello-info {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid-top,
+            .stats-grid-bottom {
+                grid-template-columns: 1fr;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stats-overview {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .filters-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-buttons {
+                margin-left: 0;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <a href="https://tornate.loggiakilwinning.com/fratelli/dashboard" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Dashboard
+                </a>
+                <div class="header-title">
+                    <h1><i class="fas fa-chart-line"></i> Le Mie Presenze</h1>
+                    <p id="headerSubtitle">Analisi dettagliata delle partecipazioni</p>
+                </div>
+                <div class="stats-overview">
+                    <div class="stat">
+                        <div class="stat-number" id="totalTornate">0</div>
+                        <div>Tornate</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="totalPresenti">0</div>
+                        <div>Presenti</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="mediaPercent">0%</div>
+                        <div>Media</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Fratello -->
+        <div id="fratelloInfo" class="fratello-info" style="display: none;">
+            <i class="fas fa-user"></i> <span id="fratelloDettagli">Caricamento...</span>
+        </div>
+
+        <!-- Filtri -->
+        <div class="filters">
+            <div class="filters-content">
+                <div class="filter-group">
+                    <i class="fas fa-calendar"></i>
+                    <label>Anno:</label>
+                    <select class="filter-select" id="annoFilter">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="tutti">Tutti</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <i class="fas fa-filter"></i>
+                    <label>Tipo:</label>
+                    <select class="filter-select" id="tipoFilter">
+                        <option value="tutti">Tutti i tipi</option>
+                        <option value="ordinaria">Ordinaria</option>
+                        <option value="straordinaria">Straordinaria</option>
+                        <option value="cerimonia">Cerimonia</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <i class="fas fa-check-circle"></i>
+                    <label>Stato:</label>
+                    <select class="filter-select" id="statoFilter">
+                        <option value="tutti">Tutti</option>
+                        <option value="presente">Solo presenti</option>
+                        <option value="assente">Solo assenti</option>
+                    </select>
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-primary" onclick="applicaFiltri()">
+                        <i class="fas fa-filter"></i> Filtra
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetFiltri()">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                    <button class="btn btn-success" onclick="esportaDati()">
+                        <i class="fas fa-download"></i> Esporta
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prima riga: 3 card principali -->
+        <div class="stats-grid-top">
+            <!-- Presenze Totali -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon success">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="card-title">Presenze Totali</div>
+                </div>
+                <div class="big-number success" id="presenzeTotali">0</div>
+                <div class="status-badge success">In crescita</div>
+            </div>
+
+            <!-- Assenze Totali -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon danger">
+                        <i class="fas fa-times"></i>
+                    </div>
+                    <div class="card-title">Assenze Totali</div>
+                </div>
+                <div class="big-number danger" id="assenzeTotali">0</div>
+                <div class="status-badge decreasing">In diminuzione</div>
+            </div>
+
+            <!-- Media Anno Corrente -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon info">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="card-title">Media Anno Corrente</div>
+                </div>
+                <div class="progress-container">
+                    <svg class="progress-ring" width="120" height="120">
+                        <circle class="progress-ring-circle" 
+                                stroke="#e2e8f0" 
+                                stroke-width="8" 
+                                fill="transparent" 
+                                r="52" 
+                                cx="60" 
+                                cy="60"/>
+                        <circle class="progress-ring-circle" 
+                                stroke="#4299e1" 
+                                stroke-width="8" 
+                                fill="transparent" 
+                                r="52" 
+                                cx="60" 
+                                cy="60"
+                                stroke-dasharray="326.73" 
+                                stroke-dashoffset="326.73"/>
+                    </svg>
+                    <div class="progress-percentage">0%</div>
+                </div>
+                <div class="status-badge stable">Stabile</div>
+            </div>
+        </div>
+
+        <!-- Seconda riga: 3 card aggiuntive -->
+        <div class="stats-grid-bottom">
+            <!-- Presenze Ultimo Anno -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon info">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="card-title">Presenze Ultimo Anno</div>
+                </div>
+                <div class="big-number info" id="presenzeAnno">0</div>
+                <div class="status-badge success">Anno 2025</div>
+            </div>
+
+            <!-- Assenze Ultimo Anno -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon warning">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <div class="card-title">Assenze Ultimo Anno</div>
+                </div>
+                <div class="big-number warning" id="assenzeAnno">0</div>
+                <div class="status-badge warning">Solo nostra loggia</div>
+            </div>
+
+            <!-- Presenze Consecutive -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon warning">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="card-title">Presenze Consecutive</div>
+                </div>
+                <div class="big-number info" id="presenzeConsecutive">0</div>
+                <div class="status-badge success">Record personale</div>
+            </div>
+        </div>
+
+        <!-- NUOVO: Storico Tornate con due box -->
+        <div class="content-grid">
+            <!-- Box esistente: Ultime Tornate Partecipate -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon info">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="card-title">Ultime Tornate Partecipate</div>
+                </div>
+                <div class="tornate-list" id="storicoPresenze">
+                    <div class="loading-state">
+                        <i class="fas fa-spinner"></i>
+                        <p>Caricamento storico presenze...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NUOVO: Ultime Tornate NON Partecipate -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon danger">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="card-title">Ultime Tornate NON Partecipate</div>
+                </div>
+                <div class="tornate-list" id="storicoAssenze">
+                    <div class="loading-state">
+                        <i class="fas fa-spinner"></i>
+                        <p>Caricamento tornate non partecipate...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dettaglio Tornata -->
+    <div class="modal" id="modalDettaglioTornata">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitolo">Dettaglio Tornata</h2>
+                <button class="close-btn" onclick="chiudiModal()">&times;</button>
+            </div>
+            <div id="modalBody">
+                <!-- Contenuto dinamico -->
+            </div>
+        </div>
+    </div>
+<script src="/js/error-manager.js"></script>
+    <script>
+        // 🚀 SISTEMA PRESENZE COMPLETO - VERSIONE CORRETTA
+        console.log('🏛️ Sistema Presenze - Versione Corretta');
+        
+        let fratelloId = null;
+        let fratelloInfo = null;
+        let datiPresenze = {
+            totaliTornate: 0,
+            totaliPresenze: 0,
+            totaliAssenze: 0,
+            mediaAnnoCorrente: 0,
+            presenzeConsecutive: 0
+        };
+        let storicoTornateReali = [];
+
+        // 🔍 RILEVAMENTO FRATELLO (CORRETTO)
+        async function rilevaaFratello() {
+            console.log('🔄 Rilevamento fratello in corso...');
+            
+            // 1️⃣ Leggi da sessionStorage
+            const authData = sessionStorage.getItem('fratelliAuth');
+            
+            if (authData) {
+                try {
+                    const fratelliAuth = JSON.parse(authData);
+                    console.log('✅ Fratello da sessionStorage:', fratelliAuth);
+                    
+                    fratelloId = parseInt(fratelliAuth.id);
+                    fratelloInfo = {
+                        id: fratelloId,
+                        nome: fratelliAuth.nome,
+                        grado: fratelliAuth.grado,
+                        ruolo: fratelliAuth.ruolo
+                    };
+                    
+                    mostraInfoFratello(fratelloInfo);
+                    return fratelloId;
+                    
+                } catch (error) {
+                    console.error('Errore parsing sessionStorage:', error);
+                }
+            }
+            
+            // 2️⃣ Override URL per admin
+            const urlParams = new URLSearchParams(window.location.search);
+            const idFromUrl = urlParams.get('fratello_id');
+            if (idFromUrl) {
+                fratelloId = parseInt(idFromUrl);
+                await caricaInfoFratello(fratelloId);
+                return fratelloId;
+            }
+            
+            // 3️⃣ ERRORE - Non riesco a identificare l'utente
+            console.error('❌ NESSUNA SESSIONE TROVATA!');
+            alert('Devi essere loggato per vedere le presenze. Ti reindirizziamo al login.');
+            window.location.href = '/fratelli/login';
+            throw new Error('Utente non identificato');
+        }
+
+        // 📋 CARICA INFO FRATELLO DA ID
+        async function caricaInfoFratello(id) {
+            try {
+                const response = await fetch(`/api/fratelli/${id}/statistiche?tipo_loggia=nostra`);
+                const result = await response.json();
+                if (result.success) {
+                    fratelloInfo = { id: id, nome: `Fratello ID ${id}` };
+                    mostraInfoFratello(fratelloInfo);
+                }
+            } catch (error) {
+                console.log('⚠️ Impossibile caricare info fratello:', error);
+                fratelloInfo = { id: id, nome: `Fratello ID ${id}` };
+                mostraInfoFratello(fratelloInfo);
+            }
+        }
+
+        // 👤 MOSTRA INFO FRATELLO
+        function mostraInfoFratello(info) {
+            const fratelloInfoDiv = document.getElementById('fratelloInfo');
+            const fratelloDettagli = document.getElementById('fratelloDettagli');
+            const headerSubtitle = document.getElementById('headerSubtitle');
+            
+            fratelloDettagli.textContent = `Presenze di ${info.nome} (ID: ${info.id})`;
+            headerSubtitle.textContent = `Analisi presenze per ${info.nome}`;
+            fratelloInfoDiv.style.display = 'block';
+        }
+
+        // 📊 CARICA STATISTICHE REALI (CORRETTO - ASYNC AGGIUNTO!)
+        async function caricaDatiPresenze() {
+            console.log('🔍 DEBUG: Inizio caricamento dati presenze');
+            console.log('🔍 DEBUG: fratelloId =', fratelloId);
+            
+            try {
+                console.log('📊 Caricamento statistiche per fratello:', fratelloId);
+                
+                const anno = document.getElementById('annoFilter')?.value;
+                
+                // ✅ USA L'API CORRETTA DI PRESENZE
+                let url = `/api/presenze/fratello/${fratelloId}/statistiche`;
+                if (anno && anno !== 'tutti') {
+                    url += `?anno=${anno}`;
+                }
+                
+                console.log('🔗 Chiamata API:', url);
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`Errore HTTP: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('📥 Risposta API completa:', result);
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Errore dal server');
+                }
+                
+                const stats = result.data;
+                console.log('✅ Statistiche ricevute:', stats);
+                
+                // ✅ AGGIORNA DATI GLOBALI
+                datiPresenze = {
+                    totaliTornate: stats.totaliTornate || 0,
+                    totaliPresenze: stats.presenzeCount || 0,
+                    totaliAssenze: stats.assenzeCount || 0,
+                    mediaAnnoCorrente: stats.percentuale || 0,
+                    presenzeConsecutive: stats.presenzeConsecutive || 0
+                };
+                
+                console.log('📊 Dati presenze aggiornati:', datiPresenze);
+                
+                // ✅ AGGIORNA INTERFACCIA
+                aggiornaInterfaccia(stats);
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento statistiche:', error);
+                alert('Errore nel caricamento delle statistiche: ' + error.message);
+                resetInterfaccia();
+            }
+        }
+
+        // 🔄 AGGIORNA INTERFACCIA CON DATI REALI (CORRETTO)
+        function aggiornaInterfaccia(stats) {
+            console.log('🔄 Aggiornamento interfaccia con:', stats);
+            
+            // ✅ HEADER con mappatura corretta
+            document.getElementById('totalTornate').textContent = stats.totaliTornate || 0;
+            document.getElementById('totalPresenti').textContent = stats.presenzeCount || 0;
+            document.getElementById('mediaPercent').textContent = (stats.percentuale || 0) + '%';
+
+            // ✅ CARDS principali
+            document.getElementById('presenzeTotali').textContent = stats.presenzeCount || 0;
+            document.getElementById('assenzeTotali').textContent = stats.assenzeCount || 0;
+            document.getElementById('presenzeConsecutive').textContent = stats.presenzeConsecutive || 0;
+            
+            // ✅ Cards "ultimo anno"
+            document.getElementById('presenzeAnno').textContent = stats.presenzeCount || 0;
+            document.getElementById('assenzeAnno').textContent = stats.assenzeCount || 0;
+
+            // ✅ PROGRESS RING
+            aggiornaProgressRing(stats.percentuale || 0);
+            
+            console.log('✅ Interfaccia aggiornata correttamente!');
+        }
+
+        // 📋 CARICA STORICO TORNATE (CORRETTO - ASYNC AGGIUNTO!)
+        async function caricaStoricoTornate() {
+            const container = document.getElementById('storicoPresenze');
+            
+            try {
+                console.log('📋 Caricamento storico tornate per fratello:', fratelloId);
+                
+                container.innerHTML = `
+                    <div class="loading-state">
+                        <i class="fas fa-spinner"></i>
+                        <p>Caricamento storico presenze...</p>
+                    </div>
+                `;
+
+                // ✅ USA L'API CORRETTA
+                const anno = document.getElementById('annoFilter')?.value;
+                let url = `/api/presenze/fratello/${fratelloId}?limit=5`;
+
+                if (anno && anno !== 'tutti') {
+                    url += `&anno=${anno}`;
+                }
+                
+                console.log('🔗 Caricamento tornate da:', url);
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'API non disponibile');
+                }
+                
+                // ✅ LEGGI I DATI DALLA STRUTTURA CORRETTA
+                storicoTornateReali = result.data.presenze || [];
+                console.log('📋 Tornate caricate dal DB:', storicoTornateReali.length);
+                
+                // ✅ FILTRA SOLO TORNATE PARTECIPATE
+                const tornatePartecipate = storicoTornateReali.filter(t => {
+                    return t.tipo_loggia === 'nostra' && 
+                           t.presenza_confermata === 1 &&
+                           (t.stato === 'completata' || new Date(t.data) <= new Date());
+                }).slice(0, 5);
+                
+                console.log('📋 Tornate partecipate filtrate:', tornatePartecipate.length);
+                
+                if (tornatePartecipate.length === 0) {
+                    container.innerHTML = `
+                        <div class="loading-state">
+                            <i class="fas fa-info-circle"></i>
+                            <p>Nessuna presenza trovata</p>
+                            <small>Non hai ancora partecipato a tornate</small>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // ✅ GENERA HTML CON STILE IDENTICO
+                const tornateHTML = tornatePartecipate.map(tornata => {
+                    const titolo = tornata.titolo || tornata.discussione || `Tornata del ${formatData(tornata.data)}`;
+                    const dataFormatted = formatDataBrief(tornata.data);
+                    
+                    return `
+                        <div class="tornata-item" onclick="apriDettaglioTornata(${tornata.id})">
+                            <div class="presence-indicator"></div>
+                            <div class="tornata-date">${dataFormatted}</div>
+                            <div class="tornata-info">
+                                <div class="tornata-title">${titolo}</div>
+                                <div class="tornata-role">
+                                    <i class="fas fa-user"></i>
+                                    Presente • ${tornata.tipo || 'ordinaria'}${tornata.location ? ' • ' + tornata.location : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                container.innerHTML = tornateHTML;
+                console.log('✅ Elenco tornate partecipate generato');
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento tornate partecipate:', error);
+                container.innerHTML = `
+                    <div class="loading-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Errore nel caricamento</p>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        // 🚫 NUOVO: CARICA TORNATE NON PARTECIPATE
+        async function caricaTornateNonPartecipate() {
+            const container = document.getElementById('storicoAssenze');
+            
+            try {
+                console.log('🚫 Caricamento tornate NON partecipate per fratello:', fratelloId);
+                
+                container.innerHTML = `
+                    <div class="loading-state">
+                        <i class="fas fa-spinner"></i>
+                        <p>Caricamento tornate non partecipate...</p>
+                    </div>
+                `;
+
+                // ✅ USA LA NUOVA API
+                const anno = document.getElementById('annoFilter')?.value;
+                let url = `/api/presenze/fratello/${fratelloId}/non-partecipate?limit=5`;
+
+                if (anno && anno !== 'tutti') {
+                    url += `&anno=${anno}`;
+                }
+                
+                console.log('🔗 Caricamento assenze da:', url);
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'API non disponibile');
+                }
+                
+                const tornateNonPartecipate = result.data || [];
+                console.log('🚫 Tornate non partecipate caricate:', tornateNonPartecipate.length);
+
+                if (tornateNonPartecipate.length === 0) {
+                    container.innerHTML = `
+                        <div class="loading-state">
+                            <i class="fas fa-star"></i>
+                            <p>Ottimo! Non hai assenze recenti</p>
+                            <small>Continua così con la partecipazione</small>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // ✅ GENERA HTML CON STILE IDENTICO MA ROSSO
+                const tornateHTML = tornateNonPartecipate.map(tornata => {
+                    const titolo = tornata.titolo || tornata.discussione || `Tornata del ${formatData(tornata.data)}`;
+                    const dataFormatted = formatDataBrief(tornata.data);
+                    
+                    return `
+                        <div class="tornata-item non-partecipata" onclick="apriDettaglioTornata(${tornata.id})">
+                            <div class="presence-indicator"></div>
+                            <div class="tornata-date">${dataFormatted}</div>
+                            <div class="tornata-info">
+                                <div class="tornata-title">${titolo}</div>
+                                <div class="tornata-role">
+                                    <i class="fas fa-user"></i>
+                                    Assente • ${tornata.tipo || 'ordinaria'}${tornata.location ? ' • ' + tornata.location : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = tornateHTML;
+                console.log('✅ Elenco tornate non partecipate generato');
+
+            } catch (error) {
+                console.error('❌ Errore caricamento tornate non partecipate:', error);
+                container.innerHTML = `
+                    <div class="loading-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Errore nel caricamento</p>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        // 🔄 RESET INTERFACCIA
+        function resetInterfaccia() {
+            const elementi = ['totalTornate', 'totalPresenti', 'presenzeTotali', 'assenzeTotali', 
+                            'presenzeConsecutive', 'presenzeAnno', 'assenzeAnno'];
+            elementi.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = '0';
+            });
+            const mediaElement = document.getElementById('mediaPercent');
+            if (mediaElement) mediaElement.textContent = '0%';
+            aggiornaProgressRing(0);
+        }
+
+        // 📊 AGGIORNA PROGRESS RING
+        function aggiornaProgressRing(percentuale) {
+            const circle = document.querySelector('.progress-ring-circle:last-child');
+            if (circle) {
+                const radius = 52;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (percentuale / 100) * circumference;
+                
+                circle.style.strokeDashoffset = offset;
+            }
+            
+            const percentageElement = document.querySelector('.progress-percentage');
+            if (percentageElement) {
+                percentageElement.textContent = percentuale + '%';
+            }
+        }
+
+        // 🎪 MODAL DETTAGLIO TORNATA - STILE ADMIN
+        function apriDettaglioTornata(tornataId) {
+            const tornata = storicoTornateReali.find(t => t.id === tornataId);
+            if (!tornata) return;
+
+            // Rimuovi modal esistenti
+            document.querySelectorAll('.modal').forEach(modal => {
+                if (modal.classList.contains('tornata-detail-modal')) {
+                    modal.remove();
+                }
+            });
+
+            // Crea modal identico all'admin
+            const detailsModal = document.createElement('div');
+            detailsModal.className = 'modal tornata-detail-modal';
+            detailsModal.style.display = 'block';
+            
+            const isPresente = tornata.presenza_confermata === 1;
+            const statusIcon = isPresente ? '✅' : '❌';
+            const statusText = isPresente ? 'Presente' : 'Assente';
+            
+            detailsModal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h2>📋 RIEPILOGO TORNATA</h2>
+                        <span class="close" onclick="this.closest('.modal').remove()" style="cursor: pointer; font-size: 24px;">&times;</span>
+                    </div>
+                    
+                    <div style="padding: 20px 0;">
+                        <!-- STATUS PRESENZA -->
+                        <div style="background: ${isPresente ? '#d4edda' : '#f8d7da'}; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+                            <h3 style="margin: 0; color: ${isPresente ? '#155724' : '#721c24'};">
+                                ${statusIcon} ${statusText} alla Tornata
+                            </h3>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <strong>📅 Data:</strong><br>
+                                ${formatData(tornata.data)}
+                            </div>
+                            <div>
+                                <strong>🕐 Ora Inizio:</strong><br>
+                                ${tornata.orario_inizio || 'Non specificata'}
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <strong>💬 Discussione:</strong><br>
+                            <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 5px;">
+                                ${tornata.discussione || tornata.titolo || 'Nessuna discussione specificata'}
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <strong>📍 Location:</strong><br>
+                                ${tornata.location || 'Tolfa'}
+                            </div>
+                            <div>
+                                <strong>🏛️ Tipo Tornata:</strong><br>
+                                ${capitalizeFirst(tornata.tipo || 'ordinaria')} 
+                                <span style="background: #007bff; color: white; padding: 3px 6px; border-radius: 8px; font-size: 11px; font-weight: bold; margin-left: 10px;">
+                                    Nostra Loggia
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; border-top: 1px solid #ddd; padding-top: 15px;">
+                        <button onclick="this.closest('.modal').remove();" style="background: #6c757d; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                            Chiudi
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(detailsModal);
+            
+            // Chiudi cliccando fuori
+            detailsModal.onclick = function(event) {
+                if (event.target === detailsModal) {
+                    detailsModal.remove();
+                }
+            };
+        }
+
+        // Aggiungi funzione di utilità
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        }
+
+        // 🛠️ FUNZIONI UTILITÀ
+        function chiudiModal() {
+            const modal = document.getElementById('modalDettaglioTornata');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function formatData(dataString) {
+            try {
+                const options = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                };
+                return new Date(dataString).toLocaleDateString('it-IT', options);
+            } catch (error) {
+                return dataString;
+            }
+        }
+
+        function formatDataBrief(dataString) {
+            try {
+                const date = new Date(dataString);
+                const day = date.getDate();
+                const months = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 
+                              'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+                const month = months[date.getMonth()];
+                return `${day} ${month}`;
+            } catch (error) {
+                return dataString.slice(8, 10) + ' ' + dataString.slice(5, 7);
+            }
+        }
+
+        // 🎛️ GESTIONE FILTRI
+        function applicaFiltri() {
+            const anno = document.getElementById('annoFilter')?.value;
+            const tipo = document.getElementById('tipoFilter')?.value;
+            const stato = document.getElementById('statoFilter')?.value;
+
+            console.log('🔍 Filtri applicati:', { anno, tipo, stato });
+            
+            // Ricarica tutti i dati con i nuovi filtri
+            caricaDatiPresenze();
+            caricaStoricoTornate();
+            caricaTornateNonPartecipate(); // NUOVO
+        }
+
+        function resetFiltri() {
+            const annoFilter = document.getElementById('annoFilter');
+            const tipoFilter = document.getElementById('tipoFilter');
+            const statoFilter = document.getElementById('statoFilter');
+            
+            if (annoFilter) annoFilter.value = '2025';
+            if (tipoFilter) tipoFilter.value = 'tutti';
+            if (statoFilter) statoFilter.value = 'tutti';
+            
+            caricaDatiPresenze();
+            caricaStoricoTornate();
+            caricaTornateNonPartecipate(); // NUOVO
+        }
+
+        // 📁 EXPORT CSV
+        function esportaDati() {
+            const datiEsportazione = {
+                fratello: fratelloInfo ? fratelloInfo.nome : `Fratello ID ${fratelloId}`,
+                periodo: document.getElementById('annoFilter')?.value || '2025',
+                totaliTornate: datiPresenze.totaliTornate,
+                presenze: datiPresenze.totaliPresenze,
+                assenze: datiPresenze.totaliAssenze,
+                percentuale: datiPresenze.mediaAnnoCorrente,
+                generato: new Date().toLocaleDateString('it-IT')
+            };
+
+            console.log('📁 Dati da esportare:', datiEsportazione);
+            
+            const csvContent = `
+Riepilogo Presenze,${datiEsportazione.periodo}
+Fratello,${datiEsportazione.fratello}
+Totale Tornate,${datiEsportazione.totaliTornate}
+Presenze,${datiEsportazione.presenze}
+Assenze,${datiEsportazione.assenze}
+Percentuale,${datiEsportazione.percentuale}%
+Generato il,${datiEsportazione.generato}
+            `.trim();
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `presenze_${fratelloInfo ? fratelloInfo.nome.replace(/\s+/g, '_') : 'fratello'}_${new Date().toISOString().split('T')[0]}.csv`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('Export completato! Il file CSV è stato scaricato.');
+        }
+
+        // 🎬 GESTIONE EVENTI
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalDettaglioTornata');
+            if (event.target === modal) {
+                chiudiModal();
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                chiudiModal();
+            }
+        });
+
+        // ✨ ANIMAZIONI AL CARICAMENTO
+        function animazioniCaricamento() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }
+
+        // 🚀 INIZIALIZZAZIONE SISTEMA (CORRETTO)
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🏛️ Inizializzazione Sistema Presenze...');
+            
+            try {
+                // 1. Rileva fratello automaticamente
+                await rilevaaFratello();
+                
+                // 2. Carica tutti i dati
+                await caricaDatiPresenze();
+                await caricaStoricoTornate();
+                await caricaTornateNonPartecipate(); // NUOVO
+                
+                // 3. Attiva animazioni
+                animazioniCaricamento();
+                
+                console.log('✅ Sistema inizializzato completamente');
+                console.log('👤 Fratello corrente:', fratelloInfo);
+                console.log('📊 Dati presenze:', datiPresenze);
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione:', error);
+                // Non bloccare la pagina, mostra solo errore
+                resetInterfaccia();
+            }
+        });
+
+        // 🔧 DEBUG E LOG FINALI
+        console.log('🏛️ Sistema Gestione Presenze - Loggia Kilwinning');
+        console.log('📅 Versione: Luglio 2025 - CON TORNATE NON PARTECIPATE');
+        console.log('🔧 Features: Due Box + Stile Identico + API Complete');
+        console.log('📊 Status: PRONTO PER IL DEPLOY');
+    </script>
+</body>
+</html>

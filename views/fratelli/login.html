@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Fratelli - Loggia Kilwinning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 35px;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #fafbfc;
+        }
+        
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group select {
+            cursor: pointer;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .admin-link {
+            padding-top: 25px;
+            border-top: 1px solid #e1e5e9;
+            margin-top: 10px;
+        }
+        
+        .admin-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .admin-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e1e5e9;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .fratello-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+            display: none;
+        }
+        
+        .fratello-info.show {
+            display: block;
+        }
+        
+        .fratello-info h4 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .fratello-info p {
+            color: #666;
+            margin: 4px 0;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 25px;
+                margin: 10px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🏛️</div>
+        <h1 class="title">Loggia Kilwinning</h1>
+        <p class="subtitle">Area Riservata Fratelli</p>
+        
+        <div id="alertContainer"></div>
+        
+        <form id="fratelliLoginForm">
+            <div class="form-group">
+                <label for="fratello">👤 Seleziona il tuo nome:</label>
+                <select id="fratello" name="fratello" required>
+                    <option value="">-- Scegli il tuo nome --</option>
+                    
+                    <!-- MAESTRI -->
+                    <optgroup label="🔺 Maestri">
+                        <option value="15" data-nome="Antonio De Chiara" data-grado="Maestro" data-ruolo="">Antonio De Chiara</option>
+                        <option value="16" data-nome="Paolo Giulio Gazzano" data-grado="Maestro" data-ruolo="Ven.mo Maestro">Paolo Giulio Gazzano</option>
+                        <option value="17" data-nome="Luca Terranova" data-grado="Maestro" data-ruolo="Primo Sorvegliante">Luca Terranova</option>
+                        <option value="19" data-nome="Francesco Stefani" data-grado="Maestro" data-ruolo="">Francesco Stefani</option>
+                        <option value="20" data-nome="Gabriele Recanatesi" data-grado="Maestro" data-ruolo="">Gabriele Recanatesi</option>
+                        <option value="21" data-nome="Marco Jacopucci" data-grado="Maestro" data-ruolo="">Marco Jacopucci</option>
+                        <option value="22" data-nome="Davide Santori" data-grado="Maestro" data-ruolo="">Davide Santori</option>
+                    </optgroup>
+                    
+                    <!-- COMPAGNI -->
+                    <optgroup label="🔸 Compagni">
+                        <option value="3" data-nome="Antonio Cozzolino" data-grado="Compagno" data-ruolo="Compagno d'Armonia">Antonio Cozzolino</option>
+                        <option value="5" data-nome="Marco De Giovanni" data-grado="Compagno" data-ruolo="Secondo Diacono">Marco De Giovanni</option>
+                        <option value="10" data-nome="Alessio De Martis" data-grado="Compagno" data-ruolo="Segretario">Alessio De Martis</option>
+                        <option value="11" data-nome="Francesco Ropresti" data-grado="Compagno" data-ruolo="Primo Diacono">Francesco Ropresti</option>
+                        <option value="12" data-nome="Emiliano Menicucci" data-grado="Compagno" data-ruolo="Secondo Sorvegliante">Emiliano Menicucci</option>
+                        <option value="13" data-nome="Roberto Vinci" data-grado="Compagno" data-ruolo="Oratore">Roberto Vinci</option>
+                        <option value="14" data-nome="Roberto Terranova" data-grado="Compagno" data-ruolo="">Roberto Terranova</option>
+                    </optgroup>
+                    
+                    <!-- APPRENDISTI -->
+                    <optgroup label="🔹 Apprendisti">
+                        <option value="1" data-nome="Stefano Bonifazi" data-grado="Apprendista" data-ruolo="">Stefano Bonifazi</option>
+                        <option value="2" data-nome="Giancarlo Bordi" data-grado="Apprendista" data-ruolo="">Giancarlo Bordi</option>
+                        <option value="9" data-nome="Luca Guiducci" data-grado="Apprendista" data-ruolo="Bibliotecario">Luca Guiducci</option>
+                        <option value="6" data-nome="Leonardo Lunetto" data-grado="Apprendista" data-ruolo="Copritore">Leonardo Lunetto</option>
+                        <option value="7" data-nome="Stefano Piantone" data-grado="Apprendista" data-ruolo="">Stefano Piantone</option>
+                        <option value="8" data-nome="Andrea Spampinato" data-grado="Apprendista" data-ruolo="Tesoriere">Andrea Spampinato</option>
+                        <option value="18" data-nome="Dario Genova" data-grado="Apprendista" data-ruolo="">Dario Genova</option>
+                    </optgroup>
+                </select>
+            </div>
+            
+            <div class="fratello-info" id="fratelloInfo">
+                <h4 id="infoNome"></h4>
+                <p><strong>Grado:</strong> <span id="infoGrado"></span></p>
+                <p><strong>Ruolo Fisso:</strong> <span id="infoRuolo"></span></p>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">🔐 Password di Loggia:</label>
+                <input type="password" id="password" name="password" placeholder="Inserisci la password" required>
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">
+                🔓 Accedi all'Area Riservata
+            </button>
+        </form>
+        
+        <div class="loading" id="loadingDiv">
+            <div class="spinner"></div>
+            Accesso in corso...
+        </div>
+        
+        <div class="admin-link">
+            <a href="/admin">🛠️ Accesso Amministratori</a>
+        </div>
+    </div>
+<script src="/js/error-manager.js"></script>
+    <script>
+        // Elementi DOM
+        const fratelliForm = document.getElementById('fratelliLoginForm');
+        const fratelloSelect = document.getElementById('fratello');
+        const passwordInput = document.getElementById('password');
+        const fratelloInfo = document.getElementById('fratelloInfo');
+        const loginBtn = document.getElementById('loginBtn');
+        const loadingDiv = document.getElementById('loadingDiv');
+        const alertContainer = document.getElementById('alertContainer');
+
+        // Event listeners
+        fratelloSelect.addEventListener('change', showFratelloInfo);
+        fratelliForm.addEventListener('submit', handleLogin);
+
+        // Mostra info fratello selezionato
+        function showFratelloInfo() {
+            const selectedOption = fratelloSelect.options[fratelloSelect.selectedIndex];
+            
+            if (selectedOption.value) {
+                const nome = selectedOption.dataset.nome;
+                const grado = selectedOption.dataset.grado;
+                const ruolo = selectedOption.dataset.ruolo || 'Nessuno';
+                
+                document.getElementById('infoNome').textContent = nome;
+                document.getElementById('infoGrado').textContent = grado;
+                document.getElementById('infoRuolo').textContent = ruolo;
+                
+                fratelloInfo.classList.add('show');
+            } else {
+                fratelloInfo.classList.remove('show');
+            }
+        }
+
+        // Gestisce login
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const fratelloId = fratelloSelect.value;
+            const password = passwordInput.value;
+            
+            // Validazione
+            if (!fratelloId) {
+                showAlert('Seleziona il tuo nome dalla lista', 'error');
+                return;
+            }
+            
+            if (!password) {
+                showAlert('Inserisci la password di loggia', 'error');
+                return;
+            }
+            
+            if (password !== 'tolfa') {
+                showAlert('Password non corretta. Contatta il Maestro Venerabile se hai dimenticato la password.', 'error');
+                return;
+            }
+            
+            // Mostra loading
+            showLoading(true);
+            
+            try {
+                // Simula chiamata API per login
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Salva sessione fratello
+                const selectedOption = fratelloSelect.options[fratelloSelect.selectedIndex];
+                const fratelliData = {
+                    id: fratelloId,
+                    nome: selectedOption.dataset.nome,
+                    grado: selectedOption.dataset.grado,
+                    ruolo: selectedOption.dataset.ruolo || '',
+                    loginTime: new Date().toISOString()
+                };
+                
+                // Salva in sessionStorage (simula sessione)
+                sessionStorage.setItem('fratelliAuth', JSON.stringify(fratelliData));
+                
+                showAlert('✅ Accesso effettuato con successo! Benvenuto in Loggia.', 'success');
+                
+                // Redirect dopo 1 secondo
+                setTimeout(() => {
+                   window.location.replace('https://tornate.loggiakilwinning.com/fratelli/dashboard');
+                }, 1000);
+                
+            } catch (error) {
+                showAlert('Errore durante l\'accesso. Riprova.', 'error');
+                showLoading(false);
+            }
+        }
+
+        // Mostra/nasconde loading
+        function showLoading(show) {
+            if (show) {
+                fratelliForm.style.display = 'none';
+                loadingDiv.style.display = 'block';
+            } else {
+                fratelliForm.style.display = 'block';
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        // Mostra alert
+        function showAlert(message, type) {
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            // Rimuovi alert dopo 5 secondi
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        // Verifica se già loggato
+        document.addEventListener('DOMContentLoaded', function() {
+            const existingAuth = sessionStorage.getItem('fratelliAuth');
+            if (existingAuth) {
+                const authData = JSON.parse(existingAuth);
+                showAlert(`Sei già autenticato come ${authData.nome}. Reindirizzamento...`, 'success');
+                setTimeout(() => {
+                    window.location.replace('https://tornate.loggiakilwinning.com/fratelli/dashboard');
+                }, 1500);
+            }
+        });
+    </script>
+</body>
+</html>

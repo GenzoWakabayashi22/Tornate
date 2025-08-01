@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Riepilogo Fratelli e Presenze - R∴L∴ Kilwinning</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-title h1 {
+            color: #2d3748;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header-title p {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        /* Filtri */
+        .filters-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-buttons {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        /* Statistiche Rapide */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Tabella */
+        .table-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-title {
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .fratello-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .grado-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .grado-maestro {
+            background: #68d391;
+            color: #22543d;
+        }
+
+        .grado-compagno {
+            background: #fbb6ce;
+            color: #97266d;
+        }
+
+        .grado-apprendista {
+            background: #90cdf4;
+            color: #2a4365;
+        }
+
+        .presenze-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .presenze-numero {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .presenze-percentuale {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .percentuale-alta {
+            color: #38a169;
+        }
+
+        .percentuale-media {
+            color: #d69e2e;
+        }
+
+        .percentuale-bassa {
+            color: #e53e3e;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        /* Badge per indicare solo loggia nostra */
+        .loggia-badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .filters-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-buttons {
+                margin-left: 0;
+                justify-content: center;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 0.8rem;
+            }
+            
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <a href="/fratelli/dashboard" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Dashboard
+                </a>
+                <div class="header-title">
+                    <h1><i class="fas fa-users"></i> Riepilogo Fratelli e Presenze</h1>
+                    <p>Solo presenze/assenze della nostra Loggia <span class="loggia-badge">Kilwinning</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtri -->
+        <div class="filters-card">
+            <div class="filters-content">
+                <div class="filter-group">
+                    <label for="filtroAnno">Anno</label>
+                    <select id="filtroAnno">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="tutti">Tutti gli anni</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filtroGrado">Grado</label>
+                    <select id="filtroGrado">
+                        <option value="">Tutti i gradi</option>
+                        <option value="Maestro">Maestri</option>
+                        <option value="Compagno">Compagni</option>
+                        <option value="Apprendista">Apprendisti</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="ordinamento">Ordina per</label>
+                    <select id="ordinamento">
+                        <option value="nome">Nome</option>
+                        <option value="presenze_desc">Presenze (↓)</option>
+                        <option value="presenze_asc">Presenze (↑)</option>
+                        <option value="percentuale_desc">% Presenze (↓)</option>
+                        <option value="percentuale_asc">% Presenze (↑)</option>
+                    </select>
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-primary" onclick="applicaFiltri()">
+                        <i class="fas fa-filter"></i>
+                        Applica Filtri
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetFiltri()">
+                        <i class="fas fa-undo"></i>
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiche Rapide -->
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-number" id="totalFratelli">-</div>
+                <div class="stat-label">Fratelli Attivi</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-number" id="totalTornate">-</div>
+                <div class="stat-label">Tornate Loggia Nostra</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-number" id="mediaPresenze">-%</div>
+                <div class="stat-label">Media Presenze</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-number" id="migliorePresenza">-%</div>
+                <div class="stat-label">Miglior Presenza</div>
+            </div>
+        </div>
+
+        <!-- Tabella Fratelli -->
+        <div class="table-card">
+            <div class="table-header">
+                <h3 class="table-title">📋 Presenze/Assenze - Solo Loggia Nostra</h3>
+            </div>
+            
+            <div id="loadingFratelli" class="loading">
+                <div class="loading-spinner"></div>
+                Caricamento dati fratelli...
+            </div>
+            
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table id="fratelliTable">
+                    <thead>
+                        <tr>
+                            <th>Fratello</th>
+                            <th>Grado</th>
+                            <th>Carica</th>
+                            <th>Presenze/Assenze</th>
+                            <th>% Partecipazione</th>
+                            <th>Ultima Presenza</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fratelliTableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-search" style="font-size: 3rem; color: #cbd5e0; margin-bottom: 15px;"></i>
+                <p>Nessun fratello trovato con i filtri selezionati.</p>
+            </div>
+        </div>
+    </div>
+<script src="/js/error-manager.js"></script>
+    <script>
+        let fratelliData = [];
+        let tornateData = [];
+        let presenzeData = [];
+        let annoSelezionato = '2025';
+
+        // Carica dati all'avvio
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Avvio applicazione - Solo Loggia Nostra');
+            caricaDati();
+        });
+
+        async function caricaDati() {
+            try {
+                console.log('🔄 Caricamento dati per loggia nostra...');
+                
+                // Carica fratelli attivi
+                const fratelliResp = await fetch('/api/fratelli?attivo=1');
+                const fratelliResult = await fratelliResp.json();
+                fratelliData = fratelliResult.success ? fratelliResult.data : [];
+                
+                // Carica tornate SOLO della nostra loggia per anno selezionato
+                await caricaTornatePerAnno(annoSelezionato);
+                
+                // Carica presenze
+                const presenzeResp = await fetch('/api/presenze');
+                const presenzeResult = await presenzeResp.json();
+                presenzeData = presenzeResult.success ? presenzeResult.data : [];
+                
+                console.log('✅ Dati caricati:', {
+                    fratelli: fratelliData.length,
+                    tornate: tornateData.length,
+                    presenze: presenzeData.length
+                });
+                
+                // Mostra tabella
+                document.getElementById('loadingFratelli').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+                
+                // Aggiorna visualizzazione
+                aggiornaTabella();
+                aggiornaStatistiche();
+                
+            } catch (error) {
+                console.error('💥 Errore caricamento dati:', error);
+                document.getElementById('loadingFratelli').innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="color: #e53e3e; font-size: 2rem; margin-bottom: 10px;"></i><br>
+                    Errore nel caricamento dei dati
+                `;
+            }
+        }
+
+        async function caricaTornatePerAnno(anno) {
+            try {
+                console.log(`🔍 Caricamento tornate per anno: ${anno}`);
+                
+                // 🚨 PRIMA: Carica TUTTE le tornate della nostra loggia senza filtro stato
+                let url = '/api/tornate?tipo_loggia=nostra';
+                if (anno !== 'tutti') {
+                    url += `&anno=${anno}`;
+                }
+                
+                console.log(`📡 API chiamata: ${url}`);
+                
+                const tornateResp = await fetch(url);
+                const tornateResult = await tornateResp.json();
+                let allTornate = tornateResult.success ? tornateResult.data : [];
+                
+                console.log(`📋 Tornate RAW dalla API: ${allTornate.length}`);
+                
+                // 🔍 DEBUG: Verifica gli stati delle tornate
+                const statiTrovati = [...new Set(allTornate.map(t => t.stato || 'NULL'))];
+                console.log(`📊 Stati trovati nel database:`, statiTrovati);
+                
+                // 🚨 FILTRO RIGOROSO: Solo tornate che sono VERAMENTE completate + RIMUOVI DUPLICATI
+                const dataOggi = new Date();
+                dataOggi.setHours(23, 59, 59, 999); // Fine giornata
+                
+                // Prima filtra per loggia, stato e data
+                let tornateFiltered = allTornate.filter(t => {
+                    const dataTornata = new Date(t.data);
+                    const isNostraLoggia = t.tipo_loggia === 'nostra';
+                    const isPassata = dataTornata <= dataOggi;
+                    const isCompletata = t.stato === 'completata' || isPassata;
+                    
+                    return isNostraLoggia && isCompletata;
+                });
+                
+                // 🎯 RIMUOVI DUPLICATI BASANDOSI SULLA DATA
+                const tornateUniche = new Map();
+                tornateFiltered.forEach(tornata => {
+                    const chiaveData = tornata.data;
+                    
+                    // Se non esiste già questa data, aggiungila
+                    if (!tornateUniche.has(chiaveData)) {
+                        tornateUniche.set(chiaveData, tornata);
+                    } else {
+                        // Se esiste già, tieni quella con ID più alto (più recente)
+                        const esistente = tornateUniche.get(chiaveData);
+                        if (tornata.id > esistente.id) {
+                            tornateUniche.set(chiaveData, tornata);
+                            console.log(`🔄 Sostituita tornata duplicata ${chiaveData}: ID ${esistente.id} → ID ${tornata.id}`);
+                        } else {
+                            console.log(`🗑️ Rimossa tornata duplicata ${chiaveData}: ID ${tornata.id} (mantenuto ID ${esistente.id})`);
+                        }
+                    }
+                });
+                
+                // Converti la Map in array
+                tornateData = Array.from(tornateUniche.values());
+                
+                console.log(`✅ Tornate DOPO rimozione duplicati: ${tornateData.length}`);
+                console.log(`🔍 Duplicate rimosse: ${tornateFiltered.length - tornateData.length}`);
+                
+                // 🔍 DEBUG DETTAGLIATO per 2024
+                if (tornateData.length > 0) {
+                    const anni = [...new Set(tornateData.map(t => new Date(t.data).getFullYear()))];
+                    console.log(`📅 Anni trovati:`, anni);
+                    
+                    const tornate2024 = tornateData.filter(t => new Date(t.data).getFullYear() === 2024);
+                    const tornate2023 = tornateData.filter(t => new Date(t.data).getFullYear() === 2023);
+                    const tornate2025 = tornateData.filter(t => new Date(t.data).getFullYear() === 2025);
+                    
+                    console.log(`📊 CONTEGGI FINALI:`);
+                    console.log(`   2023: ${tornate2023.length} tornate`);
+                    console.log(`   2024: ${tornate2024.length} tornate`);
+                    console.log(`   2025: ${tornate2025.length} tornate`);
+                    
+                    // 🎯 LISTA DETTAGLIATA 2024 per debug
+                    if (anno === '2024' || anno === 'tutti') {
+                        console.log(`🎯 DETTAGLIO COMPLETO TORNATE 2024:`);
+                        console.log(`═══════════════════════════════════════════════════════════`);
+                        tornate2024.forEach((t, i) => {
+                            console.log(`${String(i+1).padStart(2, '0')}. ${t.data} | ID:${t.id} | ${(t.discussione || 'N/A').substring(0,30)} | Stato:${t.stato || 'NULL'} | Tipo:${t.tipo_loggia}`);
+                        });
+                        console.log(`═══════════════════════════════════════════════════════════`);
+                        console.log(`🔍 TOTAL COUNT: ${tornate2024.length} tornate (dovrebbero essere 28)`);
+                        
+                        // 🚨 CONTROLLA DUPLICATI
+                        const dateUniche = [...new Set(tornate2024.map(t => t.data))];
+                        if (dateUniche.length !== tornate2024.length) {
+                            console.log(`⚠️  DUPLICATI TROVATI! Date uniche: ${dateUniche.length}, Tornate totali: ${tornate2024.length}`);
+                            
+                            // Trova i duplicati
+                            const duplicati = {};
+                            tornate2024.forEach(t => {
+                                if (duplicati[t.data]) {
+                                    duplicati[t.data].push(t);
+                                } else {
+                                    duplicati[t.data] = [t];
+                                }
+                            });
+                            
+                            Object.entries(duplicati).forEach(([data, tornate]) => {
+                                if (tornate.length > 1) {
+                                    console.log(`🔴 DUPLICATO ${data}:`, tornate.map(t => `ID:${t.id} - ${t.discussione}`));
+                                }
+                            });
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento tornate:', error);
+                tornateData = [];
+            }
+        }
+
+        function applicaFiltri() {
+            const nuovoAnno = document.getElementById('filtroAnno').value;
+            
+            console.log(`🔄 Applicazione filtri - Anno: ${nuovoAnno}`);
+            
+            // Se l'anno è cambiato, ricarica le tornate
+            if (nuovoAnno !== annoSelezionato) {
+                annoSelezionato = nuovoAnno;
+                document.getElementById('loadingFratelli').style.display = 'block';
+                document.getElementById('tableContainer').style.display = 'none';
+                
+                caricaTornatePerAnno(annoSelezionato).then(() => {
+                    document.getElementById('loadingFratelli').style.display = 'none';
+                    document.getElementById('tableContainer').style.display = 'block';
+                    aggiornaTabella();
+                    aggiornaStatistiche();
+                });
+            } else {
+                aggiornaTabella();
+                aggiornaStatistiche();
+            }
+        }
+
+        function resetFiltri() {
+            console.log('🔄 Reset filtri');
+            document.getElementById('filtroAnno').value = '2025';
+            document.getElementById('filtroGrado').value = '';
+            document.getElementById('ordinamento').value = 'nome';
+            applicaFiltri();
+        }
+
+        function aggiornaTabella() {
+            const filtroGrado = document.getElementById('filtroGrado').value;
+            const ordinamento = document.getElementById('ordinamento').value;
+            
+            console.log(`🔄 Aggiornamento tabella - Grado: ${filtroGrado}, Ordinamento: ${ordinamento}`);
+            
+            // Filtra fratelli per grado
+            let fratelliFiltered = fratelliData.filter(fratello => {
+                if (filtroGrado && fratello.grado !== filtroGrado) return false;
+                return true;
+            });
+            
+            // Calcola presenze per ogni fratello SOLO per tornate della nostra loggia
+            const fratelliConPresenze = fratelliFiltered.map(fratello => {
+                const presenzeAnnuali = calcolaPresenzeAnnuali(fratello.id);
+                return {
+                    ...fratello,
+                    ...presenzeAnnuali
+                };
+            });
+            
+            // Ordina
+            fratelliConPresenze.sort((a, b) => {
+                switch(ordinamento) {
+                    case 'presenze_desc':
+                        return b.presenze - a.presenze;
+                    case 'presenze_asc':
+                        return a.presenze - b.presenze;
+                    case 'percentuale_desc':
+                        return b.percentuale - a.percentuale;
+                    case 'percentuale_asc':
+                        return a.percentuale - b.percentuale;
+                    default: // nome
+                        return a.nome.localeCompare(b.nome);
+                }
+            });
+            
+            // Popola tabella
+            const tbody = document.getElementById('fratelliTableBody');
+            tbody.innerHTML = '';
+            
+            if (fratelliConPresenze.length === 0) {
+                document.getElementById('tableContainer').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+            
+            document.getElementById('tableContainer').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            
+            fratelliConPresenze.forEach(fratello => {
+                const row = document.createElement('tr');
+                
+                // Determina classe percentuale
+                let classePercentuale = 'percentuale-media';
+                if (fratello.percentuale >= 80) classePercentuale = 'percentuale-alta';
+                else if (fratello.percentuale < 50) classePercentuale = 'percentuale-bassa';
+                
+                // 🚨 MODIFICA: Mostra Presenze/Assenze invece di solo presenze
+                const assenze = fratello.tornateDisponibili - fratello.presenze;
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="fratello-name">${fratello.nome}</div>
+                    </td>
+                    <td>
+                        <span class="grado-badge grado-${fratello.grado.toLowerCase()}">
+                            ${fratello.grado}
+                        </span>
+                    </td>
+                    <td>${fratello.carica || '-'}</td>
+                    <td>
+                        <div class="presenze-stats">
+                            <div class="presenze-numero">
+                                <span style="color: #38a169;">${fratello.presenze} P</span> / 
+                                <span style="color: #e53e3e;">${assenze} A</span>
+                            </div>
+                            <div class="presenze-percentuale">su ${fratello.tornateDisponibili} tornate</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="presenze-stats">
+                            <div class="presenze-numero ${classePercentuale}">${fratello.percentuale}%</div>
+                        </div>
+                    </td>
+                    <td>${fratello.ultimaTornata || '-'}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            console.log(`✅ Tabella aggiornata con ${fratelliConPresenze.length} fratelli`);
+        }
+
+        function calcolaPresenzeAnnuali(fratelloId) {
+            // 🚨 CORREZIONE: Filtra SOLO tornate completate della nostra loggia
+            let tornateRilevanti = tornateData.filter(t => 
+                t.tipo_loggia === 'nostra' && 
+                t.stato === 'completata' &&
+                new Date(t.data) <= new Date()
+            );
+            
+            if (annoSelezionato !== 'tutti') {
+                tornateRilevanti = tornateRilevanti.filter(t => t.data.startsWith(annoSelezionato));
+            }
+            
+            console.log(`🔍 Calcolo presenze per fratello ${fratelloId}`);
+            console.log(`   Tornate rilevanti (completate): ${tornateRilevanti.length}`);
+            
+            // 🔍 DEBUG DETTAGLIATO PER VERIFICARE
+            if (annoSelezionato === '2024') {
+                const tornate2024 = tornateRilevanti.filter(t => t.data.startsWith('2024'));
+                console.log(`   🎯 Tornate 2024 effettive: ${tornate2024.length}`);
+                console.log(`   📅 Date trovate:`, tornate2024.map(t => t.data).sort());
+            }
+            
+            // Conta presenze del fratello SOLO per tornate completate della nostra loggia
+            const presenzeValide = presenzeData.filter(p => 
+                p.fratello_id == fratelloId && 
+                p.presente === 1 &&
+                tornateRilevanti.some(t => t.id == p.tornata_id)
+            );
+            
+            const presenze = presenzeValide.length;
+            const tornateDisponibili = tornateRilevanti.length;
+            const percentuale = tornateDisponibili > 0 ? Math.round((presenze / tornateDisponibili) * 100) : 0;
+            
+            // Trova ultima tornata COMPLETATA della nostra loggia
+            const ultimaPresenza = presenzeValide
+                .map(p => tornateRilevanti.find(t => t.id == p.tornata_id))
+                .filter(Boolean)
+                .sort((a, b) => new Date(b.data) - new Date(a.data))[0];
+            
+            const ultimaTornata = ultimaPresenza ? 
+                new Date(ultimaPresenza.data).toLocaleDateString('it-IT') : null;
+            
+            const result = {
+                presenze,
+                tornateDisponibili,
+                percentuale,
+                ultimaTornata
+            };
+            
+            console.log(`📊 Fratello ${fratelloId}: ${presenze}/${tornateDisponibili} (${percentuale}%) - Completate`);
+            
+            return result;
+        }
+
+        function aggiornaStatistiche() {
+            // 🚨 CORREZIONE: Calcola statistiche SOLO per tornate completate della nostra loggia
+            const totaleFratelli = fratelliData.length;
+            const totaleTornateCompletate = tornateData.filter(t => 
+                t.tipo_loggia === 'nostra' && 
+                t.stato === 'completata' &&
+                new Date(t.data) <= new Date()
+            ).length;
+            
+            console.log(`📊 Statistiche - Fratelli: ${totaleFratelli}, Tornate COMPLETATE nostra loggia: ${totaleTornateCompletate}`);
+            
+            // 🔍 DEBUG CONTEGGIO PER ANNO
+            if (annoSelezionato !== 'tutti') {
+                const tornateAnno = tornateData.filter(t => 
+                    t.tipo_loggia === 'nostra' && 
+                    t.stato === 'completata' &&
+                    t.data.startsWith(annoSelezionato)
+                ).length;
+                console.log(`📅 Tornate completate ${annoSelezionato}: ${tornateAnno}`);
+            }
+            
+            // Calcola media presenze
+            let sommaPercentuali = 0;
+            let migliorePercentuale = 0;
+            
+            fratelliData.forEach(fratello => {
+                const stats = calcolaPresenzeAnnuali(fratello.id);
+                sommaPercentuali += stats.percentuale;
+                migliorePercentuale = Math.max(migliorePercentuale, stats.percentuale);
+            });
+            
+            const mediaPresenze = fratelliData.length > 0 ? 
+                Math.round(sommaPercentuali / fratelliData.length) : 0;
+            
+            // Aggiorna DOM
+            document.getElementById('totalFratelli').textContent = totaleFratelli;
+            document.getElementById('totalTornate').textContent = totaleTornateCompletate;
+            document.getElementById('mediaPresenze').textContent = mediaPresenze + '%';
+            document.getElementById('migliorePresenza').textContent = migliorePercentuale + '%';
+            
+            console.log(`✅ Statistiche aggiornate - Media: ${mediaPresenze}%, Migliore: ${migliorePercentuale}%`);
+        }
+    </script>
+</body>
+</html>
