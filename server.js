@@ -83,7 +83,7 @@ app.use(session({
     rolling: true,
     name: 'kilwinning_session',
     cookie: {
-        secure: false,
+        secure: process.env.NODE_ENV === 'production', // True in produzione, false in dev
         httpOnly: true,
         maxAge: 8 * 60 * 60 * 1000,
         sameSite: 'lax'
@@ -1511,41 +1511,47 @@ app.delete('/api/admin/tavole/:id', requireAdminAccess, async (req, res) => {
 console.log('✅ API ADMIN TAVOLE caricate correttamente');
 
 // ========== ROTTE AREA FRATELLI (HTML) ==========
+// Middleware di autenticazione per area fratelli (escluso login)
+const requireFratelloAuth = (req, res, next) => {
+    if (!req.session || !req.session.user) {
+        console.log('🔒 Accesso negato - sessione non valida per:', req.path);
+        return res.redirect('/fratelli/login');
+    }
+    console.log(`✅ Accesso verificato per ${req.session.user.nome} a ${req.path}`);
+    next();
+};
+
 app.get('/fratelli/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/login.html'));
 });
 
-app.get('/fratelli/dashboard', (req, res) => {
+// Applica middleware di autenticazione a tutte le rotte protette
+app.get('/fratelli/dashboard', requireFratelloAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/dashboard.html'));
 });
 
-app.get('/fratelli/tornate', (req, res) => {
+app.get('/fratelli/tornate', requireFratelloAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/tornate.html'));
 });
 
-app.get('/fratelli/lavori', (req, res) => {
+app.get('/fratelli/lavori', requireFratelloAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/lavori.html'));
 });
 
-app.get('/fratelli/tavole', (req, res) => {
+app.get('/fratelli/tavole', requireFratelloAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/tavole.html'));
 });
 
-app.get('/fratelli/presenze', (req, res) => {
+app.get('/fratelli/presenze', requireFratelloAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/presenze.html'));
 });
 
-app.get('/fratelli/profilo', (req, res) => {
+app.get('/fratelli/profilo', requireFratelloAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/profilo.html'));
 });
 
-app.get('/fratelli/riepilogo-fratelli', (req, res) => {
-    // Controllo sessione semplice (stesso pattern delle altre pagine fratelli)
-    if (!req.session || !req.session.user) {
-        return res.redirect('/fratelli/login');
-    }
-    
-  // ✅ CORRETTO: Percorso giusto
+app.get('/fratelli/riepilogo-fratelli', requireFratelloAuth, (req, res) => {
+    // Ora utilizziamo già il middleware requireFratelloAuth, quindi non serve il controllo qui
     res.sendFile(path.join(__dirname, 'views/fratelli/riepilogo-fratelli.html'));
 });
 
@@ -1656,7 +1662,7 @@ app.get('/', (req, res) => {
                     </a>
                     
                     <div style="margin-top: 20px; font-size: 12px; color: #999;">
-                        © 2025 R∴L∴ Kilwinning - Biblioteca Digitale
+                        &copy; 2025 R∴L∴ Kilwinning - Biblioteca Digitale
                     </div>
                 </div>
             </body>
@@ -1753,7 +1759,7 @@ app.get('/', (req, res) => {
                     </a>
                     
                     <div class="footer">
-                        © 2025 R∴L∴ Kilwinning<br>
+                        &copy; 2025 R∴L∴ Kilwinning<br>
                         Sistema di gestione presenze, tornate e tavole<br>
                         <strong>✅ Multi-dominio + 📖 Biblioteca</strong>
                     </div>
