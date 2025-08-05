@@ -17,7 +17,7 @@ const app = express();
 
 app.use((req, res, next) => {
     const hostname = req.get('host') || '';
-    
+
     if (hostname.includes('biblioteca')) {
         req.appType = 'biblioteca';
         console.log(`📚 Richiesta BIBLIOTECA: ${req.method} ${req.path}`);
@@ -26,7 +26,7 @@ app.use((req, res, next) => {
         req.appType = 'tornate';
         console.log(`🏛️ Richiesta TORNATE: ${req.method} ${req.path}`);
     }
-    
+
     next();
 });
 
@@ -79,28 +79,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'kilwinning_presenze_secret_2025_super_strong',
     resave: true,
-    saveUninitialized: true,  // Cambiato da false a true per evitare problemi di creazione sessione
+    saveUninitialized: false,
     rolling: true,
     name: 'kilwinning_session',
     cookie: {
-        secure: false,  // Disattivato temporaneamente per debug
+        secure: false,
         httpOnly: true,
         maxAge: 8 * 60 * 60 * 1000,
-        sameSite: 'lax',
-        path: '/'  // Esplicitiamo il path per assicurare che il cookie sia disponibile ovunque
+        sameSite: 'lax'
     },
     genid: function(req) {
         return 'kilw_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 }));
-
-// Middleware per il debug delle sessioni
-app.use((req, res, next) => {
-    const sessionId = req.sessionID || 'nessuna';
-    const userName = req.session && req.session.user ? req.session.user.nome : 'none';
-    console.log(`🔍 ${req.method} ${req.path} - Session: ${sessionId} - User: ${userName}`);
-    next();
-});
 
 // Middleware per loggare sessioni (DEBUG)
 app.use((req, res, next) => {
@@ -118,7 +109,7 @@ app.use('/admin', require('./routes/admin'));
 // API Routes
 app.use('/api/presenze', require('./routes/presenze'));
 app.use('/api/tornate', require('./routes/tornate'));
-app.use('/api/tavole', require('./routes/tavole'));  
+app.use('/api/tavole', require('./routes/tavole'));
 app.use('/api/fratello', require('./routes/fratello-tavole'));
 
 
@@ -128,24 +119,22 @@ app.use('/api/fratello', require('./routes/fratello-tavole'));
 app.post('/api/fratelli/login', async (req, res) => {
     try {
         const { nome } = req.body;
-        
+
         console.log('🔐 Tentativo login fratello:', nome);
-        console.log('📦 Request body completo:', req.body);
-        console.log('📦 Headers:', req.headers);
-        
+
         if (!nome) {
             return res.status(400).json({
                 success: false,
                 message: 'Nome obbligatorio'
             });
         }
-        
+
         // Cerca il fratello nel database
         const fratelli = await db.getFratelli();
-        const fratello = fratelli.find(f => 
+        const fratello = fratelli.find(f =>
             f.nome.toLowerCase().trim() === nome.toLowerCase().trim()
         );
-        
+
         if (!fratello) {
             console.log('❌ Fratello non trovato:', nome);
             return res.status(401).json({
@@ -153,12 +142,12 @@ app.post('/api/fratelli/login', async (req, res) => {
                 message: 'Fratello non riconosciuto'
             });
         }
-        
+
         // ✅ CONTROLLO PRIVILEGI ADMIN
         const adminUsers = ['Paolo Giulio Gazzano', 'Emiliano Menicucci'];
         const hasAdminAccess = adminUsers.includes(fratello.nome);
-        
-        // Imposta i dati utente nella sessione (senza distruggere/rigenerare per ora)
+
+        // Crea sessione fratello
         req.session.user = {
             id: fratello.id,
             username: fratello.nome,
@@ -166,36 +155,32 @@ app.post('/api/fratelli/login', async (req, res) => {
             grado: fratello.grado,
             cariche_fisse: fratello.cariche_fisse,
             ruolo: 'fratello',
-            admin_access: hasAdminAccess,
+            admin_access: hasAdminAccess, // ✅ FLAG IMPORTANTE!
             loginTime: new Date().toISOString(),
             lastActivity: new Date().toISOString()
         };
-        
-        // Salva sessione esplicitamente
-        await new Promise((resolve, reject) => {
-            req.session.save((err) => {
-                if (err) {
-                    console.error('❌ Errore salvataggio sessione:', err);
-                    reject(err);
-                    return;
-                }
-                resolve();
+
+        // Salva sessione
+        req.session.save((err) => {
+            if (err) {
+                console.error('❌ Errore salvataggio sessione:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Errore interno sessione'
+                });
+            }
+
+            console.log(`✅ Login fratello successful:`, fratello.nome,
+                hasAdminAccess ? '(CON PRIVILEGI ADMIN)' : '(senza privilegi admin)');
+
+            res.json({
+                success: true,
+                user: req.session.user,
+                admin_access: hasAdminAccess,
+                sessionId: req.sessionID
             });
         });
-        
-        console.log(`✅ Login fratello successful:`, fratello.nome, 
-                   hasAdminAccess ? '(CON PRIVILEGI ADMIN)' : '(senza privilegi admin)');
-        console.log(`✅ Sessione salvata con ID: ${req.sessionID}`);
-        console.log(`✅ Contenuto sessione:`, req.session);
-        
-        res.json({
-            success: true,
-            user: req.session.user,
-            admin_access: hasAdminAccess,
-            sessionId: req.sessionID,
-            message: 'Login effettuato con successo'
-        });
-        
+
     } catch (error) {
         console.error('❌ Errore login fratello:', error);
         res.status(500).json({
@@ -210,7 +195,7 @@ app.get('/api/fratelli/me', async (req, res) => {
     console.log('🔍 [DEBUG] /api/fratelli/me chiamata');
     console.log('🔍 [DEBUG] Session ID:', req.sessionID);
     console.log('🔍 [DEBUG] Session user:', req.session?.user?.nome);
-    
+
     try {
         // ✅ TIMEOUT PER EVITARE 503
         const timeout = setTimeout(() => {
@@ -228,11 +213,11 @@ app.get('/api/fratelli/me', async (req, res) => {
         if (req.session && req.session.user) {
             // Aggiorna ultima attività
             req.session.user.lastActivity = new Date().toISOString();
-            
+
             // ✅ SALVATAGGIO SESSIONE CON ERROR HANDLING
             req.session.save((err) => {
                 clearTimeout(timeout);
-                
+
                 if (err) {
                     console.error('❌ [DEBUG] Errore salvataggio sessione:', err);
                     if (!res.headersSent) {
@@ -245,9 +230,9 @@ app.get('/api/fratelli/me', async (req, res) => {
                     }
                     return;
                 }
-                
+
                 console.log('✅ [DEBUG] Sessione fratello valida per:', req.session.user.nome);
-                
+
                 if (!res.headersSent) {
                     res.json({
                         success: true,
@@ -261,7 +246,7 @@ app.get('/api/fratelli/me', async (req, res) => {
         } else {
             clearTimeout(timeout);
             console.log('❌ [DEBUG] Sessione fratello non trovata o invalida');
-            
+
             if (!res.headersSent) {
                 res.status(401).json({
                     success: false,
@@ -271,11 +256,11 @@ app.get('/api/fratelli/me', async (req, res) => {
                 });
             }
         }
-        
+
     } catch (error) {
         clearTimeout(timeout);
         console.error('💥 [DEBUG] Errore catturato in /api/fratelli/me:', error);
-        
+
         if (!res.headersSent) {
             res.status(503).json({
                 success: false,
@@ -291,16 +276,16 @@ app.get('/api/fratelli/me', async (req, res) => {
 // ✅ API: Logout fratello
 app.post('/api/fratelli/logout', (req, res) => {
     console.log('🚪 Logout fratello:', req.session?.user?.nome);
-    
+
     req.session.destroy((err) => {
         if (err) {
             console.error('❌ Errore logout:', err);
             return res.status(500).json({ success: false });
         }
-        
+
         res.clearCookie('kilwinning_session');
         console.log('✅ Logout fratello completato');
-        
+
         res.json({ success: true, redirect: '/' });
     });
 });
@@ -308,22 +293,22 @@ app.post('/api/fratelli/logout', (req, res) => {
 // ✅ API DI TEST DATABASE
 app.get('/api/test/db', async (req, res) => {
     console.log('🔍 [DEBUG] Test connessione database');
-    
+
     try {
         // Test semplice connessione database
         const testQuery = await db.executeQuery('SELECT 1 as test');
         console.log('✅ [DEBUG] Database connesso:', testQuery);
-        
+
         res.json({
             success: true,
             message: 'Database connesso',
             test_result: testQuery,
             timestamp: new Date().toISOString()
         });
-        
+
     } catch (error) {
         console.error('❌ [DEBUG] Errore connessione database:', error);
-        
+
         res.status(503).json({
             success: false,
             error: 'Database error',
@@ -336,7 +321,7 @@ app.get('/api/test/db', async (req, res) => {
 // ✅ API HEALTH CHECK
 app.get('/api/health', (req, res) => {
     console.log('🔍 [DEBUG] Health check');
-    
+
     res.json({
         status: 'online',
         timestamp: new Date().toISOString(),
@@ -352,30 +337,30 @@ app.get('/api/health', (req, res) => {
 app.get('/api/fratelli', async (req, res) => {
     try {
         console.log('🔍 API: Caricamento lista fratelli');
-        
+
         const query = `
-            SELECT 
-                id, 
-                nome, 
-                grado, 
+            SELECT
+                id,
+                nome,
+                grado,
                 cariche_fisse as carica,
                 attivo,
                 telefono
-            FROM fratelli 
-            WHERE attivo = 1 
+            FROM fratelli
+            WHERE attivo = 1
             ORDER BY nome ASC
         `;
-        
+
         const fratelli = await db.executeQuery(query);
-        
+
         console.log(`✅ Caricati ${fratelli.length} fratelli`);
-        
+
         res.json({
             success: true,
             data: fratelli,
             count: fratelli.length
         });
-        
+
     } catch (error) {
         console.error('❌ Errore API fratelli:', error);
         res.status(500).json({
@@ -392,19 +377,19 @@ app.get('/api/fratelli/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const fratello = await db.getFratelloById(id);
-        
+
         if (!fratello) {
             return res.status(404).json({
                 success: false,
                 message: 'Fratello non trovato'
             });
         }
-        
+
         res.json({
             success: true,
             data: fratello
         });
-        
+
     } catch (error) {
         console.error('❌ Errore API fratello singolo:', error);
         res.status(500).json({
@@ -419,16 +404,16 @@ app.get('/api/fratelli/:id', async (req, res) => {
 app.post('/api/fratelli', async (req, res) => {
     try {
         const { nome, grado, cariche = null, cariche_fisse = null } = req.body;
-        
+
         if (!nome || !grado) {
             return res.status(400).json({
                 success: false,
                 message: 'Nome e grado sono obbligatori'
             });
         }
-        
+
         const result = await db.addFratello(nome, grado, cariche, cariche_fisse);
-        
+
         res.status(201).json({
             success: true,
             message: 'Fratello creato con successo',
@@ -440,7 +425,7 @@ app.post('/api/fratelli', async (req, res) => {
                 cariche_fisse
             }
         });
-        
+
     } catch (error) {
         console.error('❌ Errore creazione fratello:', error);
         res.status(500).json({
@@ -464,9 +449,9 @@ app.put('/api/fratelli/:id', async (req, res) => {
             data_arco_reale,
             data_royal_ark
         } = req.body;
-        
+
         const sql = `
-            UPDATE fratelli 
+            UPDATE fratelli
             SET data_iniziazione = ?,
                 data_passaggio = ?,
                 data_elevazione = ?,
@@ -476,7 +461,7 @@ app.put('/api/fratelli/:id', async (req, res) => {
                 data_royal_ark = ?
             WHERE id = ?
         `;
-        
+
         await db.executeQuery(sql, [
             data_iniziazione || null,
             data_passaggio || null,
@@ -487,12 +472,12 @@ app.put('/api/fratelli/:id', async (req, res) => {
             data_royal_ark || null,
             id
         ]);
-        
+
         res.json({
             success: true,
             message: 'Gradi aggiornati con successo'
         });
-        
+
     } catch (error) {
         console.error('Errore aggiornamento gradi:', error);
         res.status(500).json({
@@ -507,7 +492,7 @@ app.put('/api/fratelli/:id', async (req, res) => {
 app.delete('/api/fratelli/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const fratello = await db.getFratelloById(id);
         if (!fratello) {
             return res.status(404).json({
@@ -515,14 +500,14 @@ app.delete('/api/fratelli/:id', async (req, res) => {
                 message: 'Fratello non trovato'
             });
         }
-        
+
         await db.deleteFratello(id);
-        
+
         res.json({
             success: true,
             message: 'Fratello eliminato con successo'
         });
-        
+
     } catch (error) {
         console.error('❌ Errore eliminazione fratello:', error);
         res.status(500).json({
@@ -538,11 +523,11 @@ app.delete('/api/fratelli/:id', async (req, res) => {
 app.get('/api/presenze', async (req, res) => {
     try {
         const { fratello_id, tornata_id, anno } = req.query;
-        
+
         console.log('🔍 API: Caricamento presenze - Filtri:', { fratello_id, tornata_id, anno });
-        
+
         let query = `
-            SELECT 
+            SELECT
                 p.fratello_id,
                 p.tornata_id,
                 p.presente,
@@ -556,42 +541,42 @@ app.get('/api/presenze', async (req, res) => {
                 f.grado,
                 f.data_iniziazione
             FROM presenze p
-            LEFT JOIN tornate t ON p.tornata_id = t.id
-            LEFT JOIN fratelli f ON p.fratello_id = f.id
+                     LEFT JOIN tornate t ON p.tornata_id = t.id
+                     LEFT JOIN fratelli f ON p.fratello_id = f.id
             WHERE 1=1
               AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
         `;
-        
+
         const params = [];
-        
+
         // Filtri opzionali
         if (fratello_id) {
             query += ' AND p.fratello_id = ?';
             params.push(fratello_id);
         }
-        
+
         if (tornata_id) {
             query += ' AND p.tornata_id = ?';
             params.push(tornata_id);
         }
-        
+
         if (anno) {
             query += ' AND YEAR(t.data) = ?';
             params.push(anno);
         }
-        
+
         query += ' ORDER BY t.data DESC, f.nome ASC';
-        
+
         const presenze = await db.executeQuery(query, params);
-        
+
         console.log(`✅ Caricate ${presenze.length} presenze (dalla data iniziazione)`);
-        
+
         res.json({
             success: true,
             data: presenze,
             count: presenze.length
         });
-        
+
     } catch (error) {
         console.error('❌ Errore API presenze:', error);
         res.status(500).json({
@@ -608,12 +593,12 @@ app.get('/api/presenze/fratello/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { anno } = req.query;
-        
+
         console.log(`📋 [PRESENZE] Lista presenze per fratello ${id} - Anno: ${anno || 'TUTTI'}`);
-        
+
         // Query con filtro data iniziazione
         let sql = `
-            SELECT 
+            SELECT
                 t.*,
                 COALESCE(p.presente, 0) as presenza_confermata,
                 p.ruolo as ruolo_presenza,
@@ -621,8 +606,8 @@ app.get('/api/presenze/fratello/:id', async (req, res) => {
                 f.data_iniziazione,
                 f.nome as fratello_nome
             FROM tornate t
-            LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
-            LEFT JOIN fratelli f ON f.id = ?
+                     LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
+                     LEFT JOIN fratelli f ON f.id = ?
             WHERE t.tipo_loggia = 'nostra'
               AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
         `;
@@ -635,16 +620,16 @@ app.get('/api/presenze/fratello/:id', async (req, res) => {
         }
 
         sql += ' ORDER BY t.data DESC';
-        
+
         const presenze = await db.executeQuery(sql, params);
         const fratello = await db.getFratelloById(id);
-        
+
         // Log per debug
         if (presenze.length > 0) {
             console.log(`📅 Prima tornata considerata: ${presenze[presenze.length - 1].data}`);
             console.log(`📅 Data iniziazione fratello: ${presenze[0].data_iniziazione}`);
         }
-        
+
         res.json({
             success: true,
             data: {
@@ -656,7 +641,7 @@ app.get('/api/presenze/fratello/:id', async (req, res) => {
                 data_iniziazione: presenze[0]?.data_iniziazione
             }
         });
-        
+
     } catch (error) {
         console.error('❌ Errore presenze fratello:', error);
         res.status(500).json({
@@ -672,55 +657,55 @@ app.get('/api/presenze/fratello/:id/statistiche', async (req, res) => {
     try {
         const { id } = req.params;
         const { anno } = req.query;
-        
+
         console.log(`📊 [PRESENZE] Statistiche per fratello ${id} - Anno: ${anno || 'TUTTI'}`);
-        
+
         // ✅ GESTISCI CASO "TUTTI" VS ANNO SPECIFICO
         const isTutti = !anno || anno === 'tutti' || anno === 'Tutti';
-        
+
         if (isTutti) {
             // 🌍 CALCOLO PER TUTTI GLI ANNI (CON FILTRO DATA INIZIAZIONE)
             console.log('🔄 Calcolo per TUTTI gli anni dalla data iniziazione...');
-            
+
             // Query per statistiche generali (tutti gli anni, dalla data iniziazione)
             const queryStatsAll = `
-                SELECT 
+                SELECT
                     COUNT(DISTINCT t.id) as totaliTornate,
                     COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) as presenzeCount,
                     COUNT(DISTINCT CASE WHEN p.presente = 0 THEN t.id END) as assenzeCount,
                     ROUND(
-                        (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) / 
-                        NULLIF(COUNT(DISTINCT t.id), 0), 1
+                            (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) /
+                            NULLIF(COUNT(DISTINCT t.id), 0), 1
                     ) as percentuale,
                     f.data_iniziazione,
                     f.nome as fratello_nome
                 FROM tornate t
-                LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
-                LEFT JOIN fratelli f ON f.id = ?
+                         LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
+                         LEFT JOIN fratelli f ON f.id = ?
                 WHERE t.tipo_loggia = 'nostra'
                   AND t.data <= CURDATE()
                   AND t.stato = 'completata'
                   AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
             `;
             const statsAll = await db.executeQuery(queryStatsAll, [id, id]);
-            
+
             // Query per presenze consecutive (dalla data iniziazione)
             const queryConsecutiveAll = `
-                SELECT 
+                SELECT
                     t.id, t.data, YEAR(t.data) as anno, COALESCE(p.presente, 0) as presente
                 FROM tornate t
-                LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
-                LEFT JOIN fratelli f ON f.id = ?
-                WHERE t.tipo_loggia = 'nostra' 
-                  AND t.data <= CURDATE() 
+                    LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
+                    LEFT JOIN fratelli f ON f.id = ?
+                WHERE t.tipo_loggia = 'nostra'
+                  AND t.data <= CURDATE()
                   AND t.stato = 'completata'
                   AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
                 ORDER BY t.data DESC
-                LIMIT 1000
+                    LIMIT 1000
             `;
-            
+
             const presenzeDettaglio = await db.executeQuery(queryConsecutiveAll, [id, id]);
-            
+
             // Calcola presenze consecutive partendo dalle più recenti
             let presenzeConsecutive = 0;
             for (const tornata of presenzeDettaglio) {
@@ -730,7 +715,7 @@ app.get('/api/presenze/fratello/:id/statistiche', async (req, res) => {
                     break; // Interrompi al primo 0 (assenza)
                 }
             }
-            
+
             const result = {
                 totaliTornate: statsAll[0]?.totaliTornate || 0,
                 presenzeCount: statsAll[0]?.presenzeCount || 0,
@@ -741,60 +726,60 @@ app.get('/api/presenze/fratello/:id/statistiche', async (req, res) => {
                 data_iniziazione: statsAll[0]?.data_iniziazione,
                 fratello_nome: statsAll[0]?.fratello_nome
             };
-            
+
             console.log(`✅ [PRESENZE] Statistiche TUTTI gli anni per fratello ${id}:`, result);
             console.log(`📅 Data iniziazione: ${result.data_iniziazione}`);
-            
+
             res.json({
                 success: true,
                 data: result,
                 fratello_id: id
             });
-            
+
         } else {
             // 📅 CALCOLO PER ANNO SPECIFICO (CON FILTRO DATA INIZIAZIONE)
             console.log(`🔄 Calcolo per anno specifico: ${anno} dalla data iniziazione`);
-            
+
             const queryStats = `
-                SELECT 
+                SELECT
                     COUNT(DISTINCT t.id) as totaliTornate,
                     COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) as presenzeCount,
                     COUNT(DISTINCT CASE WHEN p.presente = 0 THEN t.id END) as assenzeCount,
                     ROUND(
-                        (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) / 
-                        NULLIF(COUNT(DISTINCT t.id), 0), 1
+                            (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) /
+                            NULLIF(COUNT(DISTINCT t.id), 0), 1
                     ) as percentuale,
                     f.data_iniziazione,
                     f.nome as fratello_nome
                 FROM tornate t
-                LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
-                LEFT JOIN fratelli f ON f.id = ?
+                         LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
+                         LEFT JOIN fratelli f ON f.id = ?
                 WHERE t.tipo_loggia = 'nostra'
-                  AND YEAR(t.data) = ?
+                    AND YEAR(t.data) = ?
                   AND t.data <= CURDATE()
                   AND t.stato = 'completata'
                   AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
             `;
-            
+
             const queryConsecutive = `
-                SELECT 
+                SELECT
                     t.id, t.data, COALESCE(p.presente, 0) as presente
                 FROM tornate t
-                LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
-                LEFT JOIN fratelli f ON f.id = ?
-                WHERE t.tipo_loggia = 'nostra' 
-                  AND YEAR(t.data) = ?
-                  AND t.data <= CURDATE() 
+                         LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
+                         LEFT JOIN fratelli f ON f.id = ?
+                WHERE t.tipo_loggia = 'nostra'
+                    AND YEAR(t.data) = ?
+                  AND t.data <= CURDATE()
                   AND t.stato = 'completata'
                   AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
                 ORDER BY t.data DESC
             `;
-            
+
             const [stats, presenzeDettaglio] = await Promise.all([
                 db.executeQuery(queryStats, [id, id, anno]),
                 db.executeQuery(queryConsecutive, [id, id, anno])
             ]);
-            
+
             // Calcola presenze consecutive per l'anno
             let presenzeConsecutive = 0;
             for (const tornata of presenzeDettaglio) {
@@ -804,7 +789,7 @@ app.get('/api/presenze/fratello/:id/statistiche', async (req, res) => {
                     break;
                 }
             }
-            
+
             const result = {
                 totaliTornate: stats[0]?.totaliTornate || 0,
                 presenzeCount: stats[0]?.presenzeCount || 0,
@@ -815,17 +800,17 @@ app.get('/api/presenze/fratello/:id/statistiche', async (req, res) => {
                 data_iniziazione: stats[0]?.data_iniziazione,
                 fratello_nome: stats[0]?.fratello_nome
             };
-            
+
             console.log(`✅ [PRESENZE] Statistiche anno ${anno} per fratello ${id}:`, result);
             console.log(`📅 Data iniziazione: ${result.data_iniziazione}`);
-            
+
             res.json({
                 success: true,
                 data: result,
                 fratello_id: id
             });
         }
-        
+
     } catch (error) {
         console.error('❌ Errore calcolo statistiche presenze:', error);
         res.status(500).json({
@@ -840,12 +825,12 @@ app.get('/api/presenze/fratello/:id/statistiche', async (req, res) => {
 app.get('/api/presenze/riepilogo-fratelli', async (req, res) => {
     try {
         const { anno } = req.query;
-        
+
         console.log(`👥 [RIEPILOGO] Caricamento riepilogo fratelli - Anno: ${anno || 'TUTTI'}`);
-        
+
         // Query per riepilogo con filtro data iniziazione
         let sql = `
-            SELECT 
+            SELECT
                 f.id,
                 f.nome,
                 f.grado,
@@ -854,41 +839,41 @@ app.get('/api/presenze/riepilogo-fratelli', async (req, res) => {
                 COUNT(DISTINCT t.id) as tornate_disponibili,
                 COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) as presenze,
                 ROUND(
-                    (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) / 
-                    NULLIF(COUNT(DISTINCT t.id), 0), 1
+                        (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) /
+                        NULLIF(COUNT(DISTINCT t.id), 0), 1
                 ) as percentuale,
                 MAX(CASE WHEN p.presente = 1 THEN t.data END) as ultima_presenza
             FROM fratelli f
-            LEFT JOIN tornate t ON t.tipo_loggia = 'nostra' 
-                AND t.stato = 'completata' 
+                     LEFT JOIN tornate t ON t.tipo_loggia = 'nostra'
+                AND t.stato = 'completata'
                 AND t.data <= CURDATE()
                 AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
-            LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = f.id
+                     LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = f.id
             WHERE f.attivo = 1
         `;
-        
+
         const params = [];
-        
+
         if (anno && anno !== 'tutti') {
             sql += ' AND YEAR(t.data) = ?';
             params.push(anno);
         }
-        
+
         sql += `
             GROUP BY f.id, f.nome, f.grado, f.cariche_fisse, f.data_iniziazione
             ORDER BY f.nome
         `;
-        
+
         const riepilogo = await db.executeQuery(sql, params);
-        
+
         console.log(`✅ [RIEPILOGO] Caricati ${riepilogo.length} fratelli`);
-        
+
         res.json({
             success: true,
             data: riepilogo,
             anno: anno || 'tutti'
         });
-        
+
     } catch (error) {
         console.error('❌ Errore caricamento riepilogo fratelli:', error);
         res.status(500).json({
@@ -909,74 +894,74 @@ app.get('/api/fratelli/:id/statistiche', async (req, res) => {
     try {
         const fratelloId = req.params.id;
         const { anno } = req.query;
-        
+
         console.log(`📊 [DASHBOARD] Statistiche fratello ${fratelloId} - Anno: ${anno || '2025'}`);
-        
+
         // ✅ MANTIENI COMPATIBILITÀ CON DASHBOARD ESISTENTE
         const annoTarget = anno || '2025';
-        
+
         if (annoTarget === '2025' || !anno) {
             // 🎯 VERSIONE DASHBOARD 2025 - CON FILTRO DATA INIZIAZIONE
             const queryStats = `
-                SELECT 
+                SELECT
                     COUNT(DISTINCT t.id) as totaliTornate,
                     COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) as presenzeCount,
                     ROUND(
-                        (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) / 
-                        NULLIF(COUNT(DISTINCT t.id), 0), 1
+                            (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) /
+                            NULLIF(COUNT(DISTINCT t.id), 0), 1
                     ) as percentuale,
                     f.data_iniziazione,
                     f.nome as fratello_nome
                 FROM tornate t
-                LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
-                LEFT JOIN fratelli f ON f.id = ?
+                         LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
+                         LEFT JOIN fratelli f ON f.id = ?
                 WHERE t.tipo_loggia = 'nostra'
-                  AND YEAR(t.data) = 2025
+                    AND YEAR(t.data) = 2025
                   AND t.data <= CURDATE()
                   AND t.stato = 'completata'
                   AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
             `;
-            
+
             const stats = await db.executeQuery(queryStats, [fratelloId, fratelloId]);
-            
+
             // ✅ FORMATO SEMPLICE PER DASHBOARD (quello che si aspetta)
             const result = {
                 totaliTornate: stats[0]?.totaliTornate || 0,
                 presenzeCount: stats[0]?.presenzeCount || 0,
                 percentuale: Math.round(stats[0]?.percentuale || 0)
             };
-            
+
             console.log(`✅ [DASHBOARD] Statistiche 2025 fratello ${fratelloId}:`, result);
             console.log(`📅 [DASHBOARD] Data iniziazione: ${stats[0]?.data_iniziazione}`);
-            
+
             // ✅ FORMATO RESPONSE COMPATIBILE CON DASHBOARD
             res.json(result);
-            
+
         } else {
             // 📊 VERSIONE COMPLETA PER ALTRI ANNI - CON FILTRO DATA INIZIAZIONE
             const queryStats = `
-                SELECT 
+                SELECT
                     COUNT(DISTINCT t.id) as totaliTornate,
                     COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) as presenzeCount,
                     COUNT(DISTINCT CASE WHEN p.presente = 0 THEN t.id END) as assenzeCount,
                     ROUND(
-                        (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) / 
-                        NULLIF(COUNT(DISTINCT t.id), 0), 1
+                            (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) /
+                            NULLIF(COUNT(DISTINCT t.id), 0), 1
                     ) as percentuale,
                     f.data_iniziazione,
                     f.nome as fratello_nome
                 FROM tornate t
-                LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
-                LEFT JOIN fratelli f ON f.id = ?
+                         LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
+                         LEFT JOIN fratelli f ON f.id = ?
                 WHERE t.tipo_loggia = 'nostra'
-                  AND YEAR(t.data) = ?
+                    AND YEAR(t.data) = ?
                   AND t.data <= CURDATE()
                   AND t.stato = 'completata'
                   AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
             `;
-            
+
             const stats = await db.executeQuery(queryStats, [fratelloId, fratelloId, anno]);
-            
+
             const result = {
                 success: true,
                 data: {
@@ -990,13 +975,13 @@ app.get('/api/fratelli/:id/statistiche', async (req, res) => {
                 fratello_id: fratelloId,
                 filtro_anno: anno
             };
-            
+
             console.log(`✅ [DASHBOARD] Statistiche anno ${anno} fratello ${fratelloId}:`, result);
             console.log(`📅 [DASHBOARD] Data iniziazione: ${stats[0]?.data_iniziazione}`);
-            
+
             res.json(result);
         }
-        
+
     } catch (error) {
         console.error('❌ [DASHBOARD] Errore API statistiche:', error);
         res.status(500).json({
@@ -1015,7 +1000,7 @@ console.log('✅ API DASHBOARD STATISTICHE con filtro data iniziazione caricata!
 // ========== MIDDLEWARE ADMIN ==========
 function requireAdminAccess(req, res, next) {
     console.log('🔍 Controllo privilegi admin...');
-    
+
     if (!req.session || !req.session.user) {
         console.log('❌ Nessuna sessione attiva');
         return res.status(401).json({
@@ -1023,10 +1008,10 @@ function requireAdminAccess(req, res, next) {
             message: 'Accesso negato - Login richiesto'
         });
     }
-    
+
     const user = req.session.user;
     const hasAdminAccess = user.ruolo === 'admin' || user.admin_access === true;
-    
+
     if (!hasAdminAccess) {
         console.log('❌ Utente senza privilegi admin:', user.username);
         return res.status(403).json({
@@ -1034,7 +1019,7 @@ function requireAdminAccess(req, res, next) {
             message: 'Accesso negato - Privilegi admin richiesti'
         });
     }
-    
+
     console.log('✅ Accesso admin autorizzato per:', user.username);
     next();
 }
@@ -1046,33 +1031,33 @@ app.post('/api/admin/fratelli', requireAdminAccess, async (req, res) => {
     try {
         console.log('👥 ADMIN: Creazione nuovo fratello');
         console.log('📥 Dati ricevuti:', req.body);
-        
+
         const { nome, grado, cariche = null, cariche_fisse = null } = req.body;
-        
+
         if (!nome || !grado) {
             return res.status(400).json({
                 success: false,
                 message: 'Nome e grado sono obbligatori'
             });
         }
-        
+
         // Inizio transazione esplicita
         await db.executeQuery('START TRANSACTION');
-        
+
         try {
             const result = await db.addFratello(nome, grado, cariche, cariche_fisse);
-            
+
             // Commit esplicito
             await db.executeQuery('COMMIT');
             console.log('✅ Fratello creato con ID:', result.insertId);
-            
+
             // Verifica che sia stato salvato
             const verifica = await db.getFratelloById(result.insertId);
-            
+
             if (!verifica) {
                 throw new Error('Fratello non trovato dopo il salvataggio');
             }
-            
+
             res.status(201).json({
                 success: true,
                 message: 'Fratello creato con successo',
@@ -1084,12 +1069,12 @@ app.post('/api/admin/fratelli', requireAdminAccess, async (req, res) => {
                     cariche_fisse
                 }
             });
-            
+
         } catch (dbError) {
             await db.executeQuery('ROLLBACK');
             throw dbError;
         }
-        
+
     } catch (error) {
         console.error('❌ Errore creazione fratello:', error);
         res.status(500).json({
@@ -1104,10 +1089,10 @@ app.post('/api/admin/fratelli', requireAdminAccess, async (req, res) => {
 app.put('/api/admin/fratelli/:id', requireAdminAccess, async (req, res) => {
     try {
         console.log('👥 ADMIN: Aggiornamento fratello ID:', req.params.id);
-        
+
         const { id } = req.params;
         const { nome, grado, cariche = null, cariche_fisse = null } = req.body;
-        
+
         const fratelloEsistente = await db.getFratelloById(id);
         if (!fratelloEsistente) {
             return res.status(404).json({
@@ -1115,16 +1100,16 @@ app.put('/api/admin/fratelli/:id', requireAdminAccess, async (req, res) => {
                 message: 'Fratello non trovato'
             });
         }
-        
+
         await db.updateFratello(id, nome, grado, cariche, cariche_fisse);
-        
+
         console.log('✅ Fratello aggiornato con successo');
-        
+
         res.json({
             success: true,
             message: 'Fratello aggiornato con successo'
         });
-        
+
     } catch (error) {
         console.error('❌ Errore aggiornamento fratello:', error);
         res.status(500).json({
@@ -1139,9 +1124,9 @@ app.put('/api/admin/fratelli/:id', requireAdminAccess, async (req, res) => {
 app.delete('/api/admin/fratelli/:id', requireAdminAccess, async (req, res) => {
     try {
         console.log('👥 ADMIN: Eliminazione fratello ID:', req.params.id);
-        
+
         const { id } = req.params;
-        
+
         const fratello = await db.getFratelloById(id);
         if (!fratello) {
             return res.status(404).json({
@@ -1149,16 +1134,16 @@ app.delete('/api/admin/fratelli/:id', requireAdminAccess, async (req, res) => {
                 message: 'Fratello non trovato'
             });
         }
-        
+
         await db.deleteFratello(id);
-        
+
         console.log('✅ Fratello eliminato con successo');
-        
+
         res.json({
             success: true,
             message: 'Fratello eliminato con successo'
         });
-        
+
     } catch (error) {
         console.error('❌ Errore eliminazione fratello:', error);
         res.status(500).json({
@@ -1176,17 +1161,17 @@ app.post('/api/admin/tornate', requireAdminAccess, async (req, res) => {
     try {
         console.log('📅 ADMIN: Creazione nuova tornata');
         console.log('📥 Dati ricevuti:', req.body);
-        
+
         // Validazione dati
         const { data, discussione, location } = req.body;
-        
+
         if (!data) {
             return res.status(400).json({
                 success: false,
                 message: 'Data obbligatoria'
             });
         }
-        
+
         // Prepara dati con nomi corretti
         const tornataData = {
             data: data,
@@ -1206,31 +1191,31 @@ app.post('/api/admin/tornate', requireAdminAccess, async (req, res) => {
             stato: req.body.stato || 'programmata',
             note: req.body.note || null
         };
-        
+
         console.log('📋 Dati preparati per database:', tornataData);
-        
+
         // Inizio transazione esplicita
         await db.executeQuery('START TRANSACTION');
-        
+
         try {
             const result = await db.addTornata(tornataData);
             console.log('📊 Risultato INSERT:', result);
-            
+
             // Commit esplicito
             await db.executeQuery('COMMIT');
             console.log('✅ COMMIT completato');
-            
+
             // Verifica immediata
             const verifica = await db.executeQuery('SELECT * FROM tornate WHERE id = ?', [result.insertId]);
             console.log('🔍 VERIFICA POST-COMMIT:', verifica.length > 0 ? 'TROVATA' : 'NON TROVATA');
-            
+
             if (result.insertId && verifica.length > 0) {
                 console.log('🎉 SUCCESSO COMPLETO! ID:', result.insertId);
-                
+
                 res.status(201).json({
                     success: true,
                     message: 'Tornata creata e salvata con successo',
-                    data: { 
+                    data: {
                         id: result.insertId,
                         ...verifica[0]
                     }
@@ -1238,16 +1223,16 @@ app.post('/api/admin/tornate', requireAdminAccess, async (req, res) => {
             } else {
                 throw new Error('Tornata non trovata dopo il commit');
             }
-            
+
         } catch (dbError) {
             console.log('💥 ERRORE - ROLLBACK...');
             await db.executeQuery('ROLLBACK');
             throw dbError;
         }
-        
+
     } catch (error) {
         console.error('💥 ERRORE CRITICO ADMIN TORNATE:', error);
-        
+
         res.status(500).json({
             success: false,
             message: 'Errore nella creazione: ' + error.message,
@@ -1261,9 +1246,9 @@ app.put('/api/admin/tornate/:id', requireAdminAccess, async (req, res) => {
     try {
         console.log('📅 ADMIN: Aggiornamento tornata ID:', req.params.id);
         console.log('📥 Dati ricevuti:', req.body);
-        
+
         const { id } = req.params;
-        
+
         // Verifica che la tornata esista
         const tornataEsistente = await db.executeQuery('SELECT * FROM tornate WHERE id = ?', [id]);
         if (tornataEsistente.length === 0) {
@@ -1272,7 +1257,7 @@ app.put('/api/admin/tornate/:id', requireAdminAccess, async (req, res) => {
                 message: 'Tornata non trovata'
             });
         }
-        
+
         // Prepara dati per l'aggiornamento
         const tornataData = {
             data: req.body.data,
@@ -1292,27 +1277,27 @@ app.put('/api/admin/tornate/:id', requireAdminAccess, async (req, res) => {
             stato: req.body.stato || 'programmata',
             note: req.body.note || null
         };
-        
+
         console.log('📋 Dati preparati per aggiornamento:', tornataData);
-        
+
         // Inizio transazione esplicita
         await db.executeQuery('START TRANSACTION');
-        
+
         try {
             const result = await db.updateTornata(id, tornataData);
             console.log('📊 Risultato UPDATE:', result);
-            
+
             // Commit esplicito
             await db.executeQuery('COMMIT');
             console.log('✅ COMMIT completato');
-            
+
             // Verifica immediata
             const verifica = await db.executeQuery('SELECT * FROM tornate WHERE id = ?', [id]);
             console.log('🔍 VERIFICA POST-COMMIT:', verifica.length > 0 ? 'TROVATA' : 'NON TROVATA');
-            
+
             if (verifica.length > 0) {
                 console.log('🎉 AGGIORNAMENTO COMPLETATO! ID:', id);
-                
+
                 res.json({
                     success: true,
                     message: 'Tornata aggiornata con successo',
@@ -1321,16 +1306,16 @@ app.put('/api/admin/tornate/:id', requireAdminAccess, async (req, res) => {
             } else {
                 throw new Error('Tornata non trovata dopo l\'aggiornamento');
             }
-            
+
         } catch (dbError) {
             console.log('💥 ERRORE - ROLLBACK...');
             await db.executeQuery('ROLLBACK');
             throw dbError;
         }
-        
+
     } catch (error) {
         console.error('💥 ERRORE CRITICO ADMIN TORNATE UPDATE:', error);
-        
+
         res.status(500).json({
             success: false,
             message: 'Errore nell\'aggiornamento: ' + error.message,
@@ -1343,9 +1328,9 @@ app.put('/api/admin/tornate/:id', requireAdminAccess, async (req, res) => {
 app.delete('/api/admin/tornate/:id', requireAdminAccess, async (req, res) => {
     try {
         console.log('📅 ADMIN: Eliminazione tornata ID:', req.params.id);
-        
+
         const { id } = req.params;
-        
+
         // Verifica che la tornata esista
         const tornata = await db.executeQuery('SELECT * FROM tornate WHERE id = ?', [id]);
         if (tornata.length === 0) {
@@ -1354,24 +1339,24 @@ app.delete('/api/admin/tornate/:id', requireAdminAccess, async (req, res) => {
                 message: 'Tornata non trovata'
             });
         }
-        
+
         // Elimina prima le presenze collegate
         await db.executeQuery('DELETE FROM presenze WHERE tornata_id = ?', [id]);
         console.log('✅ Presenze collegate eliminate');
-        
+
         // Elimina la tornata
         const result = await db.executeQuery('DELETE FROM tornate WHERE id = ?', [id]);
         console.log('✅ Tornata eliminata:', result);
-        
+
         if (result.affectedRows === 0) {
             throw new Error('Nessuna riga eliminata');
         }
-        
+
         res.json({
             success: true,
             message: 'Tornata eliminata con successo'
         });
-        
+
     } catch (error) {
         console.error('❌ Errore eliminazione tornata:', error);
         res.status(500).json({
@@ -1390,22 +1375,22 @@ console.log('✅ API ADMIN TORNATE (PUT/DELETE) caricate correttamente');
 app.get('/api/admin/tavole', requireAdminAccess, async (req, res) => {
     try {
         console.log('📖 ADMIN: Caricamento tavole');
-        
+
         const filtri = {
             anno: req.query.anno || null,
             stato: req.query.stato || null,
             chi_introduce: req.query.chi_introduce || null
         };
-        
+
         const tavole = await db.getTavole(filtri);
-        
+
         console.log(`✅ Caricate ${tavole.length} tavole`);
-        
+
         res.json({
             success: true,
             data: tavole
         });
-        
+
     } catch (error) {
         console.error('❌ Errore caricamento tavole:', error);
         res.status(500).json({
@@ -1421,29 +1406,29 @@ app.post('/api/admin/tavole', requireAdminAccess, async (req, res) => {
     try {
         console.log('📖 ADMIN: Creazione nuova tavola');
         console.log('📥 Dati ricevuti:', req.body);
-        
+
         const { data_trattazione, titolo_discussione } = req.body;
-        
+
         if (!data_trattazione || !titolo_discussione) {
             return res.status(400).json({
                 success: false,
                 message: 'Data e titolo discussione sono obbligatori'
             });
         }
-        
+
         const result = await db.addTavola(req.body);
-        
+
         console.log('✅ Tavola creata con ID:', result.insertId);
-        
+
         res.status(201).json({
             success: true,
             message: 'Tavola creata con successo',
-            data: { 
+            data: {
                 id: result.insertId,
                 ...req.body
             }
         });
-        
+
     } catch (error) {
         console.error('❌ Errore creazione tavola:', error);
         res.status(500).json({
@@ -1458,9 +1443,9 @@ app.post('/api/admin/tavole', requireAdminAccess, async (req, res) => {
 app.put('/api/admin/tavole/:id', requireAdminAccess, async (req, res) => {
     try {
         console.log('📖 ADMIN: Aggiornamento tavola ID:', req.params.id);
-        
+
         const { id } = req.params;
-        
+
         // Verifica che la tavola esista
         const tavolaEsistente = await db.getTavolaById(id);
         if (!tavolaEsistente) {
@@ -1469,16 +1454,16 @@ app.put('/api/admin/tavole/:id', requireAdminAccess, async (req, res) => {
                 message: 'Tavola non trovata'
             });
         }
-        
+
         await db.updateTavola(id, req.body);
-        
+
         console.log('✅ Tavola aggiornata con successo');
-        
+
         res.json({
             success: true,
             message: 'Tavola aggiornata con successo'
         });
-        
+
     } catch (error) {
         console.error('❌ Errore aggiornamento tavola:', error);
         res.status(500).json({
@@ -1493,9 +1478,9 @@ app.put('/api/admin/tavole/:id', requireAdminAccess, async (req, res) => {
 app.delete('/api/admin/tavole/:id', requireAdminAccess, async (req, res) => {
     try {
         console.log('📖 ADMIN: Eliminazione tavola ID:', req.params.id);
-        
+
         const { id } = req.params;
-        
+
         const tavola = await db.getTavolaById(id);
         if (!tavola) {
             return res.status(404).json({
@@ -1503,16 +1488,16 @@ app.delete('/api/admin/tavole/:id', requireAdminAccess, async (req, res) => {
                 message: 'Tavola non trovata'
             });
         }
-        
+
         await db.deleteTavola(id);
-        
+
         console.log('✅ Tavola eliminata con successo');
-        
+
         res.json({
             success: true,
             message: 'Tavola eliminata con successo'
         });
-        
+
     } catch (error) {
         console.error('❌ Errore eliminazione tavola:', error);
         res.status(500).json({
@@ -1526,80 +1511,49 @@ app.delete('/api/admin/tavole/:id', requireAdminAccess, async (req, res) => {
 console.log('✅ API ADMIN TAVOLE caricate correttamente');
 
 // ========== ROTTE AREA FRATELLI (HTML) ==========
-// Middleware di autenticazione per area fratelli (escluso login)
-const requireFratelloAuth = (req, res, next) => {
-    // Debug dettagliato della sessione
-    console.log('🔍 CHECK AUTH - path:', req.path);
-    console.log('🔍 CHECK AUTH - sessionID:', req.sessionID);
-    console.log('🔍 CHECK AUTH - session:', JSON.stringify(req.session, null, 2));
-    console.log('🔍 CHECK AUTH - cookies:', req.headers.cookie);
-    
-    // Se la pagina è login.html, bypass del controllo
-    if (req.path === '/fratelli/login') {
-        return next();
-    }
-    
-    // Verifica se la sessione è valida
-    if (!req.session || !req.session.user) {
-        console.log('🔒 Accesso negato - sessione non valida per:', req.path);
-        
-        // Controlla se esiste un cookie di sessione ma è vuoto
-        if (req.sessionID) {
-            console.log('⚠️ SessionID esiste ma non contiene dati utente:', req.sessionID);
-        }
-        
-        return res.redirect('/fratelli/login');
-    }
-    
-    console.log(`✅ Accesso verificato per ${req.session.user.nome} a ${req.path}`);
-    next();
-};
-
 app.get('/fratelli/login', (req, res) => {
-    // Se l'utente è già autenticato, reindirizzalo direttamente alla dashboard
-    if (req.session && req.session.user) {
-        console.log(`⏩ Utente già autenticato: ${req.session.user.nome}, redirect a dashboard`);
-        return res.redirect('/fratelli/dashboard');
-    }
-    
     res.sendFile(path.join(__dirname, 'views/fratelli/login.html'));
 });
 
-// Applica middleware di autenticazione a tutte le rotte protette
-app.get('/fratelli/dashboard', requireFratelloAuth, (req, res) => {
+app.get('/fratelli/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/dashboard.html'));
 });
 
-app.get('/fratelli/tornate', requireFratelloAuth, (req, res) => {
+app.get('/fratelli/tornate', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/tornate.html'));
 });
 
-app.get('/fratelli/lavori', requireFratelloAuth, (req, res) => {
+app.get('/fratelli/lavori', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/lavori.html'));
 });
 
-app.get('/fratelli/tavole', requireFratelloAuth, (req, res) => {
+app.get('/fratelli/tavole', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/tavole.html'));
 });
 
-app.get('/fratelli/presenze', requireFratelloAuth, (req, res) => {
+app.get('/fratelli/presenze', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/presenze.html'));
 });
 
-app.get('/fratelli/profilo', requireFratelloAuth, (req, res) => {
+app.get('/fratelli/profilo', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/profilo.html'));
 });
 
-app.get('/fratelli/riepilogo-fratelli', requireFratelloAuth, (req, res) => {
-    // Ora utilizziamo già il middleware requireFratelloAuth, quindi non serve il controllo qui
+app.get('/fratelli/riepilogo-fratelli', (req, res) => {
+    // Controllo sessione semplice (stesso pattern delle altre pagine fratelli)
+    if (!req.session || !req.session.user) {
+        return res.redirect('/fratelli/login');
+    }
+
+    // ✅ CORRETTO: Percorso giusto
     res.sendFile(path.join(__dirname, 'views/fratelli/riepilogo-fratelli.html'));
 });
 
 // ========== API STATUS E TEST ==========
 app.get('/api/status', async (req, res) => {
     const dbStatus = await testConnection();
-    res.json({ 
-        status: 'online', 
+    res.json({
+        status: 'online',
         app: 'Presenze Kilwinning',
         version: '1.0.0',
         database: dbStatus ? 'connesso' : 'disconnesso',
@@ -1609,13 +1563,13 @@ app.get('/api/status', async (req, res) => {
 });
 
 app.get('/api/test', (req, res) => {
-    res.json({ 
+    res.json({
         message: 'Server funzionante!',
         environment: process.env.NODE_ENV || 'development',
         database_configured: !!(process.env.DB_HOST && process.env.DB_NAME),
         routes_loaded: {
             admin: '✅ (NO LOGIN SEPARATO)',
-            fratelli: '✅ (CON PRIVILEGI ADMIN)', 
+            fratelli: '✅ (CON PRIVILEGI ADMIN)',
             presenze: '✅',
             tornate: '✅',
             tavole: '✅ (NUOVO!)' // ✅ AGGIUNTO
@@ -1697,12 +1651,12 @@ app.get('/', (req, res) => {
                         </ul>
                     </div>
                     
-                    <a href="/" class="back-link">
+                    <a href="https://tornate.loggiakilwinning.com" class="back-link">
                         🏛️ Torna alle Tornate
                     </a>
                     
                     <div style="margin-top: 20px; font-size: 12px; color: #999;">
-                        &copy; 2025 R∴L∴ Kilwinning - Biblioteca Digitale
+                        © 2025 R∴L∴ Kilwinning - Biblioteca Digitale
                     </div>
                 </div>
             </body>
@@ -1799,7 +1753,7 @@ app.get('/', (req, res) => {
                     </a>
                     
                     <div class="footer">
-                        &copy; 2025 R∴L∴ Kilwinning<br>
+                        © 2025 R∴L∴ Kilwinning<br>
                         Sistema di gestione presenze, tornate e tavole<br>
                         <strong>✅ Multi-dominio + 📖 Biblioteca</strong>
                     </div>
@@ -1835,7 +1789,7 @@ app.get('*', (req, res) => {
 (async () => {
     try {
         console.log('🚀 Avvio server Kilwinning...');
-        
+
         // Test connessione database
         const dbOk = await testConnection();
         if (!dbOk) {
@@ -1843,10 +1797,10 @@ app.get('*', (req, res) => {
         }
         console.log('✅ Database connesso correttamente');
 
-        const PORT = process.env.PORT || 80;
+        const PORT = process.env.PORT || 3000;
 
         app.listen(PORT, () => {
-           console.log(`
+            console.log(`
 🏛️ =====================================
    SERVER KILWINNING MULTI-DOMINIO!
    =====================================
