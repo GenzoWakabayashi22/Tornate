@@ -1657,7 +1657,7 @@ app.get('/', (req, res) => {
                         </ul>
                     </div>
                     
-                    <a href="https://tornate.loggiakilwinning.com" class="back-link">
+                    <a href="/" class="back-link">
                         🏛️ Torna alle Tornate
                     </a>
                     
