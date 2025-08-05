@@ -380,7 +380,7 @@
                 
                 // Redirect dopo 1 secondo
                 setTimeout(() => {
-                   window.location.replace('https://tornate.loggiakilwinning.com/fratelli/dashboard');
+                   window.location.replace('/fratelli/dashboard');
                 }, 1000);
                 
             } catch (error) {
@@ -421,7 +421,7 @@
                 const authData = JSON.parse(existingAuth);
                 showAlert(`Sei già autenticato come ${authData.nome}. Reindirizzamento...`, 'success');
                 setTimeout(() => {
-                    window.location.replace('https://tornate.loggiakilwinning.com/fratelli/dashboard');
+                    window.location.replace('/fratelli/dashboard');
                 }, 1500);
             }
         });
