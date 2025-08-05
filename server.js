@@ -79,19 +79,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'kilwinning_presenze_secret_2025_super_strong',
     resave: true,
-    saveUninitialized: false,
+    saveUninitialized: true,  // Cambiato da false a true per evitare problemi di creazione sessione
     rolling: true,
     name: 'kilwinning_session',
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // True in produzione, false in dev
+        secure: false,  // Disattivato temporaneamente per debug
         httpOnly: true,
         maxAge: 8 * 60 * 60 * 1000,
-        sameSite: 'lax'
+        sameSite: 'lax',
+        path: '/'  // Esplicitiamo il path per assicurare che il cookie sia disponibile ovunque
     },
     genid: function(req) {
         return 'kilw_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 }));
+
+// Middleware per il debug delle sessioni
+app.use((req, res, next) => {
+    const sessionId = req.sessionID || 'nessuna';
+    const userName = req.session && req.session.user ? req.session.user.nome : 'none';
+    console.log(`🔍 ${req.method} ${req.path} - Session: ${sessionId} - User: ${userName}`);
+    next();
+});
 
 // Middleware per loggare sessioni (DEBUG)
 app.use((req, res, next) => {
@@ -121,6 +130,8 @@ app.post('/api/fratelli/login', async (req, res) => {
         const { nome } = req.body;
         
         console.log('🔐 Tentativo login fratello:', nome);
+        console.log('📦 Request body completo:', req.body);
+        console.log('📦 Headers:', req.headers);
         
         if (!nome) {
             return res.status(400).json({
@@ -147,7 +158,7 @@ app.post('/api/fratelli/login', async (req, res) => {
         const adminUsers = ['Paolo Giulio Gazzano', 'Emiliano Menicucci'];
         const hasAdminAccess = adminUsers.includes(fratello.nome);
         
-        // Crea sessione fratello
+        // Imposta i dati utente nella sessione (senza distruggere/rigenerare per ora)
         req.session.user = {
             id: fratello.id,
             username: fratello.nome,
@@ -155,30 +166,34 @@ app.post('/api/fratelli/login', async (req, res) => {
             grado: fratello.grado,
             cariche_fisse: fratello.cariche_fisse,
             ruolo: 'fratello',
-            admin_access: hasAdminAccess, // ✅ FLAG IMPORTANTE!
+            admin_access: hasAdminAccess,
             loginTime: new Date().toISOString(),
             lastActivity: new Date().toISOString()
         };
         
-        // Salva sessione
-        req.session.save((err) => {
-            if (err) {
-                console.error('❌ Errore salvataggio sessione:', err);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Errore interno sessione'
-                });
-            }
-            
-            console.log(`✅ Login fratello successful:`, fratello.nome, 
-                       hasAdminAccess ? '(CON PRIVILEGI ADMIN)' : '(senza privilegi admin)');
-            
-            res.json({
-                success: true,
-                user: req.session.user,
-                admin_access: hasAdminAccess,
-                sessionId: req.sessionID
+        // Salva sessione esplicitamente
+        await new Promise((resolve, reject) => {
+            req.session.save((err) => {
+                if (err) {
+                    console.error('❌ Errore salvataggio sessione:', err);
+                    reject(err);
+                    return;
+                }
+                resolve();
             });
+        });
+        
+        console.log(`✅ Login fratello successful:`, fratello.nome, 
+                   hasAdminAccess ? '(CON PRIVILEGI ADMIN)' : '(senza privilegi admin)');
+        console.log(`✅ Sessione salvata con ID: ${req.sessionID}`);
+        console.log(`✅ Contenuto sessione:`, req.session);
+        
+        res.json({
+            success: true,
+            user: req.session.user,
+            admin_access: hasAdminAccess,
+            sessionId: req.sessionID,
+            message: 'Login effettuato con successo'
         });
         
     } catch (error) {
@@ -1513,15 +1528,40 @@ console.log('✅ API ADMIN TAVOLE caricate correttamente');
 // ========== ROTTE AREA FRATELLI (HTML) ==========
 // Middleware di autenticazione per area fratelli (escluso login)
 const requireFratelloAuth = (req, res, next) => {
+    // Debug dettagliato della sessione
+    console.log('🔍 CHECK AUTH - path:', req.path);
+    console.log('🔍 CHECK AUTH - sessionID:', req.sessionID);
+    console.log('🔍 CHECK AUTH - session:', JSON.stringify(req.session, null, 2));
+    console.log('🔍 CHECK AUTH - cookies:', req.headers.cookie);
+    
+    // Se la pagina è login.html, bypass del controllo
+    if (req.path === '/fratelli/login') {
+        return next();
+    }
+    
+    // Verifica se la sessione è valida
     if (!req.session || !req.session.user) {
         console.log('🔒 Accesso negato - sessione non valida per:', req.path);
+        
+        // Controlla se esiste un cookie di sessione ma è vuoto
+        if (req.sessionID) {
+            console.log('⚠️ SessionID esiste ma non contiene dati utente:', req.sessionID);
+        }
+        
         return res.redirect('/fratelli/login');
     }
+    
     console.log(`✅ Accesso verificato per ${req.session.user.nome} a ${req.path}`);
     next();
 };
 
 app.get('/fratelli/login', (req, res) => {
+    // Se l'utente è già autenticato, reindirizzalo direttamente alla dashboard
+    if (req.session && req.session.user) {
+        console.log(`⏩ Utente già autenticato: ${req.session.user.nome}, redirect a dashboard`);
+        return res.redirect('/fratelli/dashboard');
+    }
+    
     res.sendFile(path.join(__dirname, 'views/fratelli/login.html'));
 });
 
@@ -1803,7 +1843,7 @@ app.get('*', (req, res) => {
         }
         console.log('✅ Database connesso correttamente');
 
-        const PORT = process.env.PORT || 3000;
+        const PORT = process.env.PORT || 80;
 
         app.listen(PORT, () => {
            console.log(`
