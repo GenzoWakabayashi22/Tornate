@@ -11,10 +11,6 @@ require('dotenv').config();
 // Importa la configurazione database
 const { testConnection, db } = require('./config/database');
 
-// ✅ DISPONIBILI MA DISABILITATI per sicurezza:
-// const logger = require('./config/logger');
-// const security = require('./middleware/security');
-
 const app = express();
 // ========== MIDDLEWARE MULTI-DOMINIO ==========
 // AGGIUNGI DOPO: const app = express();
@@ -74,7 +70,7 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // ========== MIDDLEWARE BASE ==========
-app.use(cors()); // ✅ RIPRISTINATO: CORS semplice per evitare problemi
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -87,7 +83,7 @@ app.use(session({
     rolling: true,
     name: 'kilwinning_session',
     cookie: {
-        secure: false, // ✅ RIPRISTINATO: false per compatibilità (cambiare a true solo con HTTPS!)
+        secure: false,
         httpOnly: true,
         maxAge: 8 * 60 * 60 * 1000,
         sameSite: 'lax'
@@ -96,15 +92,6 @@ app.use(session({
         return 'kilw_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 }));
-
-// ========== MIDDLEWARE DI SICUREZZA AGGIUNTIVI ==========
-// 🔒 DISABILITATI per sicurezza - Attivare SOLO dopo test approfonditi
-// Uncomment solo se necessario e testato:
-// app.use(security.requestId);
-// app.use(security.securityHeaders);
-// app.use(security.sanitizeInput);  // ⚠️ Potrebbe modificare dati legittimi
-// app.use(security.responseTime);
-// app.use(security.auditLogger);
 
 // Middleware per loggare sessioni (DEBUG)
 app.use((req, res, next) => {
