@@ -10,6 +10,8 @@ require('dotenv').config();
 
 // Importa la configurazione database
 const { testConnection, db } = require('./config/database');
+const logger = require('./config/logger');
+const security = require('./middleware/security');
 
 const app = express();
 // ========== MIDDLEWARE MULTI-DOMINIO ==========
@@ -70,7 +72,26 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // ========== MIDDLEWARE BASE ==========
-app.use(cors());
+// CORS migliorato: usa whitelist se definita in ENV
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : null;
+
+app.use(cors(allowedOrigins ? {
+    origin: function (origin, callback) {
+        // Consenti richieste senza origin (mobile apps, curl, Postman)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            logger.warn('CORS blocked origin', { origin });
+            callback(null, true); // Per ora non blocchiamo, solo logghiamo
+        }
+    },
+    credentials: true
+} : {}));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -83,7 +104,7 @@ app.use(session({
     rolling: true,
     name: 'kilwinning_session',
     cookie: {
-        secure: false,
+        secure: process.env.NODE_ENV === 'production', // ✅ Secure in produzione
         httpOnly: true,
         maxAge: 8 * 60 * 60 * 1000,
         sameSite: 'lax'
@@ -92,6 +113,22 @@ app.use(session({
         return 'kilw_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 }));
+
+// ========== MIDDLEWARE DI SICUREZZA AGGIUNTIVI ==========
+// Request ID per tracciamento
+app.use(security.requestId);
+
+// Security headers extra
+app.use(security.securityHeaders);
+
+// Input sanitization (protezione XSS - NON blocca richieste)
+app.use(security.sanitizeInput);
+
+// Response time tracking
+app.use(security.responseTime);
+
+// Audit log per operazioni modificanti
+app.use(security.auditLogger);
 
 // Middleware per loggare sessioni (DEBUG)
 app.use((req, res, next) => {
@@ -120,9 +157,10 @@ app.post('/api/fratelli/login', async (req, res) => {
     try {
         const { nome } = req.body;
 
-        console.log('🔐 Tentativo login fratello:', nome);
+        logger.info('🔐 Tentativo login fratello', { nome, ip: req.ip });
 
         if (!nome) {
+            logger.warn('Login fallito: nome mancante', { ip: req.ip });
             return res.status(400).json({
                 success: false,
                 message: 'Nome obbligatorio'
@@ -136,7 +174,7 @@ app.post('/api/fratelli/login', async (req, res) => {
         );
 
         if (!fratello) {
-            console.log('❌ Fratello non trovato:', nome);
+            logger.warn('❌ Login fallito: fratello non trovato', { nome, ip: req.ip });
             return res.status(401).json({
                 success: false,
                 message: 'Fratello non riconosciuto'
@@ -163,15 +201,20 @@ app.post('/api/fratelli/login', async (req, res) => {
         // Salva sessione
         req.session.save((err) => {
             if (err) {
-                console.error('❌ Errore salvataggio sessione:', err);
+                logger.error('❌ Errore salvataggio sessione', { error: err.message, fratelloId: fratello.id });
                 return res.status(500).json({
                     success: false,
                     message: 'Errore interno sessione'
                 });
             }
 
-            console.log(`✅ Login fratello successful:`, fratello.nome,
-                hasAdminAccess ? '(CON PRIVILEGI ADMIN)' : '(senza privilegi admin)');
+            logger.info('✅ Login fratello successful', {
+                fratelloId: fratello.id,
+                nome: fratello.nome,
+                hasAdminAccess,
+                ip: req.ip,
+                sessionId: req.sessionID
+            });
 
             res.json({
                 success: true,
@@ -182,7 +225,7 @@ app.post('/api/fratelli/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Errore login fratello:', error);
+        logger.error('❌ Errore login fratello', { error: error.message, stack: error.stack });
         res.status(500).json({
             success: false,
             message: 'Errore interno del server'
@@ -1765,8 +1808,12 @@ app.get('/', (req, res) => {
 });
 
 // ========== MIDDLEWARE DI ERROR HANDLING ==========
+// Error logger (deve essere prima dell'error handler)
+app.use(security.errorLogger);
+
+// Error handler finale
 app.use((err, req, res, next) => {
-    console.error('💥 Errore middleware:', err);
+    logger.error('💥 Errore middleware:', { error: err.message, stack: err.stack });
     res.status(500).json({
         success: false,
         message: 'Errore interno del server',
@@ -1785,16 +1832,57 @@ app.get('*', (req, res) => {
     });
 });
 
+// ========== VALIDAZIONE ENV ==========
+function validateEnv() {
+    const warnings = [];
+    const required = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
+    const recommended = ['SESSION_SECRET', 'NODE_ENV', 'ALLOWED_ORIGINS'];
+
+    // Check variabili obbligatorie
+    for (const key of required) {
+        if (!process.env[key]) {
+            warnings.push(`❌ MANCANTE (critico): ${key}`);
+        }
+    }
+
+    // Check variabili raccomandate
+    for (const key of recommended) {
+        if (!process.env[key]) {
+            warnings.push(`⚠️ MANCANTE (raccomandato): ${key}`);
+        }
+    }
+
+    // Check SESSION_SECRET debole
+    if (process.env.SESSION_SECRET && process.env.SESSION_SECRET.length < 32) {
+        warnings.push(`⚠️ SESSION_SECRET troppo corto (min 32 caratteri)`);
+    }
+
+    if (warnings.length > 0) {
+        logger.warn('Problemi configurazione ENV', { warnings });
+        console.log('\n⚠️ ATTENZIONE: Configurazione ENV incompleta:');
+        warnings.forEach(w => console.log(`   ${w}`));
+        console.log('   Vedi .env.example per la configurazione completa\n');
+    } else {
+        logger.info('✅ Configurazione ENV valida');
+    }
+
+    return warnings;
+}
+
 // ========== AVVIO SERVER ==========
 (async () => {
     try {
         console.log('🚀 Avvio server Kilwinning...');
+
+        // Valida configurazione ENV
+        validateEnv();
 
         // Test connessione database
         const dbOk = await testConnection();
         if (!dbOk) {
             throw new Error('❌ Connessione al database fallita - Verificare le credenziali');
         }
+        logger.info('✅ Database connesso correttamente');
         console.log('✅ Database connesso correttamente');
 
         const PORT = process.env.PORT || 3000;
