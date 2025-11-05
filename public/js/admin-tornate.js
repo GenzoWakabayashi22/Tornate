@@ -76,10 +76,10 @@ function setupEventListeners() {
 async function loadFratelli() {
     try {
         const response = await fetch('/api/fratelli');
-        const data = await response.json();
+        const result = await response.json();
         
-        if (Array.isArray(data)) {
-            fratelliData = data;
+        if (result.success && Array.isArray(result.data)) {
+            fratelliData = result.data;
             populateFratelliDropdown();
         }
     } catch (error) {
