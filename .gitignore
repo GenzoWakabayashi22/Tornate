@@ -46,3 +46,6 @@ coverage/
 
 # Session files (if not using redis)
 sessions/
+
+# Temporary analysis folders
+biblioteca-source/
