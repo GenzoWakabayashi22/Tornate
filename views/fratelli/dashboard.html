@@ -109,12 +109,96 @@ body {
             display: inline-block;
         }
         
-        .header-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+        /* Menu Navigazione Principale */
+        .main-navigation {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
         }
-        
+
+        .nav-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.25);
+        }
+
+        .nav-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .nav-icon {
+            font-size: 3rem;
+            line-height: 1;
+        }
+
+        .nav-label {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Responsive per mobile */
+        @media (max-width: 768px) {
+            .main-navigation {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .nav-card {
+                padding: 25px 15px;
+            }
+
+            .nav-icon {
+                font-size: 2.5rem;
+            }
+
+            .nav-label {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-card {
+                padding: 20px 10px;
+            }
+
+            .nav-icon {
+                font-size: 2rem;
+            }
+
+            .nav-label {
+                font-size: 14px;
+            }
+        }
+
         .btn {
             padding: 10px 20px;
             border: none;
@@ -128,7 +212,7 @@ body {
             align-items: center;
             gap: 8px;
         }
-        
+
         .btn-primary { background: #007bff; color: white; }
         .btn-success { background: #28a745; color: white; }
         .btn-danger { background: #dc3545; color: white; }
@@ -136,7 +220,7 @@ body {
         .btn-info { background: #17a2b8; color: white; }
         .btn-warning { background: #ffc107; color: #212529; }
         .btn-admin { background: #6f42c1; color: white; }
-        
+
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -591,12 +675,26 @@ body {
                         <span class="user-ruolo" id="userRuolo">Caricamento ruolo...</span>
                     </div>
                 </div>
-                <div class="header-buttons" id="headerButtons">
-                    <a href="/fratelli/tornate" class="btn btn-primary">📅 Tornate</a>
-                    <a href="/fratelli/presenze" class="btn btn-success">📊 Presenze</a>
-                    <a href="/fratelli/tavole" class="btn btn-info">📚 Tavole</a>
-                    <button class="btn btn-danger" onclick="logout()">🚪 Esci</button>
-                </div>
+            </div>
+
+            <!-- Menu Navigazione Principale -->
+            <div class="main-navigation">
+                <a href="/fratelli/tornate" class="nav-card">
+                    <div class="nav-icon">📅</div>
+                    <div class="nav-label">Tornate</div>
+                </a>
+                <a href="/fratelli/presenze" class="nav-card">
+                    <div class="nav-icon">📊</div>
+                    <div class="nav-label">Presenze</div>
+                </a>
+                <a href="/fratelli/tavole" class="nav-card">
+                    <div class="nav-icon">📚</div>
+                    <div class="nav-label">Tavole</div>
+                </a>
+                <a href="https://biblioteca.oldgamers.it" target="_blank" class="nav-card">
+                    <div class="nav-icon">📖</div>
+                    <div class="nav-label">Biblioteca</div>
+                </a>
             </div>
 
             <!-- Statistiche Personali -->
@@ -702,16 +800,16 @@ body {
                         <li><a href="/fratelli/presenze">📊 Le Mie Presenze</a></li>
                         <li><a href="/fratelli/tavole">📚 Archivio Tavole</a></li>
                         <li><a href="/fratelli/riepilogo-fratelli">👥 Riepilogo Fratelli</a></li>
-                        <li id="adminFooterLink" style="display: none;"><a href="/admin/dashboard">🔧 Amministrazione</a></li>
+                        <li id="adminFooterLink" style="display: none;"><a href="/admin/dashboard">🔧 Admin</a></li>
                     </ul>
                 </div>
-                
+
                 <!-- Info e Supporto -->
                 <div class="footer-section">
                     <h4>ℹ️ Informazioni</h4>
                     <ul>
+                        <li><a href="#" onclick="logout(); return false;">🚪 Esci</a></li>
                         <li><a href="mailto:segreteria@loggiakilwinning.com">📧 Supporto Tecnico</a></li>
-                        <li><a href="#" onclick="logout()">🚪 Logout Rapido</a></li>
                         <li><span style="color: rgba(255,255,255,0.6); font-size: 13px;">💾 Sistema v2.1</span></li>
                         <li><span id="lastUpdate" style="color: rgba(255,255,255,0.6); font-size: 13px;">⏱️ Aggiornato: --:--</span></li>
                     </ul>
@@ -798,25 +896,9 @@ body {
             if (ADMIN_USERS.includes(userId)) {
                 // Mostra link admin nel footer
                 document.getElementById('adminFooterLink').style.display = 'block';
-                
-                createAdminSession().then(() => {
-                    const headerButtons = document.getElementById('headerButtons');
-                    const logoutBtn = headerButtons.querySelector('.btn-danger');
-                    
-                    let adminBtn = headerButtons.querySelector('.btn-admin');
-                    if (adminBtn) return;
-                    
-                    adminBtn = document.createElement('button');
-                    adminBtn.className = 'btn btn-admin';
-                    adminBtn.innerHTML = '🔧 Amministrazione';
-                    
-                    adminBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        accessoAdmin();
-                    });
-                    
-                    headerButtons.insertBefore(adminBtn, logoutBtn);
-                });
+
+                // Crea sessione admin silenziosa
+                createAdminSession();
             }
         }
 
