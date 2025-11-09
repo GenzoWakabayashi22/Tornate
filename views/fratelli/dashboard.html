@@ -112,7 +112,7 @@ body {
         /* Menu Navigazione Principale */
         .main-navigation {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             margin-bottom: 30px;
         }
@@ -130,7 +130,7 @@ body {
             gap: 12px;
             transition: all 0.3s ease;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .nav-card::before {
@@ -163,6 +163,26 @@ body {
             font-size: 18px;
             font-weight: 600;
             color: #333;
+        }
+
+        .new-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: linear-gradient(135deg, #e94560 0%, #d63447 100%);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(233, 69, 96, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         /* Responsive per mobile */
@@ -375,63 +395,65 @@ body {
         }
         
         .presenza-btn {
-            padding: 10px 16px;
+            padding: 12px 20px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            min-width: 90px;
+            min-width: 110px;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
-        
+
         .presenza-btn.presente {
             background: #28a745;
             color: white;
             box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
         }
-        
+
         .presenza-btn.presente:hover:not(.confermato) {
             background: #218838;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
         }
-        
+
         .presenza-btn.assente {
             background: #dc3545;
             color: white;
             box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
         }
-        
+
         .presenza-btn.assente:hover:not(.confermato) {
             background: #c82333;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
         }
-        
+
         .presenza-btn.pending {
             background: #ffc107;
             color: #212529;
             box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
         }
-        
+
         .presenza-btn.confermato {
-            opacity: 0.8;
+            opacity: 0.9;
             cursor: default;
             position: relative;
+            padding-right: 35px;
         }
-        
+
         .presenza-btn.confermato::after {
             content: '✓';
             position: absolute;
-            right: 8px;
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
             font-weight: bold;
+            font-size: 16px;
         }
         
         .presenza-status-text {
@@ -691,9 +713,18 @@ body {
                     <div class="nav-icon">📚</div>
                     <div class="nav-label">Tavole</div>
                 </a>
-                <a href="https://biblioteca.oldgamers.it" target="_blank" class="nav-card">
+                <a href="/fratelli/biblioteca" class="nav-card">
                     <div class="nav-icon">📖</div>
                     <div class="nav-label">Biblioteca</div>
+                </a>
+                <a href="https://finanze.loggiakilwinning.com" target="_blank" class="nav-card">
+                    <div class="nav-icon">💰</div>
+                    <div class="nav-label">Finanze</div>
+                </a>
+                <a href="/fratelli/chat" class="nav-card nav-card-new">
+                    <div class="nav-icon">💬</div>
+                    <div class="nav-label">Chat</div>
+                    <div class="new-badge">NUOVO</div>
                 </a>
             </div>
 

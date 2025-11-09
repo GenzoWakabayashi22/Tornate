@@ -1549,6 +1549,14 @@ app.get('/fratelli/riepilogo-fratelli', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/riepilogo-fratelli.html'));
 });
 
+app.get('/fratelli/biblioteca', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/fratelli/biblioteca.html'));
+});
+
+app.get('/fratelli/chat', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/fratelli/chat.html'));
+});
+
 // ========== API STATUS E TEST ==========
 app.get('/api/status', async (req, res) => {
     const dbStatus = await testConnection();
