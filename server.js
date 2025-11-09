@@ -115,37 +115,52 @@ app.use('/api/fratello', require('./routes/fratello-tavole'));
 
 // ========== API FRATELLI (INLINE) ==========
 
-// ✅ API: Login fratelli con controllo privilegi admin
+// ✅ API: Login fratelli con autenticazione password
 app.post('/api/fratelli/login', async (req, res) => {
     try {
-        const { nome } = req.body;
+        const { fratello_id, password } = req.body;
 
-        console.log('🔐 Tentativo login fratello:', nome);
+        console.log('🔐 Tentativo login fratello ID:', fratello_id);
 
-        if (!nome) {
+        if (!fratello_id || !password) {
             return res.status(400).json({
                 success: false,
-                message: 'Nome obbligatorio'
+                message: 'ID fratello e password obbligatori'
             });
         }
 
-        // Cerca il fratello nel database
-        const fratelli = await db.getFratelli();
-        const fratello = fratelli.find(f =>
-            f.nome.toLowerCase().trim() === nome.toLowerCase().trim()
-        );
+        // Cerca il fratello nel database con password_hash e role
+        const query = `
+            SELECT
+                id, nome, grado, cariche_fisse,
+                password_hash, role, tipo, attivo
+            FROM fratelli
+            WHERE id = ? AND attivo = 1
+        `;
 
-        if (!fratello) {
-            console.log('❌ Fratello non trovato:', nome);
+        const result = await db.executeQuery(query, [fratello_id]);
+
+        if (result.length === 0) {
+            console.log('❌ Fratello non trovato o non attivo:', fratello_id);
             return res.status(401).json({
                 success: false,
-                message: 'Fratello non riconosciuto'
+                message: 'Credenziali non valide'
             });
         }
 
-        // ✅ CONTROLLO PRIVILEGI ADMIN
-        const adminUsers = ['Paolo Giulio Gazzano', 'Emiliano Menicucci'];
-        const hasAdminAccess = adminUsers.includes(fratello.nome);
+        const fratello = result[0];
+
+        // Verifica password (confronto diretto con password_hash)
+        if (password !== fratello.password_hash) {
+            console.log('❌ Password errata per:', fratello.nome);
+            return res.status(401).json({
+                success: false,
+                message: 'Credenziali non valide'
+            });
+        }
+
+        // Determina privilegi admin dal campo role
+        const hasAdminAccess = (fratello.role === 'admin');
 
         // Crea sessione fratello
         req.session.user = {
@@ -154,8 +169,10 @@ app.post('/api/fratelli/login', async (req, res) => {
             nome: fratello.nome,
             grado: fratello.grado,
             cariche_fisse: fratello.cariche_fisse,
+            tipo: fratello.tipo,
+            role: fratello.role,
             ruolo: 'fratello',
-            admin_access: hasAdminAccess, // ✅ FLAG IMPORTANTE!
+            admin_access: hasAdminAccess,
             loginTime: new Date().toISOString(),
             lastActivity: new Date().toISOString()
         };
@@ -170,8 +187,9 @@ app.post('/api/fratelli/login', async (req, res) => {
                 });
             }
 
-            console.log(`✅ Login fratello successful:`, fratello.nome,
-                hasAdminAccess ? '(CON PRIVILEGI ADMIN)' : '(senza privilegi admin)');
+            console.log(`✅ Login successful:`, fratello.nome,
+                `[${fratello.tipo}]`,
+                hasAdminAccess ? '(ADMIN)' : '(user)');
 
             res.json({
                 success: true,
@@ -344,11 +362,16 @@ app.get('/api/fratelli', async (req, res) => {
                 nome,
                 grado,
                 cariche_fisse as carica,
+                tipo,
+                role,
                 attivo,
                 telefono
             FROM fratelli
             WHERE attivo = 1
-            ORDER BY nome ASC
+            ORDER BY
+                CASE tipo WHEN 'fratello' THEN 1 WHEN 'ospite' THEN 2 END,
+                CASE grado WHEN 'Maestro' THEN 1 WHEN 'Compagno' THEN 2 WHEN 'Apprendista' THEN 3 END,
+                nome ASC
         `;
 
         const fratelli = await db.executeQuery(query);
@@ -368,6 +391,66 @@ app.get('/api/fratelli', async (req, res) => {
             message: 'Errore nel caricamento dei fratelli',
             error: error.message,
             data: []
+        });
+    }
+});
+
+// GET /api/fratelli/login-list - Lista fratelli per dropdown login (divisi per tipo)
+app.get('/api/fratelli/login-list', async (req, res) => {
+    try {
+        console.log('🔍 API: Caricamento lista fratelli per login');
+
+        const query = `
+            SELECT
+                id,
+                nome,
+                grado,
+                cariche_fisse as carica,
+                tipo
+            FROM fratelli
+            WHERE attivo = 1
+            ORDER BY
+                CASE tipo WHEN 'fratello' THEN 1 WHEN 'ospite' THEN 2 END,
+                CASE grado WHEN 'Maestro' THEN 1 WHEN 'Compagno' THEN 2 WHEN 'Apprendista' THEN 3 END,
+                nome ASC
+        `;
+
+        const allFratelli = await db.executeQuery(query);
+
+        // Dividi per tipo
+        const fratelli = allFratelli.filter(f => f.tipo === 'fratello');
+        const ospiti = allFratelli.filter(f => f.tipo === 'ospite');
+
+        // Dividi fratelli per grado
+        const maestri = fratelli.filter(f => f.grado === 'Maestro');
+        const compagni = fratelli.filter(f => f.grado === 'Compagno');
+        const apprendisti = fratelli.filter(f => f.grado === 'Apprendista');
+
+        console.log(`✅ Caricati ${fratelli.length} fratelli, ${ospiti.length} ospiti`);
+
+        res.json({
+            success: true,
+            data: {
+                fratelli: {
+                    maestri,
+                    compagni,
+                    apprendisti
+                },
+                ospiti
+            },
+            count: {
+                fratelli: fratelli.length,
+                ospiti: ospiti.length,
+                totale: allFratelli.length
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Errore API fratelli login-list:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Errore nel caricamento dei fratelli',
+            error: error.message
         });
     }
 });
