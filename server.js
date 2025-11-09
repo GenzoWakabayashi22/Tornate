@@ -33,6 +33,9 @@ app.use((req, res, next) => {
     if (hostname.includes('biblioteca')) {
         req.appType = 'biblioteca';
         console.log(`📚 Richiesta BIBLIOTECA: ${req.method} ${req.path}`);
+    } else if (hostname.includes('finanze')) {
+        req.appType = 'finanze';
+        console.log(`💰 Richiesta FINANZE: ${req.method} ${req.path}`);
     } else {
         // QUALSIASI altro dominio = tornate
         req.appType = 'tornate';
@@ -98,7 +101,8 @@ app.use(session({
         secure: false,
         httpOnly: true,
         maxAge: 8 * 60 * 60 * 1000,
-        sameSite: 'lax'
+        sameSite: 'lax',
+        domain: process.env.NODE_ENV === 'production' ? '.loggiakilwinning.com' : undefined // Condividi cookie tra sottodomini in produzione
     },
     genid: function(req) {
         return 'kilw_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -2078,6 +2082,10 @@ app.get('/fratelli/riepilogo-fratelli', (req, res) => {
 });
 
 app.get('/fratelli/biblioteca', (req, res) => {
+    // Verifica sessione
+    if (!req.session || !req.session.user) {
+        return res.redirect('/fratelli/login');
+    }
     res.sendFile(path.join(__dirname, 'views/fratelli/biblioteca.html'));
 });
 
@@ -2085,8 +2093,12 @@ app.get('/fratelli/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/chat.html'));
 });
 
-// GET /fratelli/finanze - Finanze page
+// GET /fratelli/finanze - Finanze page (richiede autenticazione)
 app.get('/fratelli/finanze', (req, res) => {
+    // Verifica sessione
+    if (!req.session || !req.session.user) {
+        return res.redirect('/fratelli/login');
+    }
     res.sendFile(path.join(__dirname, 'views', 'fratelli', 'finanze.html'));
 });
 
@@ -2123,89 +2135,20 @@ app.get('/api/test', (req, res) => {
 
 app.get('/', (req, res) => {
     if (req.appType === 'biblioteca') {
-        // Homepage Biblioteca
-        res.send(`
-            <!DOCTYPE html>
-            <html lang="it">
-            <head>
-                <title>📚 Biblioteca R∴L∴ Kilwinning</title>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body {
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
-                        min-height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 20px;
-                    }
-                    .container {
-                        background: white;
-                        border-radius: 20px;
-                        padding: 40px;
-                        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-                        width: 100%;
-                        max-width: 500px;
-                        text-align: center;
-                    }
-                    .logo { font-size: 4rem; margin-bottom: 15px; }
-                    .title { font-size: 28px; font-weight: bold; color: #333; margin-bottom: 8px; }
-                    .subtitle { color: #666; margin-bottom: 35px; font-size: 16px; }
-                    .coming-soon {
-                        background: #fff3cd;
-                        border: 1px solid #ffeaa7;
-                        border-radius: 10px;
-                        padding: 20px;
-                        margin: 20px 0;
-                    }
-                    .back-link {
-                        display: inline-block;
-                        background: #8B4513;
-                        color: white;
-                        text-decoration: none;
-                        padding: 12px 25px;
-                        border-radius: 8px;
-                        margin-top: 20px;
-                        transition: background 0.3s;
-                    }
-                    .back-link:hover { background: #A0522D; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="logo">📚</div>
-                    <h1 class="title">Biblioteca Kilwinning</h1>
-                    <p class="subtitle">Gestione Libri e Documenti</p>
-                    
-                    <div class="coming-soon">
-                        <h3>🚧 In Costruzione</h3>
-                        <p>La biblioteca digitale della loggia sarà presto disponibile!</p>
-                        <p><strong>Funzionalità previste:</strong></p>
-                        <ul style="text-align: left; margin: 15px 0;">
-                            <li>📖 Catalogo libri massonici</li>
-                            <li>📚 Sistema prestiti</li>
-                            <li>⭐ Recensioni e valutazioni</li>
-                            <li>📋 Liste di lettura personali</li>
-                        </ul>
-                    </div>
-                    
-                    <a href="https://tornate.loggiakilwinning.com" class="back-link">
-                        🏛️ Torna alle Tornate
-                    </a>
-                    
-                    <div style="margin-top: 20px; font-size: 12px; color: #999;">
-                        © 2025 R∴L∴ Kilwinning - Biblioteca Digitale
-                    </div>
-                </div>
-            </body>
-            </html>
-        `);
+        // Redirect a /fratelli/biblioteca (richiede login)
+        res.redirect('/fratelli/login');
+    } else if (req.appType === 'finanze') {
+        // Redirect a /fratelli/finanze (richiede login)
+        res.redirect('/fratelli/login');
     } else {
-        // Homepage Tornate (quella esistente)
-        res.send(`
+        // Homepage Tornate (redirect al login)
+        res.redirect('/fratelli/login');
+    }
+});
+
+// Homepage principale con link ai servizi (se servisse in futuro)
+app.get('/home', (req, res) => {
+    res.send(`
             <!DOCTYPE html>
             <html lang="it">
             <head>
