@@ -100,12 +100,12 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'kilwinning_presenze_secret_2025_super_strong',
     resave: true,
     saveUninitialized: false,
-    rolling: true,
+    rolling: true,  // ✅ Rolling mantiene la sessione attiva con ogni richiesta
     name: 'kilwinning_session',
     cookie: {
         secure: false,
         httpOnly: true,
-        maxAge: 8 * 60 * 60 * 1000,
+        maxAge: 10 * 60 * 1000,  // ✅ FIX: 10 minuti di timeout (600,000 ms)
         sameSite: 'lax',
         domain: process.env.NODE_ENV === 'production' ? '.loggiakilwinning.com' : undefined // Condividi cookie tra sottodomini in produzione
     },
@@ -211,7 +211,7 @@ app.post('/api/fratelli/login', async (req, res) => {
             cariche_fisse: fratello.cariche_fisse,
             tipo: fratello.tipo,
             role: fratello.role,
-            ruolo: 'fratello',
+            ruolo: fratello.cariche_fisse || 'Fratello',  // ✅ FIX: Usa cariche_fisse per il ruolo
             admin_access: hasAdminAccess,
             loginTime: new Date().toISOString(),
             lastActivity: new Date().toISOString()
