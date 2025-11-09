@@ -862,11 +862,19 @@ body {
         // ID dei fratelli che hanno accesso admin
         const ADMIN_USERS = [16, 12]; // Paolo Giulio Gazzano (16), Emiliano Menicucci (12)
 
+        // ✅ Configurazione timeout sessione (10 minuti)
+        const SESSION_TIMEOUT = 10 * 60 * 1000; // 10 minuti in millisecondi
+        const WARNING_TIME = 9 * 60 * 1000; // Avviso a 9 minuti (1 minuto prima della scadenza)
+        let sessionTimer = null;
+        let warningTimer = null;
+        let lastActivityTime = Date.now();
+
         // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
             loadFratelliData();
             updateLastUpdate();
+            initSessionMonitoring(); // ✅ Inizializza monitoraggio sessione
         });
 
         // Aggiorna timestamp ultimo aggiornamento
@@ -981,14 +989,16 @@ body {
  // Carica statistiche personali
 async function loadStatistiche() {
     try {
-        const response = await fetch(`/api/fratelli/${fratelliAuth.id}/statistiche?tipo_loggia=nostra&anno=2025`);
+        // ✅ FIX: Usa l'endpoint corretto per le statistiche
+        const response = await fetch(`/api/presenze/fratello/${fratelliAuth.id}/statistiche?anno=2025`);
         if (response.ok) {
-            const stats = await response.json();
+            const result = await response.json();
+            const stats = result.data || result;
             
             // Assicurati che i campi esistano
-            const percentuale = stats.percentuale || stats.percentuale_presenze || 0;
-            const presenze = stats.presenzeCount || stats.presenze_totali || 0;
-            const totali = stats.totaliTornate || stats.tornate_totali || 0;
+            const percentuale = stats.percentuale || 0;
+            const presenze = stats.presenzeCount || 0;
+            const totali = stats.totaliTornate || 0;
             
             document.getElementById('statPresenze').textContent = Math.round(percentuale) + '%';
             document.getElementById('statPresenzeDettaglio').textContent = `${presenze} tornate su ${totali}`;
@@ -1002,31 +1012,10 @@ async function loadStatistiche() {
         }
     } catch (error) {
         console.error('❌ Errore caricamento statistiche:', error);
-        
-        // Prova API di fallback
-        try {
-            const fallbackResponse = await fetch(`/api/fratelli/${fratelliAuth.id}/presenze?anno=2025`);
-            if (fallbackResponse.ok) {
-                const presenzeData = await fallbackResponse.json();
-                const presenze = presenzeData.filter(p => p.presente === 1).length;
-                const totali = presenzeData.length;
-                const percentuale = totali > 0 ? Math.round((presenze / totali) * 100) : 0;
-                
-                document.getElementById('statPresenze').textContent = percentuale + '%';
-                document.getElementById('statPresenzeDettaglio').textContent = `${presenze} tornate su ${totali}`;
-                document.getElementById('statTornate').textContent = presenze;
-                
-                console.log('✅ Statistiche da fallback:', { percentuale, presenze, totali });
-            } else {
-                throw new Error('Anche fallback fallito');
-            }
-        } catch (fallbackError) {
-            console.error('❌ Anche fallback fallito:', fallbackError);
-            // Dati di emergenza
-            document.getElementById('statPresenze').textContent = '0%';
-            document.getElementById('statPresenzeDettaglio').textContent = '0 tornate su 0';
-            document.getElementById('statTornate').textContent = '0';
-        }
+        // Dati di emergenza
+        document.getElementById('statPresenze').textContent = '0%';
+        document.getElementById('statPresenzeDettaglio').textContent = '0 tornate su 0';
+        document.getElementById('statTornate').textContent = '0';
     }
 }
 
@@ -1585,6 +1574,71 @@ document.addEventListener('keydown', function(event) {
                 }
             }, 5000);
         }
+
+        // ========== GESTIONE TIMEOUT SESSIONE ==========
+        
+        // Inizializza monitoraggio sessione
+        function initSessionMonitoring() {
+            console.log('🔐 Inizializzazione monitoraggio sessione (timeout: 10 minuti)');
+            
+            // Resetta i timer quando l'utente è attivo
+            const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+            activityEvents.forEach(event => {
+                document.addEventListener(event, resetSessionTimer);
+            });
+            
+            // Avvia il timer iniziale
+            resetSessionTimer();
+        }
+        
+        // Resetta il timer della sessione
+        function resetSessionTimer() {
+            lastActivityTime = Date.now();
+            
+            // Cancella i timer precedenti
+            if (sessionTimer) clearTimeout(sessionTimer);
+            if (warningTimer) clearTimeout(warningTimer);
+            
+            // Avviso a 9 minuti (1 minuto prima della scadenza)
+            warningTimer = setTimeout(() => {
+                showAlert('⏰ La tua sessione scadrà tra 1 minuto per inattività', 'warning');
+            }, WARNING_TIME);
+            
+            // Logout automatico dopo 10 minuti
+            sessionTimer = setTimeout(() => {
+                console.log('⏱️ Sessione scaduta per inattività (10 minuti)');
+                sessionExpired();
+            }, SESSION_TIMEOUT);
+        }
+        
+        // Gestione scadenza sessione
+        function sessionExpired() {
+            // Mostra messaggio
+            alert('⏱️ La tua sessione è scaduta per inattività.\nVerrai reindirizzato alla pagina di login.');
+            
+            // Pulisci sessione e reindirizza
+            sessionStorage.removeItem('fratelliAuth');
+            
+            // Logout lato server
+            fetch('/api/fratelli/logout', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }).catch(err => console.error('Errore logout:', err));
+            
+            // Reindirizza al login
+            window.location.href = '/fratelli/login';
+        }
+        
+        // Verifica periodica dello stato della sessione (ogni 30 secondi)
+        setInterval(() => {
+            const timeSinceActivity = Date.now() - lastActivityTime;
+            
+            // Se sono passati più di 10 minuti dall'ultima attività
+            if (timeSinceActivity >= SESSION_TIMEOUT) {
+                console.log('⏱️ Sessione scaduta rilevata dal controllo periodico');
+                sessionExpired();
+            }
+        }, 30000); // Controlla ogni 30 secondi
     </script>
 
     <!-- PWA Registration -->

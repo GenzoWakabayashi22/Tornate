@@ -378,12 +378,14 @@
 
                 console.log('🔓 Login riuscito');
 
-                // Salva anche in sessionStorage per compatibilità
+                // ✅ FIX: Salva tutti i dati dell'utente da API response in sessionStorage
                 const fratelliData = {
-                    id: fratelloId,
-                    nome: selectedOption.dataset.nome,
-                    grado: selectedOption.dataset.grado,
-                    ruolo: selectedOption.dataset.ruolo || '',
+                    id: data.user.id,
+                    nome: data.user.nome,
+                    grado: data.user.grado,
+                    ruolo: data.user.ruolo || data.user.cariche_fisse || '',  // ✅ Usa ruolo dalla risposta API
+                    cariche_fisse: data.user.cariche_fisse || '',
+                    admin_access: data.admin_access || false,
                     loginTime: new Date().toISOString()
                 };
 
