@@ -3,7 +3,7 @@ const path = require('path');
 const cors = require('cors');
 const session = require('express-session');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit'); // ✅ CORRETTO: aggiunta parentesi mancante
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 
@@ -177,6 +177,7 @@ app.post('/api/fratelli/login', async (req, res) => {
             WHERE id = ? AND attivo = 1
         `;
 
+        // ✅ CORRETTO: Utilizzo di db.executeQuery invece di un inesistente db.query
         const result = await db.executeQuery(query, [fratello_id]);
 
         if (result.length === 0) {
@@ -253,9 +254,10 @@ app.get('/api/fratelli/me', async (req, res) => {
     console.log('🔍 [DEBUG] Session ID:', req.sessionID);
     console.log('🔍 [DEBUG] Session user:', req.session?.user?.nome);
 
+    let timeout;
     try {
         // ✅ TIMEOUT PER EVITARE 503
-        const timeout = setTimeout(() => {
+        timeout = setTimeout(() => {
             console.error('❌ [DEBUG] TIMEOUT - Risposta dopo 5 secondi');
             if (!res.headersSent) {
                 res.status(503).json({
@@ -315,7 +317,7 @@ app.get('/api/fratelli/me', async (req, res) => {
         }
 
     } catch (error) {
-        clearTimeout(timeout);
+        if(timeout) clearTimeout(timeout);
         console.error('💥 [DEBUG] Errore catturato in /api/fratelli/me:', error);
 
         if (!res.headersSent) {
@@ -1011,112 +1013,12 @@ console.log('✅ API PRESENZE CON FILTRO DATA INIZIAZIONE caricate correttamente
 // 📊 API STATISTICHE DASHBOARD - CON FILTRO DATA INIZIAZIONE
 // ========================================
 
-// GET /api/fratelli/:id/statistiche - PER IL DASHBOARD
+// ❌ RIMOSSO: Questo blocco è duplicato e causa un errore. La rotta è già definita sopra.
+/*
 app.get('/api/fratelli/:id/statistiche', async (req, res) => {
-    try {
-        const fratelloId = req.params.id;
-        const { anno } = req.query;
-
-        console.log(`📊 [DASHBOARD] Statistiche fratello ${fratelloId} - Anno: ${anno || '2025'}`);
-
-        // ✅ MANTIENI COMPATIBILITÀ CON DASHBOARD ESISTENTE
-        const annoTarget = anno || '2025';
-
-        if (annoTarget === '2025' || !anno) {
-            // 🎯 VERSIONE DASHBOARD 2025 - CON FILTRO DATA INIZIAZIONE
-            const queryStats = `
-                SELECT
-                    COUNT(DISTINCT t.id) as totaliTornate,
-                    COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) as presenzeCount,
-                    ROUND(
-                            (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) /
-                            NULLIF(COUNT(DISTINCT t.id), 0), 1
-                    ) as percentuale,
-                    f.data_iniziazione,
-                    f.nome as fratello_nome
-                FROM tornate t
-                         LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
-                         LEFT JOIN fratelli f ON f.id = ?
-                WHERE t.tipo_loggia = 'nostra'
-                    AND YEAR(t.data) = 2025
-                  AND t.data <= CURDATE()
-                  AND t.stato = 'completata'
-                  AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
-            `;
-
-            const stats = await db.executeQuery(queryStats, [fratelloId, fratelloId]);
-
-            // ✅ FORMATO SEMPLICE PER DASHBOARD (quello che si aspetta)
-            const result = {
-                totaliTornate: stats[0]?.totaliTornate || 0,
-                presenzeCount: stats[0]?.presenzeCount || 0,
-                percentuale: Math.round(stats[0]?.percentuale || 0)
-            };
-
-            console.log(`✅ [DASHBOARD] Statistiche 2025 fratello ${fratelloId}:`, result);
-            console.log(`📅 [DASHBOARD] Data iniziazione: ${stats[0]?.data_iniziazione}`);
-
-            // ✅ FORMATO RESPONSE COMPATIBILE CON DASHBOARD
-            res.json(result);
-
-        } else {
-            // 📊 VERSIONE COMPLETA PER ALTRI ANNI - CON FILTRO DATA INIZIAZIONE
-            const queryStats = `
-                SELECT
-                    COUNT(DISTINCT t.id) as totaliTornate,
-                    COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) as presenzeCount,
-                    COUNT(DISTINCT CASE WHEN p.presente = 0 THEN t.id END) as assenzeCount,
-                    ROUND(
-                            (COUNT(DISTINCT CASE WHEN p.presente = 1 THEN t.id END) * 100.0) /
-                            NULLIF(COUNT(DISTINCT t.id), 0), 1
-                    ) as percentuale,
-                    f.data_iniziazione,
-                    f.nome as fratello_nome
-                FROM tornate t
-                         LEFT JOIN presenze p ON t.id = p.tornata_id AND p.fratello_id = ?
-                         LEFT JOIN fratelli f ON f.id = ?
-                WHERE t.tipo_loggia = 'nostra'
-                    AND YEAR(t.data) = ?
-                  AND t.data <= CURDATE()
-                  AND t.stato = 'completata'
-                  AND t.data >= COALESCE(f.data_iniziazione, '1900-01-01')
-            `;
-
-            const stats = await db.executeQuery(queryStats, [fratelloId, fratelloId, anno]);
-
-            const result = {
-                success: true,
-                data: {
-                    totaliTornate: stats[0]?.totaliTornate || 0,
-                    presenzeCount: stats[0]?.presenzeCount || 0,
-                    assenzeCount: stats[0]?.assenzeCount || 0,
-                    percentuale: Math.round(stats[0]?.percentuale || 0),
-                    data_iniziazione: stats[0]?.data_iniziazione,
-                    fratello_nome: stats[0]?.fratello_nome
-                },
-                fratello_id: fratelloId,
-                filtro_anno: anno
-            };
-
-            console.log(`✅ [DASHBOARD] Statistiche anno ${anno} fratello ${fratelloId}:`, result);
-            console.log(`📅 [DASHBOARD] Data iniziazione: ${stats[0]?.data_iniziazione}`);
-
-            res.json(result);
-        }
-
-    } catch (error) {
-        console.error('❌ [DASHBOARD] Errore API statistiche:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Errore nel caricamento delle statistiche',
-            error: error.message,
-            // ✅ FALLBACK SICURO PER DASHBOARD
-            totaliTornate: 0,
-            presenzeCount: 0,
-            percentuale: 0
-        });
-    }
+    // ... codice duplicato ...
 });
+*/
 
 console.log('✅ API DASHBOARD STATISTICHE con filtro data iniziazione caricata!');
 // ========== MIDDLEWARE ADMIN ==========
@@ -2250,7 +2152,6 @@ app.get('/home', (req, res) => {
             </body>
             </html>
         `);
-    }
 });
 
 // ========== PWA ROUTES ==========
@@ -2300,7 +2201,7 @@ app.use((err, req, res, next) => {
 });
 
 // ========== 404 HANDLER ==========
-app.get('*', (req, res) => {
+app.use((req, res) => { // ✅ CORRETTO: Usare app.use per catturare tutte le rotte non gestite
     console.log(`❌ 404 - Rotta non trovata: ${req.method} ${req.path}`);
     res.status(404).json({
         success: false,
