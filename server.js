@@ -24,6 +24,11 @@ const poolFinanze = mysql.createPool({
 });
 
 const app = express();
+
+// ========== TRUST PROXY CONFIGURATION ==========
+// Abilita trust proxy per supportare X-Forwarded-* headers dietro reverse proxy
+app.set('trust proxy', true);
+
 // ========== MIDDLEWARE MULTI-DOMINIO ==========
 // AGGIUNGI DOPO: const app = express();
 
