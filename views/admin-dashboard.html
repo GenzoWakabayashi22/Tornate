@@ -213,12 +213,19 @@
         }
         
         /* ========== STATISTICHE DASHBOARD ========== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+   .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* 1 colonna su schermi piccoli (mobile) */
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* A partire da 768px di larghezza, passa a una griglia a 2 colonne */
+@media (min-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
         
         .stat-card {
             background: white;
@@ -701,7 +708,7 @@
             <div class="topbar">
                 <div class="topbar-left">
                     <button class="menu-toggle" id="menuToggle">☰</button>
-                    <h1 class="page-title" id="pageTitle">🏛️ Dashboard Amministrativo</h1>
+                    <h1 class="page-title" id="pageTitle">🏛️ Admin</h1>
                 </div>
                 <div class="topbar-right">
                     <div class="user-info">
