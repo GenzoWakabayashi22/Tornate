@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanze - Loggia Kilwinning</title>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f3460">
+
+    <!-- iOS Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tornate">
+
+    <!-- iOS Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png">
+
+    <!-- Standard Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+
+    <!-- Android/Chrome -->
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/finanze.css">
+</head>
+<body>
+    <!-- Main App -->
+    <div id="mainApp">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">
+                    <img src="/images/finanze-logo.png" alt="Logo Kilwinning" style="height:48px; margin-right:10px;">
+                    Finanze Loggia Kilwinning
+                </div>
+                <div class="user-info">
+                    <span id="userWelcome"></span>
+                    <a href="/fratelli/dashboard" class="btn btn-secondary">← Dashboard</a>
+                </div>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="dashboard">
+                <div class="stat-card">
+                    <div class="stat-label">Saldo Attuale</div>
+                    <div class="stat-value saldo" id="saldoAttuale">€ 0,00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Entrate Totali</div>
+                    <div class="stat-value entrate" id="entrateAnno">€ 0,00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Uscite Totali</div>
+                    <div class="stat-value uscite" id="usciteAnno">€ 0,00</div>
+                </div>
+            </div>
+
+            <!-- SISTEMA FILTRI AVANZATI -->
+            <div class="card">
+                <h3>🔍 Analisi e Filtri</h3>
+
+                <!-- Controlli Filtri -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Anno</label>
+                        <select id="filtroAnno" onchange="applicaFiltri()">
+                            <option value="">Tutti gli anni</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Tipo</label>
+                        <select id="filtroTipo" onchange="applicaFiltri()">
+                            <option value="">Entrate + Uscite</option>
+                            <option value="entrata">Solo Entrate</option>
+                            <option value="uscita">Solo Uscite</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Categoria</label>
+                        <select id="filtroCategoria" onchange="applicaFiltri()">
+                            <option value="">Tutte le categorie</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: end; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="resetFiltri()">🔄 Reset</button>
+                        <button class="btn" onclick="esportaFiltrati()">📊 Esporta</button>
+                    </div>
+                </div>
+
+                <!-- Statistiche Filtrate -->
+                <div id="statisticheFiltrate" class="dashboard" style="margin-bottom: 15px;">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #e6fffa, #b2f5ea);">
+                        <div class="stat-label">Entrate Filtrate</div>
+                        <div class="stat-value entrate" id="entrateFiltrate">€ 0,00</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #fed7d7, #feb2b2);">
+                        <div class="stat-label">Uscite Filtrate</div>
+                        <div class="stat-value uscite" id="usciteFiltrate">€ 0,00</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #e6f3ff, #bee3f8);">
+                        <div class="stat-label">Saldo Filtrato</div>
+                        <div class="stat-value saldo" id="saldoFiltrato">€ 0,00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <h3>Azioni Rapide</h3>
+                <div class="actions-container">
+                    <button class="btn btn-success" onclick="openModal('addTransactionModal')" id="addTransactionBtn">➕ Nuova Transazione</button>
+                    <button class="btn" onclick="openModal('viewTransactionsModal')">📋 Visualizza Transazioni</button>
+                    <button class="btn btn-secondary" onclick="openModal('manageCategoriesModal')" id="manageCategoriesBtn">🏷️ Gestisci Categorie</button>
+                    <button class="btn btn-secondary" onclick="exportData()">📊 Esporta Dati</button>
+                </div>
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="card">
+                <h3>Ultime Transazioni</h3>
+
+                <!-- Controlli tabella principale -->
+                <div class="main-table-controls">
+                    <div class="left-controls">
+                        <div class="entries-selector">
+                            <label>Mostra:</label>
+                            <select id="mainTableLimit" onchange="changeMainTableLimit()">
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="75">75</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span>transazioni</span>
+                        </div>
+                    </div>
+                    <div class="right-controls">
+                        <button class="btn btn-sm" onclick="openModal('viewTransactionsModal')">📋 Vedi Tutte</button>
+                    </div>
+                </div>
+
+                <!-- CONTENITORE RESPONSIVE PER TABELLA PRINCIPALE -->
+                <div class="table-responsive">
+                    <div id="transactionsContainer">
+                        <div class="loading"></div> <span>Caricamento transazioni...</span>
+                    </div>
+                </div>
+
+                <!-- Paginazione principale -->
+                <div id="mainPaginationControls" class="pagination-controls hidden">
+                    <div class="pagination-info">
+                        <span id="mainPaginationInfo">Nessuna transazione</span>
+                    </div>
+                    <div class="pagination-buttons">
+                        <button id="mainPrevBtn" class="btn btn-secondary btn-sm" onclick="changePage(-1)">← Precedente</button>
+                        <button id="mainNextBtn" class="btn btn-secondary btn-sm" onclick="changePage(1)">Successiva →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 5 Categorie - moved from filters section -->
+            <div class="card">
+                <div id="topCategorie" class="hidden">
+                    <h4 style="margin: 0 0 15px 0; color: #2d3748;">📊 Top 5 Categorie</h4>
+                    <div id="topCategorieContent"></div>
+                </div>
+
+                <!-- Dettaglio Categoria (quando c'è filtro categoria) -->
+                <div id="dettaglioCategoria" class="hidden">
+                    <h4 style="margin: 0 0 15px 0; color: #2d3748;">📋 Dettaglio Categoria</h4>
+                    <div id="dettaglioCategoriaContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Transaction Modal -->
+    <div id="addTransactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nuova Transazione</h3>
+                <span class="close" onclick="closeModal('addTransactionModal')">&times;</span>
+            </div>
+            <div id="transactionError" class="error hidden"></div>
+            <div id="transactionSuccess" class="success hidden"></div>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="transactionDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="transactionType" required onchange="updateCategories()">
+                        <option value="">Seleziona tipo</option>
+                        <option value="entrata">💰 Entrata</option>
+                        <option value="uscita">💸 Uscita</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="transactionCategory" required>
+                        <option value="">Prima seleziona il tipo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Importo (€)</label>
+                    <input type="number" step="0.01" id="transactionAmount" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Descrizione</label>
+                    <textarea id="transactionDescription" rows="3" required placeholder="Inserisci una descrizione della transazione..."></textarea>
+                </div>
+                <div class="actions-container">
+                    <button type="submit" class="btn btn-success">💾 Salva Transazione</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addTransactionModal')">❌ Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Transactions Modal -->
+    <div id="viewTransactionsModal" class="modal">
+        <div class="modal-content transactions-modal">
+            <div class="modal-header">
+                <h3>📋 Tutte le Transazioni</h3>
+                <span class="close" onclick="closeModal('viewTransactionsModal')">&times;</span>
+            </div>
+
+            <!-- Filters -->
+            <div style="margin-bottom: 20px;">
+                <!-- Search Bar -->
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>🔍 Cerca</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="searchBox" placeholder="Cerca per descrizione, categoria, importo..."
+                               onkeyup="if(event.key === 'Enter') performSearch()"
+                               style="flex: 1; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px;">
+                        <button class="btn" onclick="performSearch()" style="white-space: nowrap;">🔍 Cerca</button>
+                        <button class="btn btn-secondary" onclick="clearSearch()" style="white-space: nowrap;">✕ Pulisci</button>
+                    </div>
+                </div>
+
+                <div class="flex gap-15">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Anno</label>
+                        <select id="filterYear" onchange="filterTransactions()">
+                            <option value="">Tutti gli anni</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Tipo</label>
+                        <select id="filterType" onchange="filterTransactions()">
+                            <option value="">Tutti i tipi</option>
+                            <option value="entrata">Entrate</option>
+                            <option value="uscita">Uscite</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Categoria</label>
+                        <select id="filterCategory" onchange="filterTransactions()">
+                            <option value="">Tutte le categorie</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Mostra</label>
+                        <select id="modalTableLimit" onchange="filterTransactions()">
+                            <option value="25">25 per pagina</option>
+                            <option value="50">50 per pagina</option>
+                            <option value="75">75 per pagina</option>
+                            <option value="100">100 per pagina</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENITORE RESPONSIVE PER TABELLA MODAL -->
+            <div class="modal-table-container">
+                <div class="table-responsive">
+                    <div id="allTransactionsContainer">
+                        <div class="loading"></div> <span>Caricamento...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paginazione modal -->
+            <div id="modalPaginationControls" class="pagination-controls hidden">
+                <div class="pagination-info">
+                    <span id="modalPaginationInfo">Nessuna transazione</span>
+                </div>
+                <div class="pagination-buttons">
+                    <button id="modalPrevBtn" class="btn btn-secondary btn-sm" onclick="changeModalPage(-1)">← Precedente</button>
+                    <button id="modalNextBtn" class="btn btn-secondary btn-sm" onclick="changeModalPage(1)">Successiva →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Categories Modal -->
+    <div id="manageCategoriesModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>🏷️ Gestisci Categorie</h3>
+                <span class="close" onclick="closeModal('manageCategoriesModal')">&times;</span>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <button class="btn btn-success" onclick="openAddCategoryModal()" id="addCategoryBtn">➕ Nuova Categoria</button>
+            </div>
+
+            <div id="categoriesManagementContainer">
+                <div class="loading"></div> <span>Caricamento categorie...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nuova Categoria</h3>
+                <span class="close" onclick="closeModal('addCategoryModal')">&times;</span>
+            </div>
+            <div id="categoryError" class="error hidden"></div>
+            <div id="categorySuccess" class="success hidden"></div>
+            <form id="categoryForm">
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="categoryType" required>
+                        <option value="">Seleziona tipo</option>
+                        <option value="entrate">💰 Entrate</option>
+                        <option value="uscite">💸 Uscite</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nome Categoria</label>
+                    <input type="text" id="categoryName" required placeholder="Es: Donazioni, Affitto, Utenze...">
+                </div>
+                <div class="form-group">
+                    <label>Descrizione (opzionale)</label>
+                    <textarea id="categoryDescription" rows="2" placeholder="Descrizione della categoria..."></textarea>
+                </div>
+                <div class="actions-container">
+                    <button type="submit" class="btn btn-success">💾 Salva Categoria</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addCategoryModal')">❌ Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/finanze/app.js"></script>
+    <script src="/js/finanze/filtri.js"></script>
+
+    <!-- PWA Registration -->
+    <script src="/js/pwa-register.js"></script>
+</body>
+</html>

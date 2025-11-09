@@ -11,6 +11,18 @@ require('dotenv').config();
 // Importa la configurazione database
 const { testConnection, db } = require('./config/database');
 
+// Finanze database pool (separate database)
+const mysql = require('mysql2/promise');
+const poolFinanze = mysql.createPool({
+    host: process.env.DB_HOST_FINANZE || process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER_FINANZE || 'jmvvznbb_finanze_user',
+    password: process.env.DB_PASSWORD_FINANZE || 'Puntorosso22',
+    database: process.env.DB_NAME_FINANZE || 'jmvvznbb_finanze_db',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
 const app = express();
 // ========== MIDDLEWARE MULTI-DOMINIO ==========
 // AGGIUNGI DOPO: const app = express();
@@ -100,6 +112,24 @@ app.use((req, res, next) => {
     }
     next();
 });
+
+// Middleware: verifica se l'utente è il Tesoriere (solo Paolo può modificare Finanze)
+const requireTesoriere = (req, res, next) => {
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Autenticazione richiesta' });
+    }
+
+    const nome = req.session.user.nome || '';
+    const isTesoriere = nome.includes('Paolo Giulio Gazzano');
+
+    if (!isTesoriere) {
+        return res.status(403).json({
+            error: 'Permesso negato: solo il Tesoriere può modificare i dati finanziari'
+        });
+    }
+
+    next();
+};
 
 // ========== ROTTE MODULARI ==========
 
@@ -1593,6 +1623,421 @@ app.delete('/api/admin/tavole/:id', requireAdminAccess, async (req, res) => {
 
 console.log('✅ API ADMIN TAVOLE caricate correttamente');
 
+// ===================================
+// FINANZE API ROUTES
+// ===================================
+
+// GET /api/finanze/categorie/entrate
+app.get('/api/finanze/categorie/entrate', async (req, res) => {
+    try {
+        const [rows] = await poolFinanze.execute(
+            'SELECT id, nome, descrizione FROM categorie_entrate WHERE attiva = 1 ORDER BY nome'
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error('❌ Errore categorie entrate:', error);
+        res.status(500).json({ error: 'Errore server nel caricamento categorie entrate' });
+    }
+});
+
+// GET /api/finanze/categorie/uscite
+app.get('/api/finanze/categorie/uscite', async (req, res) => {
+    try {
+        const [rows] = await poolFinanze.execute(
+            'SELECT id, nome, descrizione FROM categorie_uscite WHERE attiva = 1 ORDER BY nome'
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error('❌ Errore categorie uscite:', error);
+        res.status(500).json({ error: 'Errore server nel caricamento categorie uscite' });
+    }
+});
+
+// POST /api/finanze/categorie/entrate - Solo Tesoriere
+app.post('/api/finanze/categorie/entrate', requireTesoriere, async (req, res) => {
+    try {
+        const { nome, descrizione } = req.body;
+
+        if (!nome || nome.trim() === '') {
+            return res.status(400).json({ error: 'Il nome della categoria è obbligatorio' });
+        }
+
+        const [result] = await poolFinanze.execute(
+            'INSERT INTO categorie_entrate (nome, descrizione) VALUES (?, ?)',
+            [nome.trim(), descrizione || '']
+        );
+
+        res.status(201).json({ message: 'Categoria entrata creata', id: result.insertId });
+    } catch (error) {
+        console.error('❌ Errore creazione categoria entrata:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            res.status(400).json({ error: 'Categoria già esistente' });
+        } else {
+            res.status(500).json({ error: 'Errore server nella creazione categoria' });
+        }
+    }
+});
+
+// POST /api/finanze/categorie/uscite - Solo Tesoriere
+app.post('/api/finanze/categorie/uscite', requireTesoriere, async (req, res) => {
+    try {
+        const { nome, descrizione } = req.body;
+
+        if (!nome || nome.trim() === '') {
+            return res.status(400).json({ error: 'Il nome della categoria è obbligatorio' });
+        }
+
+        const [result] = await poolFinanze.execute(
+            'INSERT INTO categorie_uscite (nome, descrizione) VALUES (?, ?)',
+            [nome.trim(), descrizione || '']
+        );
+
+        res.status(201).json({ message: 'Categoria uscita creata', id: result.insertId });
+    } catch (error) {
+        console.error('❌ Errore creazione categoria uscita:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            res.status(400).json({ error: 'Categoria già esistente' });
+        } else {
+            res.status(500).json({ error: 'Errore server nella creazione categoria' });
+        }
+    }
+});
+
+// PUT /api/finanze/categorie/entrate/:id - Solo Tesoriere
+app.put('/api/finanze/categorie/entrate/:id', requireTesoriere, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nome, descrizione } = req.body;
+
+        if (!nome || nome.trim() === '') {
+            return res.status(400).json({ error: 'Il nome della categoria è obbligatorio' });
+        }
+
+        const [result] = await poolFinanze.execute(
+            'UPDATE categorie_entrate SET nome = ?, descrizione = ? WHERE id = ?',
+            [nome.trim(), descrizione || '', id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Categoria non trovata' });
+        }
+
+        res.json({ message: 'Categoria entrata aggiornata' });
+    } catch (error) {
+        console.error('❌ Errore modifica categoria entrata:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            res.status(400).json({ error: 'Nome categoria già esistente' });
+        } else {
+            res.status(500).json({ error: 'Errore server nella modifica categoria' });
+        }
+    }
+});
+
+// PUT /api/finanze/categorie/uscite/:id - Solo Tesoriere
+app.put('/api/finanze/categorie/uscite/:id', requireTesoriere, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nome, descrizione } = req.body;
+
+        if (!nome || nome.trim() === '') {
+            return res.status(400).json({ error: 'Il nome della categoria è obbligatorio' });
+        }
+
+        const [result] = await poolFinanze.execute(
+            'UPDATE categorie_uscite SET nome = ?, descrizione = ? WHERE id = ?',
+            [nome.trim(), descrizione || '', id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Categoria non trovata' });
+        }
+
+        res.json({ message: 'Categoria uscita aggiornata' });
+    } catch (error) {
+        console.error('❌ Errore modifica categoria uscita:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            res.status(400).json({ error: 'Nome categoria già esistente' });
+        } else {
+            res.status(500).json({ error: 'Errore server nella modifica categoria' });
+        }
+    }
+});
+
+// DELETE /api/finanze/categorie/entrate/:id - Solo Tesoriere
+app.delete('/api/finanze/categorie/entrate/:id', requireTesoriere, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [transactions] = await poolFinanze.execute(
+            'SELECT COUNT(*) as count FROM transazioni WHERE categoria_entrata_id = ?',
+            [id]
+        );
+
+        if (transactions[0].count > 0) {
+            return res.status(400).json({
+                error: 'Impossibile eliminare: ci sono transazioni associate a questa categoria'
+            });
+        }
+
+        const [result] = await poolFinanze.execute(
+            'UPDATE categorie_entrate SET attiva = 0 WHERE id = ?',
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Categoria non trovata' });
+        }
+
+        res.json({ message: 'Categoria entrata eliminata' });
+    } catch (error) {
+        console.error('❌ Errore eliminazione categoria entrata:', error);
+        res.status(500).json({ error: 'Errore server nell\'eliminazione categoria' });
+    }
+});
+
+// DELETE /api/finanze/categorie/uscite/:id - Solo Tesoriere
+app.delete('/api/finanze/categorie/uscite/:id', requireTesoriere, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [transactions] = await poolFinanze.execute(
+            'SELECT COUNT(*) as count FROM transazioni WHERE categoria_uscita_id = ?',
+            [id]
+        );
+
+        if (transactions[0].count > 0) {
+            return res.status(400).json({
+                error: 'Impossibile eliminare: ci sono transazioni associate a questa categoria'
+            });
+        }
+
+        const [result] = await poolFinanze.execute(
+            'UPDATE categorie_uscite SET attiva = 0 WHERE id = ?',
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Categoria non trovata' });
+        }
+
+        res.json({ message: 'Categoria uscita eliminata' });
+    } catch (error) {
+        console.error('❌ Errore eliminazione categoria uscita:', error);
+        res.status(500).json({ error: 'Errore server nell\'eliminazione categoria' });
+    }
+});
+
+// GET /api/finanze/transazioni
+app.get('/api/finanze/transazioni', async (req, res) => {
+    try {
+        const { anno, limit = 50, offset = 0 } = req.query;
+
+        let query = `
+            SELECT
+                t.id,
+                DATE(t.data_transazione) as data_transazione,
+                t.tipo,
+                t.importo,
+                t.descrizione,
+                ce.nome as categoria_entrata,
+                cu.nome as categoria_uscita,
+                t.categoria_entrata_id,
+                t.categoria_uscita_id
+            FROM transazioni t
+            LEFT JOIN categorie_entrate ce ON t.categoria_entrata_id = ce.id
+            LEFT JOIN categorie_uscite cu ON t.categoria_uscita_id = cu.id
+        `;
+
+        const params = [];
+        if (anno) {
+            query += ' WHERE YEAR(t.data_transazione) = ?';
+            params.push(anno);
+        }
+
+        query += ' ORDER BY t.data_transazione DESC, t.id DESC LIMIT ? OFFSET ?';
+        params.push(parseInt(limit), parseInt(offset));
+
+        const [rows] = await poolFinanze.execute(query, params);
+
+        let countQuery = 'SELECT COUNT(*) as total FROM transazioni t';
+        const countParams = [];
+        if (anno) {
+            countQuery += ' WHERE YEAR(t.data_transazione) = ?';
+            countParams.push(anno);
+        }
+
+        const [countResult] = await poolFinanze.execute(countQuery, countParams);
+        const total = countResult[0].total;
+
+        res.json({
+            transactions: rows,
+            total: total,
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+            hasMore: (parseInt(offset) + rows.length) < total
+        });
+    } catch (error) {
+        console.error('❌ Errore get transazioni:', error);
+        res.status(500).json({ error: 'Errore server nel caricamento transazioni' });
+    }
+});
+
+// GET /api/finanze/transazioni/:id
+app.get('/api/finanze/transazioni/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [rows] = await poolFinanze.execute(`
+            SELECT
+                t.id,
+                DATE(t.data_transazione) as data_transazione,
+                t.tipo,
+                t.importo,
+                t.descrizione,
+                ce.nome as categoria_entrata,
+                cu.nome as categoria_uscita,
+                t.categoria_entrata_id,
+                t.categoria_uscita_id
+            FROM transazioni t
+            LEFT JOIN categorie_entrate ce ON t.categoria_entrata_id = ce.id
+            LEFT JOIN categorie_uscite cu ON t.categoria_uscita_id = cu.id
+            WHERE t.id = ?
+        `, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Transazione non trovata' });
+        }
+
+        res.json(rows[0]);
+    } catch (error) {
+        console.error('❌ Errore get transazione singola:', error);
+        res.status(500).json({ error: 'Errore server nel caricamento transazione' });
+    }
+});
+
+// POST /api/finanze/transazioni - Solo Tesoriere
+app.post('/api/finanze/transazioni', requireTesoriere, async (req, res) => {
+    try {
+        const { data_transazione, tipo, importo, descrizione, categoria_id } = req.body;
+
+        if (!data_transazione || !tipo || !importo || !descrizione || !categoria_id) {
+            return res.status(400).json({ error: 'Tutti i campi sono obbligatori' });
+        }
+
+        if (!['entrata', 'uscita'].includes(tipo)) {
+            return res.status(400).json({ error: 'Tipo transazione non valido' });
+        }
+
+        const importoNum = parseFloat(importo);
+        if (isNaN(importoNum) || importoNum <= 0) {
+            return res.status(400).json({ error: 'Importo deve essere un numero maggiore di 0' });
+        }
+
+        const categoria_entrata_id = tipo === 'entrata' ? categoria_id : null;
+        const categoria_uscita_id = tipo === 'uscita' ? categoria_id : null;
+
+        const [result] = await poolFinanze.execute(
+            `INSERT INTO transazioni
+             (data_transazione, tipo, importo, descrizione, categoria_entrata_id, categoria_uscita_id)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [data_transazione, tipo, importoNum, descrizione, categoria_entrata_id, categoria_uscita_id]
+        );
+
+        res.status(201).json({ message: 'Transazione creata con successo', id: result.insertId });
+    } catch (error) {
+        console.error('❌ Errore creazione transazione:', error);
+        res.status(500).json({ error: 'Errore server nella creazione transazione' });
+    }
+});
+
+// PUT /api/finanze/transazioni/:id - Solo Tesoriere
+app.put('/api/finanze/transazioni/:id', requireTesoriere, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { data_transazione, tipo, importo, descrizione, categoria_id } = req.body;
+
+        if (!data_transazione || !tipo || !importo || !descrizione || !categoria_id) {
+            return res.status(400).json({ error: 'Tutti i campi sono obbligatori' });
+        }
+
+        if (!['entrata', 'uscita'].includes(tipo)) {
+            return res.status(400).json({ error: 'Tipo transazione non valido' });
+        }
+
+        const importoNum = parseFloat(importo);
+        if (isNaN(importoNum) || importoNum <= 0) {
+            return res.status(400).json({ error: 'Importo deve essere un numero maggiore di 0' });
+        }
+
+        const categoria_entrata_id = tipo === 'entrata' ? categoria_id : null;
+        const categoria_uscita_id = tipo === 'uscita' ? categoria_id : null;
+
+        const [result] = await poolFinanze.execute(
+            `UPDATE transazioni
+             SET data_transazione = ?, tipo = ?, importo = ?, descrizione = ?,
+                 categoria_entrata_id = ?, categoria_uscita_id = ?, updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?`,
+            [data_transazione, tipo, importoNum, descrizione, categoria_entrata_id, categoria_uscita_id, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Transazione non trovata' });
+        }
+
+        res.json({ message: 'Transazione aggiornata con successo' });
+    } catch (error) {
+        console.error('❌ Errore modifica transazione:', error);
+        res.status(500).json({ error: 'Errore server nella modifica transazione' });
+    }
+});
+
+// DELETE /api/finanze/transazioni/:id - Solo Tesoriere
+app.delete('/api/finanze/transazioni/:id', requireTesoriere, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [result] = await poolFinanze.execute('DELETE FROM transazioni WHERE id = ?', [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Transazione non trovata' });
+        }
+
+        res.json({ message: 'Transazione eliminata con successo' });
+    } catch (error) {
+        console.error('❌ Errore eliminazione transazione:', error);
+        res.status(500).json({ error: 'Errore server nell\'eliminazione transazione' });
+    }
+});
+
+// GET /api/finanze/riepilogo
+app.get('/api/finanze/riepilogo', async (req, res) => {
+    try {
+        const [totaliCumulativi] = await poolFinanze.execute(`
+            SELECT
+                SUM(CASE WHEN tipo = 'entrata' THEN importo ELSE 0 END) as totale_entrate,
+                SUM(CASE WHEN tipo = 'uscita' THEN importo ELSE 0 END) as totale_uscite
+            FROM transazioni
+        `);
+
+        const totaleEntrate = parseFloat(totaliCumulativi[0].totale_entrate || 0);
+        const totaleUscite = parseFloat(totaliCumulativi[0].totale_uscite || 0);
+        const saldoAttuale = totaleEntrate - totaleUscite;
+
+        const riepilogo = {
+            totale_entrate: totaleEntrate,
+            totale_uscite: totaleUscite,
+            saldo_finale: saldoAttuale
+        };
+
+        res.json(riepilogo);
+    } catch (error) {
+        console.error('❌ Errore calcolo riepilogo:', error);
+        res.status(500).json({ error: 'Errore server nel calcolo riepilogo' });
+    }
+});
+
+console.log('✅ API FINANZE caricate correttamente');
+
 // ========== ROTTE AREA FRATELLI (HTML) ==========
 app.get('/fratelli/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/login.html'));
@@ -1638,6 +2083,11 @@ app.get('/fratelli/biblioteca', (req, res) => {
 
 app.get('/fratelli/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/fratelli/chat.html'));
+});
+
+// GET /fratelli/finanze - Finanze page
+app.get('/fratelli/finanze', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'fratelli', 'finanze.html'));
 });
 
 // ========== API STATUS E TEST ==========
