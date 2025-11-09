@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0f3460"/>
+
+  <!-- Compass and Square (Masonic Symbol) -->
+  <g transform="translate(256, 256)">
+    <!-- Compass -->
+    <path d="M -40,-80 L 0,80 L 40,-80 Z" fill="#e94560" stroke="#16213e" stroke-width="4"/>
+
+    <!-- Square -->
+    <path d="M -80,-40 L -80,40 L 80,40 M -80,-40 L 10,-40" fill="none" stroke="#f1c40f" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- Center circle (G) -->
+    <circle cx="0" cy="0" r="35" fill="#16213e" stroke="#f1c40f" stroke-width="3"/>
+    <text x="0" y="15" font-family="serif" font-size="48" font-weight="bold" fill="#f1c40f" text-anchor="middle">G</text>
+  </g>
+
+  <!-- App Name -->
+  <text x="256" y="450" font-family="sans-serif" font-size="42" font-weight="bold" fill="#ffffff" text-anchor="middle">TORNATE</text>
+</svg>

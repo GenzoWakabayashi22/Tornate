@@ -1764,6 +1764,42 @@ app.get('/', (req, res) => {
     }
 });
 
+// ========== PWA ROUTES ==========
+// Serve manifest.json con header corretti
+app.get('/manifest.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/manifest+json');
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache 1 ora
+    res.sendFile(path.join(__dirname, 'public', 'manifest.json'));
+});
+
+// Serve service-worker.js con header corretti
+app.get('/service-worker.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // No cache per SW
+    res.setHeader('Service-Worker-Allowed', '/'); // Scope globale
+    res.sendFile(path.join(__dirname, 'public', 'service-worker.js'));
+});
+
+// Serve icone PWA
+app.get('/icons/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const iconPath = path.join(__dirname, 'public', 'icons', filename);
+
+    // Verifica se il file esiste
+    if (require('fs').existsSync(iconPath)) {
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache 24 ore
+        res.sendFile(iconPath);
+    } else {
+        // Se l'icona non esiste, serve l'SVG master
+        if (filename.startsWith('icon-') && filename.endsWith('.png')) {
+            res.setHeader('Cache-Control', 'public, max-age=3600');
+            res.sendFile(path.join(__dirname, 'public', 'icons', 'icon-master.svg'));
+        } else {
+            res.status(404).send('Icona non trovata');
+        }
+    }
+});
+
 // ========== MIDDLEWARE DI ERROR HANDLING ==========
 app.use((err, req, res, next) => {
     console.error('💥 Errore middleware:', err);
@@ -1815,6 +1851,7 @@ app.get('*', (req, res) => {
    • 📚 Biblioteca (in preparazione)
    • 👥 Admin integrato area fratelli
    • 🌐 Multi-dominio configurato
+   • 📱 PWA - Installabile su iOS/macOS
    =====================================
 `);
         });
