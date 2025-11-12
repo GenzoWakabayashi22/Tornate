@@ -258,6 +258,26 @@ body {
             font-size: 13px;
             padding: 8px 16px;
         }
+
+        /* Action Buttons Section - Nuova sezione dedicata */
+        .action-buttons-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons-section .btn {
+            font-size: 14px;
+            padding: 12px 24px;
+            min-width: 140px;
+        }
         
         .stats-grid {
             display: grid;
@@ -654,6 +674,15 @@ body {
         }
         
         @media (max-width: 768px) {
+            .action-buttons-section {
+                flex-direction: column;
+            }
+            
+            .action-buttons-section .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
             .header {
                 flex-direction: column;
                 text-align: center;
@@ -722,17 +751,37 @@ body {
                         <span class="user-ruolo" id="userRuolo">Caricamento ruolo...</span>
                     </div>
                 </div>
+            </div>
 
-                <!-- NUOVO: Bottoni Admin ed Esci -->
-                <div class="header-actions" style="display: flex !important; gap: 10px; align-items: center; flex-shrink: 0;">
-                    <button id="adminHeaderBtn" class="btn btn-admin" onclick="accessoAdmin()"
-                            style="display: none; font-size: 13px; padding: 8px 16px;">
-                        🔧 Admin
-                    </button>
-                    <button class="btn btn-danger" onclick="logout()"
-                            style="font-size: 13px; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                        🚪 Esci
-                    </button>
+            <!-- NUOVA SEZIONE: Bottoni Admin/Esci -->
+            <div class="action-buttons-section">
+                <button id="adminHeaderBtn" class="btn btn-admin" onclick="accessoAdmin()" style="display: none;">
+                    🔧 Admin
+                </button>
+                <button class="btn btn-danger" onclick="logout()">
+                    🚪 Esci
+                </button>
+            </div>
+
+            <!-- Statistiche Personali -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🏛️</div>
+                    <div class="stat-number" id="statRuolo">-</div>
+                    <div class="stat-label">Ruolo in Loggia</div>
+                    <div class="stat-sublabel">Carica istituzionale</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-number" id="statPresenze">-%</div>
+                    <div class="stat-label">Presenze 2025</div>
+                    <div class="stat-sublabel" id="statPresenzeDettaglio">- tornate su -</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-number" id="statTornate">-</div>
+                    <div class="stat-label">Tornate Partecipate</div>
+                    <div class="stat-sublabel">Anno corrente</div>
                 </div>
             </div>
 
@@ -763,28 +812,6 @@ body {
                     <div class="nav-label">Chat</div>
                     <div class="new-badge">NUOVO</div>
                 </a>
-            </div>
-
-            <!-- Statistiche Personali -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">🏛️</div>
-                    <div class="stat-number" id="statRuolo">-</div>
-                    <div class="stat-label">Ruolo in Loggia</div>
-                    <div class="stat-sublabel">Carica istituzionale</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📊</div>
-                    <div class="stat-number" id="statPresenze">-%</div>
-                    <div class="stat-label">Presenze 2025</div>
-                    <div class="stat-sublabel" id="statPresenzeDettaglio">- tornate su -</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📅</div>
-                    <div class="stat-number" id="statTornate">-</div>
-                    <div class="stat-label">Tornate Partecipate</div>
-                    <div class="stat-sublabel">Anno corrente</div>
-                </div>
             </div>
 
             <!-- Alert Area -->
