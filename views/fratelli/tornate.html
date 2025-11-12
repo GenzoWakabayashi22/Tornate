@@ -158,10 +158,24 @@
         .btn-primary { background: #007bff; color: white; }
         .btn-success { background: #28a745; color: white; }
         .btn-secondary { background: #6c757d; color: white; }
-        
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-admin { background: #6f42c1; color: white; }
+
         .btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Bottoni Header Actions */
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-actions .btn {
+            font-size: 13px;
+            padding: 8px 16px;
         }
         
         .tornate-grid {
@@ -408,7 +422,18 @@
                 flex-direction: column;
                 text-align: center;
             }
-            
+
+            .header-actions {
+                justify-content: center;
+                width: 100%;
+                margin-top: 15px;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                max-width: 150px;
+            }
+
             .filters-row {
                 flex-direction: column;
                 align-items: stretch;
@@ -451,7 +476,7 @@
                     <p style="color: #666; margin-top: 5px;">Gestione completa delle partecipazioni</p>
                 </div>
             </div>
-            
+
             <div class="header-stats">
                 <div class="stat-item">
                     <div class="stat-number" id="statTotali">0</div>
@@ -465,6 +490,17 @@
                     <div class="stat-number" id="statPercentuale">0%</div>
                     <div>Presenza</div>
                 </div>
+            </div>
+
+            <!-- NUOVO: Bottoni Admin ed Esci -->
+            <div class="header-actions">
+                <button id="adminHeaderBtn" class="btn btn-admin" onclick="accessoAdmin()"
+                        style="display: none;">
+                    🔧 Admin
+                </button>
+                <button class="btn btn-danger" onclick="logout()">
+                    🚪 Esci
+                </button>
             </div>
         </div>
 
@@ -521,6 +557,9 @@
         let tornateData = [];
         let tornateFiltered = [];
 
+        // ID dei fratelli che hanno accesso admin
+        const ADMIN_USERS = [16, 12]; // Paolo Giulio Gazzano (16), Emiliano Menicucci (12)
+
         // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
@@ -531,18 +570,51 @@
         // Verifica autenticazione
         function checkAuth() {
             const authData = sessionStorage.getItem('fratelliAuth');
-            
+
             if (!authData) {
                 window.location.href = '/fratelli/login';
                 return;
             }
-            
+
             try {
                 fratelliAuth = JSON.parse(authData);
                 console.log('👤 Fratello autenticato:', fratelliAuth.nome);
+                setupAdminAccess(); // ✅ Setup accesso admin
             } catch (error) {
                 console.error('Errore parsing auth data:', error);
                 window.location.href = '/fratelli/login';
+            }
+        }
+
+        // Setup accesso admin
+        function setupAdminAccess() {
+            const userId = parseInt(fratelliAuth.id);
+
+            if (ADMIN_USERS.includes(userId)) {
+                // Mostra bottone Admin nell'header
+                const adminHeaderBtn = document.getElementById('adminHeaderBtn');
+                if (adminHeaderBtn) {
+                    adminHeaderBtn.style.display = 'inline-flex';
+                }
+            }
+        }
+
+        // Accesso admin
+        function accessoAdmin() {
+            const userId = parseInt(fratelliAuth.id);
+            if (!ADMIN_USERS.includes(userId)) {
+                alert('Non hai i privilegi per accedere all\'area amministrativa');
+                return;
+            }
+
+            window.location.href = '/admin/dashboard';
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Sei sicuro di voler uscire dall\'area riservata?')) {
+                sessionStorage.removeItem('fratelliAuth');
+                window.location.href = '/';
             }
         }
 

@@ -281,6 +281,21 @@
             background: #38a169;
         }
 
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-admin { background: #6f42c1; color: white; }
+
+        /* Bottoni Header Actions */
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-actions .btn {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
+
         /* NUOVO: Grid a due colonne per tornate */
         .content-grid {
             display: grid;
@@ -474,14 +489,25 @@
             .stats-grid-bottom {
                 grid-template-columns: 1fr;
             }
-            
+
             .content-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .header-content {
                 flex-direction: column;
                 text-align: center;
+            }
+
+            .header-actions {
+                justify-content: center;
+                width: 100%;
+                margin-top: 15px;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                max-width: 150px;
             }
             
             .stats-overview {
@@ -527,6 +553,17 @@
                         <div class="stat-number" id="mediaPercent">0%</div>
                         <div>Media</div>
                     </div>
+                </div>
+
+                <!-- NUOVO: Bottoni Admin ed Esci -->
+                <div class="header-actions">
+                    <button id="adminHeaderBtn" class="btn btn-admin" onclick="accessoAdmin()"
+                            style="display: none;">
+                        🔧 Admin
+                    </button>
+                    <button class="btn btn-danger" onclick="logout()">
+                        🚪 Esci
+                    </button>
                 </div>
             </div>
         </div>
@@ -744,6 +781,9 @@
         };
         let storicoTornateReali = [];
 
+        // ID dei fratelli che hanno accesso admin
+        const ADMIN_USERS = [16, 12]; // Paolo Giulio Gazzano (16), Emiliano Menicucci (12)
+
         // 🔍 RILEVAMENTO FRATELLO (CORRETTO)
         async function rilevaaFratello() {
             console.log('🔄 Rilevamento fratello in corso...');
@@ -765,8 +805,9 @@
                     };
                     
                     mostraInfoFratello(fratelloInfo);
+                    setupAdminAccess(); // ✅ Setup accesso admin
                     return fratelloId;
-                    
+
                 } catch (error) {
                     console.error('Errore parsing sessionStorage:', error);
                 }
@@ -809,10 +850,42 @@
             const fratelloInfoDiv = document.getElementById('fratelloInfo');
             const fratelloDettagli = document.getElementById('fratelloDettagli');
             const headerSubtitle = document.getElementById('headerSubtitle');
-            
+
             fratelloDettagli.textContent = `Presenze di ${info.nome} (ID: ${info.id})`;
             headerSubtitle.textContent = `Analisi presenze per ${info.nome}`;
             fratelloInfoDiv.style.display = 'block';
+        }
+
+        // Setup accesso admin
+        function setupAdminAccess() {
+            const userId = parseInt(fratelloInfo?.id || fratelloId);
+
+            if (ADMIN_USERS.includes(userId)) {
+                // Mostra bottone Admin nell'header
+                const adminHeaderBtn = document.getElementById('adminHeaderBtn');
+                if (adminHeaderBtn) {
+                    adminHeaderBtn.style.display = 'inline-flex';
+                }
+            }
+        }
+
+        // Accesso admin
+        function accessoAdmin() {
+            const userId = parseInt(fratelloInfo?.id || fratelloId);
+            if (!ADMIN_USERS.includes(userId)) {
+                alert('Non hai i privilegi per accedere all\'area amministrativa');
+                return;
+            }
+
+            window.location.href = '/admin/dashboard';
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Sei sicuro di voler uscire dall\'area riservata?')) {
+                sessionStorage.removeItem('fratelliAuth');
+                window.location.href = '/';
+            }
         }
 
         // 📊 CARICA STATISTICHE REALI (CORRETTO - ASYNC AGGIUNTO!)
