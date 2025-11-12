@@ -178,6 +178,21 @@
             background: #cbd5e0;
         }
 
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-admin { background: #6f42c1; color: white; }
+
+        /* Bottoni Header Actions */
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-actions .btn {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
+
         /* Statistiche Rapide */
         .stats-summary {
             display: grid;
@@ -368,15 +383,26 @@
                 flex-direction: column;
                 align-items: stretch;
             }
-            
+
             .filter-buttons {
                 margin-left: 0;
                 justify-content: center;
             }
-            
+
             .header-content {
                 flex-direction: column;
                 text-align: center;
+            }
+
+            .header-actions {
+                justify-content: center;
+                width: 100%;
+                margin-top: 15px;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                max-width: 150px;
             }
             
             .stats-summary {
@@ -405,6 +431,17 @@
                 <div class="header-title">
                     <h1><i class="fas fa-users"></i> Riepilogo Fratelli e Presenze</h1>
                     <p>Solo presenze/assenze della nostra Loggia <span class="loggia-badge">Kilwinning</span></p>
+                </div>
+
+                <!-- NUOVO: Bottoni Admin ed Esci -->
+                <div class="header-actions">
+                    <button id="adminHeaderBtn" class="btn btn-admin" onclick="accessoAdmin()"
+                            style="display: none;">
+                        🔧 Admin
+                    </button>
+                    <button class="btn btn-danger" onclick="logout()">
+                        🚪 Esci
+                    </button>
                 </div>
             </div>
         </div>
@@ -518,11 +555,72 @@
         let presenzeData = [];
         let annoSelezionato = '2025';
 
+        // ID dei fratelli che hanno accesso admin
+        const ADMIN_USERS = [16, 12]; // Paolo Giulio Gazzano (16), Emiliano Menicucci (12)
+
         // Carica dati all'avvio
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Avvio applicazione - Solo Loggia Nostra');
+            checkAuthAndSetupAdmin();
             caricaDati();
         });
+
+        function checkAuthAndSetupAdmin() {
+            const authData = sessionStorage.getItem('fratelliAuth');
+            if (authData) {
+                try {
+                    const fratelliAuth = JSON.parse(authData);
+                    setupAdminAccess(fratelliAuth.id);
+                } catch (error) {
+                    console.error('Errore parsing auth data:', error);
+                }
+            }
+        }
+
+        // Setup accesso admin
+        function setupAdminAccess(userId) {
+            const userIdInt = parseInt(userId);
+
+            if (ADMIN_USERS.includes(userIdInt)) {
+                // Mostra bottone Admin nell'header
+                const adminHeaderBtn = document.getElementById('adminHeaderBtn');
+                if (adminHeaderBtn) {
+                    adminHeaderBtn.style.display = 'inline-flex';
+                }
+            }
+        }
+
+        // Accesso admin
+        function accessoAdmin() {
+            const authData = sessionStorage.getItem('fratelliAuth');
+            if (!authData) {
+                alert('Devi essere autenticato');
+                return;
+            }
+
+            try {
+                const fratelliAuth = JSON.parse(authData);
+                const userId = parseInt(fratelliAuth.id);
+
+                if (!ADMIN_USERS.includes(userId)) {
+                    alert('Non hai i privilegi per accedere all\'area amministrativa');
+                    return;
+                }
+
+                window.location.href = '/admin/dashboard';
+            } catch (error) {
+                console.error('Errore:', error);
+                alert('Errore durante l\'accesso admin');
+            }
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Sei sicuro di voler uscire dall\'area riservata?')) {
+                sessionStorage.removeItem('fratelliAuth');
+                window.location.href = '/';
+            }
+        }
 
         async function caricaDati() {
             try {

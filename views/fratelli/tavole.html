@@ -100,10 +100,25 @@
             background: #6c757d;
             color: white;
         }
-        
+
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-admin { background: #6f42c1; color: white; }
+
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Bottoni Header Actions */
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-actions .btn {
+            font-size: 13px;
+            padding: 8px 16px;
         }
         
         .card {
@@ -332,14 +347,25 @@
             .form-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .filters {
                 flex-direction: column;
             }
-            
+
             .header {
                 flex-direction: column;
                 gap: 15px;
+            }
+
+            .header-actions {
+                justify-content: center;
+                width: 100%;
+                margin-top: 15px;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                max-width: 150px;
             }
             
             .nav-buttons {
@@ -359,6 +385,17 @@
             <div class="nav-buttons">
                 <a href="/fratelli/dashboard" class="btn btn-secondary">← Dashboard</a>
                 <a href="/fratelli/tornate" class="btn btn-secondary">Tornate</a>
+            </div>
+
+            <!-- NUOVO: Bottoni Admin ed Esci -->
+            <div class="header-actions">
+                <button id="adminHeaderBtn" class="btn btn-admin" onclick="accessoAdmin()"
+                        style="display: none;">
+                    🔧 Admin
+                </button>
+                <button class="btn btn-danger" onclick="logout()">
+                    🚪 Esci
+                </button>
             </div>
         </div>
 
@@ -496,6 +533,9 @@ let myTavoleData = [];
 let filteredData = [];
 let currentUser = null;
 
+// ID dei fratelli che hanno accesso admin
+const ADMIN_USERS = [16, 12]; // Paolo Giulio Gazzano (16), Emiliano Menicucci (12)
+
 // Inizializzazione pagina
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🏛️ Inizializzazione pagina tavole fratello');
@@ -511,7 +551,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         currentUser = JSON.parse(authData);
         console.log('✅ Utente autenticato:', currentUser.nome, 'ID:', currentUser.id);
-        
+        setupAdminAccess(); // ✅ Setup accesso admin
+
     } catch (error) {
         console.error('❌ Errore parsing auth data:', error);
         window.location.href = '/fratelli/login';
@@ -532,6 +573,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Setup accesso admin
+function setupAdminAccess() {
+    const userId = parseInt(currentUser?.id);
+
+    if (ADMIN_USERS.includes(userId)) {
+        // Mostra bottone Admin nell'header
+        const adminHeaderBtn = document.getElementById('adminHeaderBtn');
+        if (adminHeaderBtn) {
+            adminHeaderBtn.style.display = 'inline-flex';
+        }
+    }
+}
+
+// Accesso admin
+function accessoAdmin() {
+    const userId = parseInt(currentUser?.id);
+    if (!ADMIN_USERS.includes(userId)) {
+        alert('Non hai i privilegi per accedere all\'area amministrativa');
+        return;
+    }
+
+    window.location.href = '/admin/dashboard';
+}
+
+// Logout
+function logout() {
+    if (confirm('Sei sicuro di voler uscire dall\'area riservata?')) {
+        sessionStorage.removeItem('fratelliAuth');
+        window.location.href = '/';
+    }
+}
 
 // ✅ CARICA TAVOLE (usa endpoint funzionante)
 async function caricaTavole() {

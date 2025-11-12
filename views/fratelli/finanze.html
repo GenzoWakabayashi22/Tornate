@@ -27,6 +27,35 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/finanze.css">
+    <style>
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-admin { background: #6f42c1; color: white; }
+
+        /* Bottoni Header Actions */
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-actions .btn {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
+
+        @media (max-width: 768px) {
+            .header-actions {
+                justify-content: center;
+                width: 100%;
+                margin-top: 15px;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                max-width: 150px;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Main App -->
@@ -41,6 +70,17 @@
                 <div class="user-info">
                     <span id="userWelcome"></span>
                     <a href="/fratelli/dashboard" class="btn btn-secondary">← Dashboard</a>
+                </div>
+
+                <!-- NUOVO: Bottoni Admin ed Esci -->
+                <div class="header-actions">
+                    <button id="adminHeaderBtn" class="btn btn-admin" onclick="accessoAdmin()"
+                            style="display: none;">
+                        🔧 Admin
+                    </button>
+                    <button class="btn btn-danger" onclick="logout()">
+                        🚪 Esci
+                    </button>
                 </div>
             </div>
 
@@ -353,6 +393,73 @@
 
     <script src="/js/finanze/app.js"></script>
     <script src="/js/finanze/filtri.js"></script>
+
+    <script>
+        // ID dei fratelli che hanno accesso admin
+        const ADMIN_USERS = [16, 12]; // Paolo Giulio Gazzano (16), Emiliano Menicucci (12)
+
+        // Setup accesso admin al caricamento
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthAndSetupAdmin();
+        });
+
+        function checkAuthAndSetupAdmin() {
+            const authData = sessionStorage.getItem('fratelliAuth');
+            if (authData) {
+                try {
+                    const fratelliAuth = JSON.parse(authData);
+                    setupAdminAccess(fratelliAuth.id);
+                } catch (error) {
+                    console.error('Errore parsing auth data:', error);
+                }
+            }
+        }
+
+        // Setup accesso admin
+        function setupAdminAccess(userId) {
+            const userIdInt = parseInt(userId);
+
+            if (ADMIN_USERS.includes(userIdInt)) {
+                // Mostra bottone Admin nell'header
+                const adminHeaderBtn = document.getElementById('adminHeaderBtn');
+                if (adminHeaderBtn) {
+                    adminHeaderBtn.style.display = 'inline-flex';
+                }
+            }
+        }
+
+        // Accesso admin
+        function accessoAdmin() {
+            const authData = sessionStorage.getItem('fratelliAuth');
+            if (!authData) {
+                alert('Devi essere autenticato');
+                return;
+            }
+
+            try {
+                const fratelliAuth = JSON.parse(authData);
+                const userId = parseInt(fratelliAuth.id);
+
+                if (!ADMIN_USERS.includes(userId)) {
+                    alert('Non hai i privilegi per accedere all\'area amministrativa');
+                    return;
+                }
+
+                window.location.href = '/admin/dashboard';
+            } catch (error) {
+                console.error('Errore:', error);
+                alert('Errore durante l\'accesso admin');
+            }
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Sei sicuro di voler uscire dall\'area riservata?')) {
+                sessionStorage.removeItem('fratelliAuth');
+                window.location.href = '/';
+            }
+        }
+    </script>
 
     <!-- PWA Registration -->
     <script src="/js/pwa-register.js"></script>

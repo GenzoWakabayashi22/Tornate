@@ -245,6 +245,18 @@ body {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
+
+        /* Bottoni Header Actions */
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-actions .btn {
+            font-size: 13px;
+            padding: 8px 16px;
+        }
         
         .stats-grid {
             display: grid;
@@ -645,30 +657,41 @@ body {
                 flex-direction: column;
                 text-align: center;
             }
-            
+
+            .header-actions {
+                justify-content: center;
+                width: 100%;
+                margin-top: 15px;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                max-width: 150px;
+            }
+
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .tornata-item {
                 flex-direction: column;
                 gap: 15px;
                 text-align: center;
             }
-            
+
             .user-info {
                 flex-direction: column;
                 text-align: center;
             }
-            
+
             .presenza-controls {
                 width: 100%;
             }
-            
+
             .presenza-status {
                 justify-content: center;
             }
-            
+
             .tornata-dettagli {
                 justify-content: center;
             }
@@ -676,7 +699,7 @@ body {
             .footer {
                 padding: 25px 0 15px 0;
             }
-            
+
             .footer-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
@@ -697,6 +720,17 @@ body {
                         <span class="user-ruolo" id="userRuolo">Caricamento ruolo...</span>
                     </div>
                 </div>
+
+                <!-- NUOVO: Bottoni Admin ed Esci -->
+                <div class="header-actions">
+                    <button id="adminHeaderBtn" class="btn btn-admin" onclick="accessoAdmin()"
+                            style="display: none;">
+                        🔧 Admin
+                    </button>
+                    <button class="btn btn-danger" onclick="logout()">
+                        🚪 Esci
+                    </button>
+                </div>
             </div>
 
             <!-- Menu Navigazione Principale -->
@@ -713,11 +747,11 @@ body {
                     <div class="nav-icon">📚</div>
                     <div class="nav-label">Tavole</div>
                 </a>
-                <a href="/fratelli/biblioteca" class="nav-card">
+                <a href="#" onclick="apriBiblioteca(); return false;" class="nav-card">
                     <div class="nav-icon">📖</div>
                     <div class="nav-label">Biblioteca</div>
                 </a>
-                <a href="https://finanze.loggiakilwinning.com" target="_blank" class="nav-card">
+                <a href="#" onclick="apriFinanze(); return false;" class="nav-card">
                     <div class="nav-icon">💰</div>
                     <div class="nav-label">Finanze</div>
                 </a>
@@ -931,10 +965,16 @@ body {
         // Setup accesso admin
         function setupAdminAccess() {
             const userId = parseInt(fratelliAuth.id);
-            
+
             if (ADMIN_USERS.includes(userId)) {
                 // Mostra link admin nel footer
                 document.getElementById('adminFooterLink').style.display = 'block';
+
+                // ✅ NUOVO: Mostra bottone Admin nell'header
+                const adminHeaderBtn = document.getElementById('adminHeaderBtn');
+                if (adminHeaderBtn) {
+                    adminHeaderBtn.style.display = 'inline-flex';
+                }
 
                 // Crea sessione admin silenziosa
                 createAdminSession();
@@ -966,8 +1006,71 @@ body {
                 alert('Non hai i privilegi per accedere all\'area amministrativa');
                 return;
             }
-            
+
             window.location.href = '/admin/dashboard';
+        }
+
+        /**
+         * ✅ NUOVO: Apre l'app Finanze con auto-login SSO
+         */
+        function apriFinanze() {
+            if (!fratelliAuth) {
+                alert('Errore: Sessione non valida');
+                return;
+            }
+
+            const userId = parseInt(fratelliAuth.id);
+            let username, password;
+
+            // Paolo Giulio Gazzano = Admin
+            if (userId === 16) {
+                username = 'admin';
+                password = 'admin123';
+            } else {
+                // Altri fratelli
+                username = 'Fratello';
+                password = 'puntorosso';
+            }
+
+            // Crea token SSO (valido 30 secondi)
+            const ssoData = {
+                username: username,
+                password: password,
+                timestamp: Date.now(),
+                from: 'tornate',
+                userId: userId,
+                nome: fratelliAuth.nome
+            };
+
+            const token = btoa(JSON.stringify(ssoData));
+
+            // Apri Finanze con token SSO
+            const finanzeUrl = `https://finanze.loggiakilwinning.com/?sso=${token}`;
+            window.open(finanzeUrl, '_blank');
+        }
+
+        /**
+         * ✅ NUOVO: Apre l'app Biblioteca con auto-login SSO
+         */
+        function apriBiblioteca() {
+            if (!fratelliAuth) {
+                alert('Errore: Sessione non valida');
+                return;
+            }
+
+            // Per la biblioteca, tutti i fratelli usano il proprio nome
+            const ssoData = {
+                fratello_nome: fratelliAuth.nome,
+                timestamp: Date.now(),
+                from: 'tornate',
+                userId: fratelliAuth.id
+            };
+
+            const token = btoa(JSON.stringify(ssoData));
+
+            // Apri Biblioteca con token SSO
+            const bibliotecaUrl = `https://biblioteca.loggiakilwinning.com/?sso=${token}`;
+            window.open(bibliotecaUrl, '_blank');
         }
 
         // Carica dati fratello
