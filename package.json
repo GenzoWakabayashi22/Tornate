@@ -31,6 +31,7 @@
     "express-rate-limit": "^7.1.5",
     "express-session": "^1.17.3",
     "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.6.5",
     "winston": "^3.18.3"
   },

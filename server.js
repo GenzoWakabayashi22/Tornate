@@ -4,6 +4,7 @@ const cors = require('cors');
 const session = require('express-session');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 
@@ -24,6 +25,10 @@ const poolFinanze = mysql.createPool({
 });
 
 const app = express();
+
+// ========== SSO CONFIGURATION ==========
+// Chiave segreta per la firma dei token JWT (Finanze SSO)
+const FINANZE_JWT_SECRET = process.env.FINANZE_JWT_SECRET || 'kilwinning_finanze_secret_key_2025_super_secure';
 
 // ========== TRUST PROXY CONFIGURATION ==========
 // Abilita trust proxy per supportare X-Forwarded-* headers dietro reverse proxy
@@ -348,6 +353,73 @@ app.post('/api/fratelli/logout', (req, res) => {
         res.json({ success: true, redirect: '/' });
     });
 });
+
+// ✅ API SSO: Genera token JWT per accesso a Finanze
+app.get('/api/auth/generate-finanze-token', (req, res) => {
+    console.log('🔐 Richiesta generazione token SSO per Finanze');
+
+    try {
+        // Verifica che l'utente sia autenticato
+        if (!req.session || !req.session.user) {
+            console.log('❌ Tentativo di accesso senza autenticazione');
+            return res.status(401).json({
+                success: false,
+                error: 'Autenticazione richiesta',
+                message: 'Devi effettuare il login per accedere a Finanze'
+            });
+        }
+
+        // Estrai informazioni utente dalla sessione
+        const user = req.session.user;
+        const nome = user.nome || user.username;
+
+        if (!nome) {
+            console.log('❌ Nome utente non trovato nella sessione');
+            return res.status(400).json({
+                success: false,
+                error: 'Dati utente incompleti',
+                message: 'Informazioni utente non valide'
+            });
+        }
+
+        // Crea payload JWT con nome utente
+        const payload = {
+            nome: nome,
+            userId: user.id,
+            timestamp: Date.now(),
+            from: 'tornate'
+        };
+
+        // Genera JWT con scadenza di 60 secondi (per sicurezza)
+        const token = jwt.sign(payload, FINANZE_JWT_SECRET, {
+            expiresIn: '60s',
+            issuer: 'tornate.loggiakilwinning.com',
+            audience: 'finanze.loggiakilwinning.com'
+        });
+
+        // Costruisci URL di destinazione con token
+        const redirectUrl = `https://finanze.loggiakilwinning.com/login.html?sso_token=${token}`;
+
+        console.log(`✅ Token SSO generato per: ${nome}`);
+
+        // Restituisci risposta con URL di reindirizzamento
+        res.json({
+            success: true,
+            redirectUrl: redirectUrl,
+            expiresIn: 60
+        });
+
+    } catch (error) {
+        console.error('❌ Errore generazione token SSO:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Errore interno',
+            message: 'Errore nella generazione del token SSO'
+        });
+    }
+});
+
+console.log('✅ API SSO per Finanze caricata correttamente');
 
 // ✅ API DI TEST DATABASE
 app.get('/api/test/db', async (req, res) => {
