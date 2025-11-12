@@ -111,9 +111,10 @@
 
         /* Bottoni Header Actions */
         .header-actions {
-            display: flex;
+            display: flex !important;
             gap: 10px;
             align-items: center;
+            flex-shrink: 0; /* Impedisce che si comprima */
         }
 
         .header-actions .btn {
@@ -358,6 +359,7 @@
             }
 
             .header-actions {
+                display: flex !important; /* Mantieni visibile anche su mobile */
                 justify-content: center;
                 width: 100%;
                 margin-top: 15px;
@@ -388,12 +390,13 @@
             </div>
 
             <!-- NUOVO: Bottoni Admin ed Esci -->
-            <div class="header-actions">
+            <div class="header-actions" style="display: flex !important; gap: 10px; align-items: center; flex-shrink: 0;">
                 <button id="adminHeaderBtn" class="btn btn-admin" onclick="accessoAdmin()"
-                        style="display: none;">
+                        style="display: none; font-size: 13px; padding: 8px 16px;">
                     🔧 Admin
                 </button>
-                <button class="btn btn-danger" onclick="logout()">
+                <button class="btn btn-danger" onclick="logout()"
+                        style="font-size: 13px; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">
                     🚪 Esci
                 </button>
             </div>
@@ -577,14 +580,28 @@ document.addEventListener('DOMContentLoaded', function() {
 // Setup accesso admin
 function setupAdminAccess() {
     const userId = parseInt(currentUser?.id);
+    
+    console.log('🔍 Setup Admin Access - User ID:', userId);
+    console.log('📋 ADMIN_USERS:', ADMIN_USERS);
+    console.log('✅ Is Admin?', ADMIN_USERS.includes(userId));
 
     if (ADMIN_USERS.includes(userId)) {
         // Mostra bottone Admin nell'header
         const adminHeaderBtn = document.getElementById('adminHeaderBtn');
+        console.log('🔘 Admin Button Element:', adminHeaderBtn);
+        
         if (adminHeaderBtn) {
             adminHeaderBtn.style.display = 'inline-flex';
+            console.log('✅ Admin button display set to inline-flex');
+        } else {
+            console.error('❌ Admin button element NOT FOUND');
         }
     }
+    
+    // Verifica che il bottone Esci sia visibile
+    const exitBtn = document.querySelector('.header-actions .btn-danger');
+    console.log('🚪 Exit Button Element:', exitBtn);
+    console.log('🚪 Exit Button Visible:', exitBtn ? window.getComputedStyle(exitBtn).display : 'NOT FOUND');
 }
 
 // Accesso admin
