@@ -1055,42 +1055,58 @@ body {
         }
 
         /**
-         * ✅ NUOVO: Apre l'app Finanze con auto-login SSO
+         * ✅ NUOVO: Apre l'app Finanze con auto-login SSO usando JWT
          */
-        function apriFinanze() {
+        async function apriFinanze() {
             if (!fratelliAuth) {
-                alert('Errore: Sessione non valida');
+                showAlert('❌ Errore: Sessione non valida', 'error');
                 return;
             }
 
-            const userId = parseInt(fratelliAuth.id);
-            let username, password;
+            try {
+                console.log('💰 Richiesta accesso a Finanze tramite SSO...');
 
-            // Paolo Giulio Gazzano = Admin
-            if (userId === 16) {
-                username = 'admin';
-                password = 'admin123';
-            } else {
-                // Altri fratelli
-                username = 'Fratello';
-                password = 'puntorosso';
+                // Mostra messaggio di caricamento
+                showAlert('⏳ Generazione token di accesso...', 'info');
+
+                // Chiamata al backend per generare il token JWT
+                const response = await fetch('/api/auth/generate-finanze-token', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include' // Include i cookie della sessione
+                });
+
+                if (!response.ok) {
+                    // Gestione errori HTTP
+                    if (response.status === 401) {
+                        showAlert('❌ Sessione scaduta. Effettua nuovamente il login.', 'error');
+                        setTimeout(() => {
+                            logout();
+                        }, 2000);
+                        return;
+                    }
+                    throw new Error(`Errore HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'Errore nella generazione del token');
+                }
+
+                // Reindirizza a Finanze con il token JWT
+                console.log('✅ Token SSO generato con successo');
+                showAlert('✅ Reindirizzamento a Finanze...', 'success');
+
+                // Apri in una nuova finestra/tab
+                window.open(result.redirectUrl, '_blank');
+
+            } catch (error) {
+                console.error('❌ Errore durante l\'accesso a Finanze:', error);
+                showAlert('❌ Errore di autenticazione. Riprova il login.', 'error');
             }
-
-            // Crea token SSO (valido 30 secondi)
-            const ssoData = {
-                username: username,
-                password: password,
-                timestamp: Date.now(),
-                from: 'tornate',
-                userId: userId,
-                nome: fratelliAuth.nome
-            };
-
-            const token = btoa(JSON.stringify(ssoData));
-
-            // Apri Finanze con token SSO
-            const finanzeUrl = `https://finanze.loggiakilwinning.com/?sso=${token}`;
-            window.open(finanzeUrl, '_blank');
         }
 
         /**
