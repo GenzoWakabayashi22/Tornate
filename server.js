@@ -2023,7 +2023,8 @@ console.log('✅ API FINANZE caricate correttamente');
 
 // ========== ROTTE AREA FRATELLI (HTML) ==========
 app.get('/fratelli/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views/fratelli/login.html'));
+    // ✅ UNIFIED LOGIN: Usa index.html con doppio select (Fratelli/Ospiti)
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/fratelli/dashboard', (req, res) => {
