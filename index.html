@@ -379,25 +379,32 @@
             <h3 style="margin-bottom: 20px;">👥 Accesso Fratelli</h3>
             <form id="fratelliForm">
                 <div class="form-group">
-                    <label for="fratelloSelect">Seleziona il tuo nome</label>
-                    <select id="fratelloSelect" required aria-label="Seleziona fratello">
-                        <option value="">-- Scegli il tuo nome --</option>
-                        <!-- Popolato dinamicamente via API -->
-                    </select>
+                    <label for="usernameInput">Username</label>
+                    <input
+                        type="text"
+                        id="usernameInput"
+                        required
+                        placeholder="Inserisci il tuo username"
+                        aria-label="Username"
+                        autocomplete="username"
+                        autocapitalize="none"
+                        spellcheck="false"
+                    >
                 </div>
-                
+
                 <div class="form-group">
                     <label for="fratelliPassword">Password</label>
-                    <input 
-                        type="password" 
-                        id="fratelliPassword" 
-                        required 
+                    <input
+                        type="password"
+                        id="fratelliPassword"
+                        required
                         placeholder="Inserisci la password"
                         aria-label="Password"
+                        autocomplete="current-password"
                         minlength="3"
                     >
                 </div>
-                
+
                 <button type="submit" class="login-btn" id="fratelliLoginBtn">
                     🔓 Accedi all'Area Riservata
                 </button>
@@ -412,25 +419,32 @@
             <h3 style="margin-bottom: 20px;">🌐 Accesso Ospiti</h3>
             <form id="ospitiForm">
                 <div class="form-group">
-                    <label for="ospiteSelect">Seleziona il tuo nome</label>
-                    <select id="ospiteSelect" required aria-label="Seleziona ospite">
-                        <option value="">-- Scegli il tuo nome --</option>
-                        <!-- Popolato dinamicamente via API -->
-                    </select>
+                    <label for="ospiteUsernameInput">Username</label>
+                    <input
+                        type="text"
+                        id="ospiteUsernameInput"
+                        required
+                        placeholder="Inserisci il tuo username"
+                        aria-label="Username ospite"
+                        autocomplete="username"
+                        autocapitalize="none"
+                        spellcheck="false"
+                    >
                 </div>
-                
+
                 <div class="form-group">
                     <label for="ospitiPassword">Password</label>
-                    <input 
-                        type="password" 
-                        id="ospitiPassword" 
-                        required 
+                    <input
+                        type="password"
+                        id="ospitiPassword"
+                        required
                         placeholder="Inserisci la password"
                         aria-label="Password ospite"
+                        autocomplete="current-password"
                         minlength="3"
                     >
                 </div>
-                
+
                 <button type="submit" class="login-btn" id="ospitiLoginBtn">
                     🔓 Accedi all'Area Riservata
                 </button>
@@ -450,22 +464,17 @@
     <script>
            // ========== GLOBAL STATE ==========
            let selectedUserType = null;
-           let fratelliData = null;
-           let ospitiData = null;
-           
+
            // ========== INITIALIZATION ==========
            document.addEventListener('DOMContentLoaded', async function() {
                console.log('🔧 Inizializzazione pagina login...');
-               
+
                // Verifica se già autenticato
                await checkExistingAuth();
-               
-               // Carica lista fratelli e ospiti
-               await loadFratelliList();
-               
+
                // Setup form handlers
                setupForms();
-               
+
                console.log('✅ Inizializzazione completata');
            });
            
@@ -499,131 +508,8 @@
                }
            }
            
-           // ========== LOAD DATA FROM API ========== ✅ VERSIONE FINALE CORRETTA
-           async function loadFratelliList() {
-               try {
-                   console.log('📥 Caricamento lista fratelli e ospiti...');
-                   showLoading(true);
-
-                   const response = await fetch('/api/fratelli/login-list');
-
-                   if (!response.ok) {
-                       throw new Error(`Errore HTTP: ${response.status}`);
-                   }
-
-                   const result = await response.json();
-                   console.log('📦 Risposta API:', result);
-
-                   if (!result.success) {
-                       throw new Error(result.message || 'Errore nel caricamento');
-                   }
-
-                   if (!result.data || !result.data.fratelli) {
-                       throw new Error('Struttura dati API non valida');
-                   }
-
-                   fratelliData = result.data.fratelli;
-                   ospitiData = result.data.ospiti || [];
-
-                   console.log(`✅ Caricati ${result.count.fratelli} fratelli e ${result.count.ospiti} ospiti`);
-                   console.log('📊 Dati fratelli:', fratelliData);
-
-                   // Popola i select
-                   populateSelects();
-
-               } catch (error) {
-                   console.error('❌ Errore caricamento lista:', error);
-                   showAlert(`⚠️ Errore nel caricamento della lista: ${error.message}. Ricarica la pagina.`, 'error');
-               } finally {
-                   showLoading(false);
-               }
-           }
-           
-    // ========== POPULATE SELECT DROPDOWNS ==========
-        function populateSelects() {
-            console.log('🔧 Popolamento select in corso...');
-            const fratelloSelect = document.getElementById('fratelloSelect');
-            const ospiteSelect = document.getElementById('ospiteSelect');
-
-            // Pulisci select esistenti (mantieni solo la prima opzione)
-            fratelloSelect.innerHTML = '<option value="">-- Scegli il tuo nome --</option>';
-            ospiteSelect.innerHTML = '<option value="">-- Scegli il tuo nome --</option>';
-
-            // Popola select fratelli con optgroup per grado
-            if (fratelliData) {
-                console.log('📝 Popolamento fratelli:', fratelliData);
-                // Maestri
-                if (fratelliData.maestri && fratelliData.maestri.length > 0) {
-                    const maestriGroup = document.createElement('optgroup');
-                    maestriGroup.label = '🔶 Maestri';
-                    fratelliData.maestri.forEach(f => {
-                        const option = document.createElement('option');
-                        option.value = f.id;
-                        option.textContent = f.nome;
-                        if (f.carica) {
-                            option.textContent += ` (${f.carica})`;
-                        }
-                        maestriGroup.appendChild(option);
-                    });
-                    fratelloSelect.appendChild(maestriGroup);
-                }
-                
-                // Compagni
-                if (fratelliData.compagni && fratelliData.compagni.length > 0) {
-                    const compagniGroup = document.createElement('optgroup');
-                    compagniGroup.label = '🔷 Compagni';
-                    fratelliData.compagni.forEach(f => {
-                        const option = document.createElement('option');
-                        option.value = f.id;
-                        option.textContent = f.nome;
-                        if (f.carica) {
-                            option.textContent += ` (${f.carica})`;
-                        }
-                        compagniGroup.appendChild(option);
-                    });
-                    fratelloSelect.appendChild(compagniGroup);
-                }
-                
-                // Apprendisti
-                if (fratelliData.apprendisti && fratelliData.apprendisti.length > 0) {
-                    const apprendistiGroup = document.createElement('optgroup');
-                    apprendistiGroup.label = '🔹 Apprendisti';
-                    fratelliData.apprendisti.forEach(f => {
-                        const option = document.createElement('option');
-                        option.value = f.id;
-                        option.textContent = f.nome;
-                        if (f.carica) {
-                            option.textContent += ` (${f.carica})`;
-                        }
-                        apprendistiGroup.appendChild(option);
-                    });
-                    fratelloSelect.appendChild(apprendistiGroup);
-                }
-            }
-            
-            // Popola select ospiti
-            if (ospitiData && ospitiData.length > 0) {
-                const ospitiGroup = document.createElement('optgroup');
-                ospitiGroup.label = '🌐 Ospiti';
-                ospitiData.forEach(o => {
-                    const option = document.createElement('option');
-                    option.value = o.id;
-                    option.textContent = o.nome;
-                    ospitiGroup.appendChild(option);
-                });
-                ospiteSelect.appendChild(ospitiGroup);
-            }
-
-            // Log finale per debug
-            const totaleOptionsFratelli = fratelloSelect.options.length - 1; // -1 per la prima opzione "-- Scegli il tuo nome --"
-            const totaleOptionsOspiti = ospiteSelect.options.length - 1;
-            console.log(`✅ Select popolati: ${totaleOptionsFratelli} fratelli, ${totaleOptionsOspiti} ospiti`);
-
-            if (totaleOptionsFratelli === 0 && totaleOptionsOspiti === 0) {
-                console.warn('⚠️ ATTENZIONE: Nessun fratello o ospite trovato nel database!');
-                showAlert('⚠️ Nessun fratello trovato nel database. Contatta l\'amministratore.', 'error');
-            }
-        }
+           // ✅ RIMOSSO: Funzioni loadFratelliList() e populateSelects()
+           // Il login ora usa username/password invece di una lista dropdown
         
         // ========== FORM SETUP ==========
         function setupForms() {
@@ -667,56 +553,56 @@
         // ========== LOGIN HANDLERS ==========
         async function handleFratelliLogin(e) {
             e.preventDefault();
-            
-            const fratelloId = document.getElementById('fratelloSelect').value;
+
+            const username = document.getElementById('usernameInput').value.trim();
             const password = document.getElementById('fratelliPassword').value;
             const submitBtn = document.getElementById('fratelliLoginBtn');
-            
+
             // Validazione client-side
-            if (!fratelloId) {
-                showAlert('⚠️ Seleziona il tuo nome', 'error');
+            if (!username) {
+                showAlert('⚠️ Inserisci il tuo username', 'error');
                 return;
             }
-            
+
             if (!password || password.length < 3) {
                 showAlert('⚠️ Inserisci una password valida', 'error');
                 return;
             }
-            
-            await performLogin(fratelloId, password, submitBtn);
+
+            await performLogin(username, password, submitBtn);
         }
-        
+
         async function handleOspitiLogin(e) {
             e.preventDefault();
-            
-            const ospiteId = document.getElementById('ospiteSelect').value;
+
+            const username = document.getElementById('ospiteUsernameInput').value.trim();
             const password = document.getElementById('ospitiPassword').value;
             const submitBtn = document.getElementById('ospitiLoginBtn');
-            
+
             // Validazione client-side
-            if (!ospiteId) {
-                showAlert('⚠️ Seleziona il tuo nome', 'error');
+            if (!username) {
+                showAlert('⚠️ Inserisci il tuo username', 'error');
                 return;
             }
-            
+
             if (!password || password.length < 3) {
                 showAlert('⚠️ Inserisci una password valida', 'error');
                 return;
             }
-            
-            await performLogin(ospiteId, password, submitBtn);
+
+            await performLogin(username, password, submitBtn);
         }
         
         // ========== PERFORM LOGIN API CALL ==========
-        async function performLogin(userId, password, submitBtn) {
+        async function performLogin(username, password, submitBtn) {
             try {
-                console.log('🔐 Tentativo login per ID:', userId);
-                
+                console.log('🔐 Tentativo login per username:', username);
+
                 // Disabilita pulsante e mostra loading
                 submitBtn.disabled = true;
                 submitBtn.classList.add('loading');
                 clearAlerts();
-                
+
                 // Chiamata API login
                 const response = await fetch('/api/fratelli/login', {
                     method: 'POST',
@@ -725,7 +611,7 @@
                     },
                     credentials: 'include',
                     body: JSON.stringify({
-                        fratello_id: userId,
+                        username: username,
                         password: password
                     })
                 });

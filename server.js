@@ -162,32 +162,32 @@ app.use('/api/fratello', require('./routes/fratello-tavole'));
 // ✅ API: Login fratelli con autenticazione password
 app.post('/api/fratelli/login', async (req, res) => {
     try {
-        const { fratello_id, password } = req.body;
+        const { username, password } = req.body;
 
-        console.log('🔐 Tentativo login fratello ID:', fratello_id);
+        console.log('🔐 Tentativo login username:', username);
 
-        if (!fratello_id || !password) {
+        if (!username || !password) {
             return res.status(400).json({
                 success: false,
-                message: 'ID fratello e password obbligatori'
+                message: 'Username e password obbligatori'
             });
         }
 
-        // Cerca il fratello nel database con password_hash e role
+        // Cerca il fratello nel database con password_hash e role tramite username
         const query = `
             SELECT
-                id, nome, grado, cariche_fisse,
+                id, nome, username, grado, cariche_fisse,
                 password_hash, role, tipo, attivo
             FROM fratelli
-            WHERE id = ? AND attivo = 1
+            WHERE username = ? AND attivo = 1
         `;
 
         // ✅ CORRETTO: Utilizzo di db.executeQuery invece di un inesistente db.query
-        const result = await db.executeQuery(query, [fratello_id]);
+        const result = await db.executeQuery(query, [username]);
 
         // ✅ Verifica robusta del risultato
         if (!result || !Array.isArray(result) || result.length === 0) {
-            console.log('❌ Fratello non trovato o non attivo:', fratello_id);
+            console.log('❌ Username non trovato o non attivo:', username);
             return res.status(401).json({
                 success: false,
                 message: 'Credenziali non valide'
@@ -198,7 +198,7 @@ app.post('/api/fratelli/login', async (req, res) => {
 
         // ✅ Verifica che fratello sia valido
         if (!fratello || !fratello.password_hash) {
-            console.log('❌ Dati fratello incompleti:', fratello_id);
+            console.log('❌ Dati fratello incompleti:', username);
             return res.status(401).json({
                 success: false,
                 message: 'Credenziali non valide'
@@ -207,7 +207,7 @@ app.post('/api/fratelli/login', async (req, res) => {
 
         // Verifica password (confronto diretto con password_hash)
         if (password !== fratello.password_hash) {
-            console.log('❌ Password errata per:', fratello.nome);
+            console.log('❌ Password errata per:', fratello.username);
             return res.status(401).json({
                 success: false,
                 message: 'Credenziali non valide'
@@ -220,7 +220,7 @@ app.post('/api/fratelli/login', async (req, res) => {
         // Crea sessione fratello
         req.session.user = {
             id: fratello.id,
-            username: fratello.nome,
+            username: fratello.username,
             nome: fratello.nome,
             grado: fratello.grado,
             cariche_fisse: fratello.cariche_fisse,
@@ -243,6 +243,7 @@ app.post('/api/fratelli/login', async (req, res) => {
             }
 
             console.log(`✅ Login successful:`, fratello.nome,
+                `[@${fratello.username}]`,
                 `[${fratello.tipo}]`,
                 hasAdminAccess ? '(ADMIN)' : '(user)');
 
@@ -518,96 +519,8 @@ app.get('/api/fratelli', async (req, res) => {
     }
 });
 
-// GET /api/fratelli/login-list - Lista fratelli per dropdown login (divisi per tipo)
-app.get('/api/fratelli/login-list', async (req, res) => {
-    try {
-        console.log('🔍 API: Caricamento lista fratelli per login');
-
-        const query = `
-            SELECT
-                id,
-                nome,
-                grado,
-                cariche_fisse as carica,
-                tipo
-            FROM fratelli
-            WHERE attivo = 1
-            ORDER BY
-                CASE tipo WHEN 'fratello' THEN 1 WHEN 'ospite' THEN 2 END,
-                CASE grado WHEN 'Maestro' THEN 1 WHEN 'Compagno' THEN 2 WHEN 'Apprendista' THEN 3 END,
-                nome ASC
-        `;
-
-        const allFratelli = await db.executeQuery(query);
-
-        // ✅ Verifica robusta del risultato
-        if (!allFratelli || !Array.isArray(allFratelli)) {
-            console.error('❌ Risposta database non valida');
-            return res.status(503).json({
-                success: false,
-                message: 'Errore database: risposta non valida',
-                error: 'Invalid database response'
-            });
-        }
-
-        console.log(`📋 Totale record trovati: ${allFratelli.length}`);
-
-        // ✅ Gestisci caso di array vuoto
-        if (allFratelli.length === 0) {
-            console.warn('⚠️ ATTENZIONE: Nessun fratello trovato nel database!');
-            return res.json({
-                success: true,
-                data: {
-                    fratelli: { maestri: [], compagni: [], apprendisti: [] },
-                    ospiti: []
-                },
-                count: { fratelli: 0, ospiti: 0, totale: 0 },
-                warning: 'Nessun fratello trovato nel database'
-            });
-        }
-
-        if (allFratelli.length > 0) {
-            console.log(`📝 Esempio record:`, JSON.stringify(allFratelli[0]));
-        }
-
-        // Dividi per tipo (case-insensitive e con default a 'fratello' se NULL)
-        const fratelli = allFratelli.filter(f => !f.tipo || f.tipo.toLowerCase() === 'fratello');
-        const ospiti = allFratelli.filter(f => f.tipo && f.tipo.toLowerCase() === 'ospite');
-
-        // Dividi fratelli per grado (case-insensitive e trim degli spazi)
-        const maestri = fratelli.filter(f => f.grado && f.grado.trim().toLowerCase() === 'maestro');
-        const compagni = fratelli.filter(f => f.grado && f.grado.trim().toLowerCase() === 'compagno');
-        const apprendisti = fratelli.filter(f => f.grado && f.grado.trim().toLowerCase() === 'apprendista');
-
-        console.log(`✅ Caricati ${fratelli.length} fratelli, ${ospiti.length} ospiti`);
-        console.log(`📊 Dettaglio: ${maestri.length} Maestri, ${compagni.length} Compagni, ${apprendisti.length} Apprendisti`);
-
-        res.json({
-            success: true,
-            data: {
-                fratelli: {
-                    maestri,
-                    compagni,
-                    apprendisti
-                },
-                ospiti
-            },
-            count: {
-                fratelli: fratelli.length,
-                ospiti: ospiti.length,
-                totale: allFratelli.length
-            }
-        });
-
-    } catch (error) {
-        console.error('❌ Errore API fratelli login-list:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Errore nel caricamento dei fratelli',
-            error: error.message
-        });
-    }
-});
+// ✅ RIMOSSO: Endpoint /api/fratelli/login-list non più necessario
+// Il login ora usa username/password invece di una lista dropdown
 
 // GET /api/fratelli/:id - Dettagli singolo fratello
 app.get('/api/fratelli/:id', async (req, res) => {
