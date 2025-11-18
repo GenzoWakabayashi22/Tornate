@@ -504,31 +504,36 @@
                try {
                    console.log('📥 Caricamento lista fratelli e ospiti...');
                    showLoading(true);
-                   
+
                    const response = await fetch('/api/fratelli/login-list');
-                   
+
                    if (!response.ok) {
-                       throw new Error('Errore nel caricamento della lista');
+                       throw new Error(`Errore HTTP: ${response.status}`);
                    }
-                   
+
                    const result = await response.json();
-                   
+                   console.log('📦 Risposta API:', result);
+
                    if (!result.success) {
                        throw new Error(result.message || 'Errore nel caricamento');
                    }
-                   
+
+                   if (!result.data || !result.data.fratelli) {
+                       throw new Error('Struttura dati API non valida');
+                   }
+
                    fratelliData = result.data.fratelli;
-                   ospitiData = result.data.ospiti;
-                   
+                   ospitiData = result.data.ospiti || [];
+
                    console.log(`✅ Caricati ${result.count.fratelli} fratelli e ${result.count.ospiti} ospiti`);
-                   
+                   console.log('📊 Dati fratelli:', fratelliData);
+
                    // Popola i select
                    populateSelects();
-                   
+
                } catch (error) {
                    console.error('❌ Errore caricamento lista:', error);
-                   // Mostra errore solo se non ci sono dati
-                   showAlert('⚠️ Errore nel caricamento della lista. Ricarica la pagina.', 'error');
+                   showAlert(`⚠️ Errore nel caricamento della lista: ${error.message}. Ricarica la pagina.`, 'error');
                } finally {
                    showLoading(false);
                }
@@ -536,15 +541,17 @@
            
     // ========== POPULATE SELECT DROPDOWNS ==========
         function populateSelects() {
+            console.log('🔧 Popolamento select in corso...');
             const fratelloSelect = document.getElementById('fratelloSelect');
             const ospiteSelect = document.getElementById('ospiteSelect');
-            
+
             // Pulisci select esistenti (mantieni solo la prima opzione)
             fratelloSelect.innerHTML = '<option value="">-- Scegli il tuo nome --</option>';
             ospiteSelect.innerHTML = '<option value="">-- Scegli il tuo nome --</option>';
-            
+
             // Popola select fratelli con optgroup per grado
             if (fratelliData) {
+                console.log('📝 Popolamento fratelli:', fratelliData);
                 // Maestri
                 if (fratelliData.maestri && fratelliData.maestri.length > 0) {
                     const maestriGroup = document.createElement('optgroup');
@@ -606,8 +613,16 @@
                 });
                 ospiteSelect.appendChild(ospitiGroup);
             }
-            
-            console.log('✅ Select popolati dinamicamente');
+
+            // Log finale per debug
+            const totaleOptionsFratelli = fratelloSelect.options.length - 1; // -1 per la prima opzione "-- Scegli il tuo nome --"
+            const totaleOptionsOspiti = ospiteSelect.options.length - 1;
+            console.log(`✅ Select popolati: ${totaleOptionsFratelli} fratelli, ${totaleOptionsOspiti} ospiti`);
+
+            if (totaleOptionsFratelli === 0 && totaleOptionsOspiti === 0) {
+                console.warn('⚠️ ATTENZIONE: Nessun fratello o ospite trovato nel database!');
+                showAlert('⚠️ Nessun fratello trovato nel database. Contatta l\'amministratore.', 'error');
+            }
         }
         
         // ========== FORM SETUP ==========
