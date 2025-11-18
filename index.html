@@ -499,7 +499,7 @@
             }
         }
         
-        // ========== LOAD DATA FROM API ==========
+        // ========== LOAD DATA FROM API ========== ✅ CORRETTO
         async function loadFratelliList() {
             try {
                 console.log('📥 Caricamento lista fratelli e ospiti...');
@@ -527,13 +527,17 @@
                 
             } catch (error) {
                 console.error('❌ Errore caricamento lista:', error);
-                showAlert('⚠️ Errore nel caricamento della lista. Ricarica la pagina.', 'error');
+                // ✅ CORRETTO: Mostra l'alert solo se c'è un vero errore
+                // Non mostrare alert se i dati sono stati caricati correttamente
+                if (!fratelliData || !ospitiData) {
+                    showAlert('⚠️ Errore nel caricamento della lista. Ricarica la pagina.', 'error');
+                }
             } finally {
                 showLoading(false);
             }
         }
-        
-        // ========== POPULATE SELECT DROPDOWNS ==========
+    
+    // ========== POPULATE SELECT DROPDOWNS ==========
         function populateSelects() {
             const fratelloSelect = document.getElementById('fratelloSelect');
             const ospiteSelect = document.getElementById('ospiteSelect');
