@@ -185,7 +185,8 @@ app.post('/api/fratelli/login', async (req, res) => {
         // ✅ CORRETTO: Utilizzo di db.executeQuery invece di un inesistente db.query
         const result = await db.executeQuery(query, [fratello_id]);
 
-        if (result.length === 0) {
+        // ✅ Verifica robusta del risultato
+        if (!result || !Array.isArray(result) || result.length === 0) {
             console.log('❌ Fratello non trovato o non attivo:', fratello_id);
             return res.status(401).json({
                 success: false,
@@ -194,6 +195,15 @@ app.post('/api/fratelli/login', async (req, res) => {
         }
 
         const fratello = result[0];
+
+        // ✅ Verifica che fratello sia valido
+        if (!fratello || !fratello.password_hash) {
+            console.log('❌ Dati fratello incompleti:', fratello_id);
+            return res.status(401).json({
+                success: false,
+                message: 'Credenziali non valide'
+            });
+        }
 
         // Verifica password (confronto diretto con password_hash)
         if (password !== fratello.password_hash) {
@@ -263,16 +273,16 @@ app.get('/api/fratelli/me', async (req, res) => {
     try {
         // ✅ TIMEOUT PER EVITARE 503
         timeout = setTimeout(() => {
-            console.error('❌ [DEBUG] TIMEOUT - Risposta dopo 5 secondi');
+            console.error('❌ [DEBUG] TIMEOUT - Risposta dopo 3 secondi');
             if (!res.headersSent) {
                 res.status(503).json({
                     success: false,
                     error: 'Database timeout',
                     message: 'Server temporaneamente non disponibile',
-                    debug: 'Timeout dopo 5 secondi'
+                    debug: 'Timeout dopo 3 secondi'
                 });
             }
-        }, 5000);
+        }, 3000);
 
         if (req.session && req.session.user) {
             // Aggiorna ultima attività
@@ -530,7 +540,32 @@ app.get('/api/fratelli/login-list', async (req, res) => {
 
         const allFratelli = await db.executeQuery(query);
 
+        // ✅ Verifica robusta del risultato
+        if (!allFratelli || !Array.isArray(allFratelli)) {
+            console.error('❌ Risposta database non valida');
+            return res.status(503).json({
+                success: false,
+                message: 'Errore database: risposta non valida',
+                error: 'Invalid database response'
+            });
+        }
+
         console.log(`📋 Totale record trovati: ${allFratelli.length}`);
+
+        // ✅ Gestisci caso di array vuoto
+        if (allFratelli.length === 0) {
+            console.warn('⚠️ ATTENZIONE: Nessun fratello trovato nel database!');
+            return res.json({
+                success: true,
+                data: {
+                    fratelli: { maestri: [], compagni: [], apprendisti: [] },
+                    ospiti: []
+                },
+                count: { fratelli: 0, ospiti: 0, totale: 0 },
+                warning: 'Nessun fratello trovato nel database'
+            });
+        }
+
         if (allFratelli.length > 0) {
             console.log(`📝 Esempio record:`, JSON.stringify(allFratelli[0]));
         }
