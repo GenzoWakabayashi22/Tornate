@@ -1064,19 +1064,21 @@ body {
             }
 
             try {
-                console.log('💰 Richiesta accesso a Finanze tramite SSO...');
+                console.log('💰 [FINANZE SSO] Richiesta accesso a Finanze tramite SSO...');
 
                 // Mostra messaggio di caricamento
                 showAlert('⏳ Generazione token di accesso...', 'info');
 
-                // Chiamata al backend per generare il token JWT
-                const response = await fetch('/api/auth/generate-finanze-token', {
+                // ✅ NUOVO ENDPOINT: Chiamata al backend per generare il token JWT
+                const response = await fetch('/api/fratelli/sso-finanze', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     credentials: 'include' // Include i cookie della sessione
                 });
+
+                console.log('📡 [FINANZE SSO] Response status:', response.status);
 
                 if (!response.ok) {
                     // Gestione errori HTTP
@@ -1091,20 +1093,23 @@ body {
                 }
 
                 const result = await response.json();
+                console.log('📦 [FINANZE SSO] Response data:', result);
 
                 if (!result.success) {
                     throw new Error(result.message || 'Errore nella generazione del token');
                 }
 
                 // Reindirizza a Finanze con il token JWT
-                console.log('✅ Token SSO generato con successo');
+                console.log('✅ [FINANZE SSO] Token generato con successo');
+                console.log('🔗 [FINANZE SSO] Redirect URL:', result.redirect_url);
+
                 showAlert('✅ Reindirizzamento a Finanze...', 'success');
 
                 // Apri in una nuova finestra/tab
-                window.open(result.redirectUrl, '_blank');
+                window.location.href = result.redirect_url;
 
             } catch (error) {
-                console.error('❌ Errore durante l\'accesso a Finanze:', error);
+                console.error('❌ [FINANZE SSO] Errore durante l\'accesso a Finanze:', error);
                 showAlert('❌ Errore di autenticazione. Riprova il login.', 'error');
             }
         }
