@@ -530,16 +530,22 @@ app.get('/api/fratelli/login-list', async (req, res) => {
 
         const allFratelli = await db.executeQuery(query);
 
-        // Dividi per tipo
-        const fratelli = allFratelli.filter(f => f.tipo === 'fratello');
-        const ospiti = allFratelli.filter(f => f.tipo === 'ospite');
+        console.log(`📋 Totale record trovati: ${allFratelli.length}`);
+        if (allFratelli.length > 0) {
+            console.log(`📝 Esempio record:`, JSON.stringify(allFratelli[0]));
+        }
 
-        // Dividi fratelli per grado
-        const maestri = fratelli.filter(f => f.grado === 'Maestro');
-        const compagni = fratelli.filter(f => f.grado === 'Compagno');
-        const apprendisti = fratelli.filter(f => f.grado === 'Apprendista');
+        // Dividi per tipo (case-insensitive e con default a 'fratello' se NULL)
+        const fratelli = allFratelli.filter(f => !f.tipo || f.tipo.toLowerCase() === 'fratello');
+        const ospiti = allFratelli.filter(f => f.tipo && f.tipo.toLowerCase() === 'ospite');
+
+        // Dividi fratelli per grado (case-insensitive e trim degli spazi)
+        const maestri = fratelli.filter(f => f.grado && f.grado.trim().toLowerCase() === 'maestro');
+        const compagni = fratelli.filter(f => f.grado && f.grado.trim().toLowerCase() === 'compagno');
+        const apprendisti = fratelli.filter(f => f.grado && f.grado.trim().toLowerCase() === 'apprendista');
 
         console.log(`✅ Caricati ${fratelli.length} fratelli, ${ospiti.length} ospiti`);
+        console.log(`📊 Dettaglio: ${maestri.length} Maestri, ${compagni.length} Compagni, ${apprendisti.length} Apprendisti`);
 
         res.json({
             success: true,
