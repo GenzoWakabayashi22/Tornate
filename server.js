@@ -214,8 +214,27 @@ app.post('/api/fratelli/login', async (req, res) => {
             });
         }
 
-        // Determina privilegi admin dal campo role
-        const hasAdminAccess = (fratello.role === 'admin');
+        // ========================================
+        // DETERMINA PRIVILEGI ADMIN
+        // ========================================
+
+        let userRole = 'user';
+        let hasAdminAccess = false;
+
+        // Paolo Giulio Gazzano è SEMPRE admin (hardcoded per sicurezza)
+        if (fratello.username === 'paolo.giulio.gazzano') {
+            userRole = 'admin';
+            hasAdminAccess = true;
+            console.log('👑 Login ADMIN: Paolo Giulio Gazzano');
+        }
+        // Oppure verifica dal database
+        else if (fratello.role === 'admin') {
+            userRole = 'admin';
+            hasAdminAccess = true;
+            console.log('👑 Login ADMIN da database:', fratello.nome);
+        } else {
+            console.log('👤 Login USER:', fratello.nome);
+        }
 
         // Crea sessione fratello
         req.session.user = {
@@ -225,7 +244,7 @@ app.post('/api/fratelli/login', async (req, res) => {
             grado: fratello.grado,
             cariche_fisse: fratello.cariche_fisse,
             tipo: fratello.tipo,
-            role: fratello.role,
+            role: userRole,  // ✅ USA userRole (NON fratello.role direttamente)
             ruolo: fratello.cariche_fisse || 'Fratello',  // ✅ FIX: Usa cariche_fisse per il ruolo
             admin_access: hasAdminAccess,
             loginTime: new Date().toISOString(),
@@ -365,7 +384,83 @@ app.post('/api/fratelli/logout', (req, res) => {
     });
 });
 
-// ✅ API SSO: Genera token JWT per accesso a Finanze
+// ========================================
+// ✅ NUOVO ENDPOINT SSO FINANZE
+// ========================================
+
+// API: Genera token JWT per accesso SSO a Finanze
+app.get('/api/fratelli/sso-finanze', (req, res) => {
+    console.log('💰 [SSO FINANZE] Richiesta generazione token SSO');
+
+    try {
+        // Verifica autenticazione
+        if (!req.session || !req.session.user) {
+            console.log('❌ [SSO FINANZE] Tentativo di accesso senza autenticazione');
+            return res.status(401).json({
+                success: false,
+                error: 'Autenticazione richiesta',
+                message: 'Devi effettuare il login per accedere a Finanze'
+            });
+        }
+
+        // Estrai informazioni utente dalla sessione
+        const user = req.session.user;
+
+        // Validazione dati utente
+        if (!user.id || !user.username || !user.nome) {
+            console.log('❌ [SSO FINANZE] Dati utente incompleti');
+            return res.status(400).json({
+                success: false,
+                error: 'Dati utente incompleti',
+                message: 'Informazioni utente non valide'
+            });
+        }
+
+        // Crea payload JWT completo con tutte le informazioni necessarie
+        const payload = {
+            id: user.id,
+            username: user.username,
+            nome: user.nome,
+            role: user.role,
+            admin_access: user.admin_access || false,
+            grado: user.grado || 'Apprendista',
+            source: 'tornate',
+            timestamp: Date.now()
+        };
+
+        // Genera JWT con scadenza di 5 minuti (sicurezza)
+        const token = jwt.sign(payload, FINANZE_JWT_SECRET, {
+            expiresIn: '5m',
+            issuer: 'tornate.loggiakilwinning.com',
+            audience: 'finanze.loggiakilwinning.com'
+        });
+
+        // Costruisci URL di destinazione con token
+        const redirectUrl = `https://finanze.loggiakilwinning.com/sso-login?token=${token}`;
+
+        console.log(`✅ [SSO FINANZE] Token generato per: ${user.nome} (@${user.username})`);
+        console.log(`📋 [SSO FINANZE] Role: ${user.role}, Admin: ${user.admin_access}`);
+
+        // Restituisci risposta con URL di reindirizzamento
+        res.json({
+            success: true,
+            redirect_url: redirectUrl,
+            expiresIn: 300 // 5 minuti in secondi
+        });
+
+    } catch (error) {
+        console.error('❌ [SSO FINANZE] Errore generazione token:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Errore interno',
+            message: 'Errore nella generazione del token SSO'
+        });
+    }
+});
+
+console.log('✅ API SSO Finanze (/api/fratelli/sso-finanze) caricata correttamente');
+
+// ✅ API SSO: Genera token JWT per accesso a Finanze (VECCHIO ENDPOINT - MANTIENI PER COMPATIBILITÀ)
 app.get('/api/auth/generate-finanze-token', (req, res) => {
     console.log('🔐 Richiesta generazione token SSO per Finanze');
 
