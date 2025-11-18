@@ -448,95 +448,92 @@
     </div>
 
     <script>
-        // ========== GLOBAL STATE ==========
-        let selectedUserType = null;
-        let fratelliData = null;
-        let ospitiData = null;
-        
-        // ========== INITIALIZATION ==========
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🔧 Inizializzazione pagina login...');
-            
-            // Verifica se già autenticato
-            await checkExistingAuth();
-            
-            // Carica lista fratelli e ospiti
-            await loadFratelliList();
-            
-            // Setup form handlers
-            setupForms();
-            
-            console.log('✅ Inizializzazione completata');
-        });
-        
-        // ========== AUTHENTICATION CHECK ==========
-        async function checkExistingAuth() {
-            try {
-                // Controlla sessionStorage locale
-                const localAuth = sessionStorage.getItem('fratelliAuth');
-                if (localAuth) {
-                    console.log('✅ Sessione locale trovata, redirect...');
-                    window.location.href = '/fratelli/dashboard';
-                    return;
-                }
+           // ========== GLOBAL STATE ==========
+           let selectedUserType = null;
+           let fratelliData = null;
+           let ospitiData = null;
+           
+           // ========== INITIALIZATION ==========
+           document.addEventListener('DOMContentLoaded', async function() {
+               console.log('🔧 Inizializzazione pagina login...');
+               
+               // Verifica se già autenticato
+               await checkExistingAuth();
+               
+               // Carica lista fratelli e ospiti
+               await loadFratelliList();
+               
+               // Setup form handlers
+               setupForms();
+               
+               console.log('✅ Inizializzazione completata');
+           });
+           
+           // ========== AUTHENTICATION CHECK ==========
+           async function checkExistingAuth() {
+               try {
+                   // Controlla sessionStorage locale
+                   const localAuth = sessionStorage.getItem('fratelliAuth');
+                   if (localAuth) {
+                       console.log('✅ Sessione locale trovata, redirect...');
+                       window.location.href = '/fratelli/dashboard';
+                       return;
+                   }
 
-                // Verifica sessione server
-                const response = await fetch('/api/fratelli/me', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
+                   // Verifica sessione server
+                   const response = await fetch('/api/fratelli/me', {
+                       method: 'GET',
+                       credentials: 'include'
+                   });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.authenticated) {
-                        console.log('✅ Sessione server valida, redirect...');
-                        sessionStorage.setItem('fratelliAuth', JSON.stringify(data.user));
-                        window.location.href = '/fratelli/dashboard';
-                    }
-                }
-            } catch (error) {
-                console.log('ℹ️ Nessuna sessione attiva:', error.message);
-            }
-        }
-        
-        // ========== LOAD DATA FROM API ========== ✅ CORRETTO
-        async function loadFratelliList() {
-            try {
-                console.log('📥 Caricamento lista fratelli e ospiti...');
-                showLoading(true);
-                
-                const response = await fetch('/api/fratelli/login-list');
-                
-                if (!response.ok) {
-                    throw new Error('Errore nel caricamento della lista');
-                }
-                
-                const result = await response.json();
-                
-                if (!result.success) {
-                    throw new Error(result.message || 'Errore nel caricamento');
-                }
-                
-                fratelliData = result.data.fratelli;
-                ospitiData = result.data.ospiti;
-                
-                console.log(`✅ Caricati ${result.count.fratelli} fratelli e ${result.count.ospiti} ospiti`);
-                
-                // Popola i select
-                populateSelects();
-                
-            } catch (error) {
-                console.error('❌ Errore caricamento lista:', error);
-                // ✅ CORRETTO: Mostra l'alert solo se c'è un vero errore
-                // Non mostrare alert se i dati sono stati caricati correttamente
-                if (!fratelliData || !ospitiData) {
-                    showAlert('⚠️ Errore nel caricamento della lista. Ricarica la pagina.', 'error');
-                }
-            } finally {
-                showLoading(false);
-            }
-        }
-    
+                   if (response.ok) {
+                       const data = await response.json();
+                       if (data.authenticated) {
+                           console.log('✅ Sessione server valida, redirect...');
+                           sessionStorage.setItem('fratelliAuth', JSON.stringify(data.user));
+                           window.location.href = '/fratelli/dashboard';
+                       }
+                   }
+               } catch (error) {
+                   console.log('ℹ️ Nessuna sessione attiva:', error.message);
+               }
+           }
+           
+           // ========== LOAD DATA FROM API ========== ✅ VERSIONE FINALE CORRETTA
+           async function loadFratelliList() {
+               try {
+                   console.log('📥 Caricamento lista fratelli e ospiti...');
+                   showLoading(true);
+                   
+                   const response = await fetch('/api/fratelli/login-list');
+                   
+                   if (!response.ok) {
+                       throw new Error('Errore nel caricamento della lista');
+                   }
+                   
+                   const result = await response.json();
+                   
+                   if (!result.success) {
+                       throw new Error(result.message || 'Errore nel caricamento');
+                   }
+                   
+                   fratelliData = result.data.fratelli;
+                   ospitiData = result.data.ospiti;
+                   
+                   console.log(`✅ Caricati ${result.count.fratelli} fratelli e ${result.count.ospiti} ospiti`);
+                   
+                   // Popola i select
+                   populateSelects();
+                   
+               } catch (error) {
+                   console.error('❌ Errore caricamento lista:', error);
+                   // Mostra errore solo se non ci sono dati
+                   showAlert('⚠️ Errore nel caricamento della lista. Ricarica la pagina.', 'error');
+               } finally {
+                   showLoading(false);
+               }
+           }
+           
     // ========== POPULATE SELECT DROPDOWNS ==========
         function populateSelects() {
             const fratelloSelect = document.getElementById('fratelloSelect');
