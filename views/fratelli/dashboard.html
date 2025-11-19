@@ -1115,27 +1115,63 @@ body {
         }
 
         /**
-         * ✅ NUOVO: Apre l'app Biblioteca con auto-login SSO
+         * ✅ NUOVO: Apre l'app Biblioteca con auto-login SSO usando JWT
          */
-        function apriBiblioteca() {
+        async function apriBiblioteca() {
             if (!fratelliAuth) {
-                alert('Errore: Sessione non valida');
+                showAlert('❌ Errore: Sessione non valida', 'error');
                 return;
             }
 
-            // Per la biblioteca, tutti i fratelli usano il proprio nome
-            const ssoData = {
-                fratello_nome: fratelliAuth.nome,
-                timestamp: Date.now(),
-                from: 'tornate',
-                userId: fratelliAuth.id
-            };
+            try {
+                console.log('📚 [BIBLIOTECA SSO] Richiesta accesso a Biblioteca tramite SSO...');
 
-            const token = btoa(JSON.stringify(ssoData));
+                // Mostra messaggio di caricamento
+                showAlert('⏳ Generazione token di accesso...', 'info');
 
-            // Apri Biblioteca con token SSO
-            const bibliotecaUrl = `https://biblioteca.loggiakilwinning.com/?sso=${token}`;
-            window.open(bibliotecaUrl, '_blank');
+                // ✅ NUOVO ENDPOINT: Chiamata al backend per generare il token JWT
+                const response = await fetch('/api/fratelli/sso-biblioteca', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include' // Include i cookie della sessione
+                });
+
+                console.log('📡 [BIBLIOTECA SSO] Response status:', response.status);
+
+                if (!response.ok) {
+                    // Gestione errori HTTP
+                    if (response.status === 401) {
+                        showAlert('❌ Sessione scaduta. Effettua nuovamente il login.', 'error');
+                        setTimeout(() => {
+                            logout();
+                        }, 2000);
+                        return;
+                    }
+                    throw new Error(`Errore HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('📦 [BIBLIOTECA SSO] Response data:', result);
+
+                if (!result.success) {
+                    throw new Error(result.message || 'Errore nella generazione del token');
+                }
+
+                // Reindirizza a Biblioteca con il token JWT
+                console.log('✅ [BIBLIOTECA SSO] Token generato con successo');
+                console.log('🔗 [BIBLIOTECA SSO] Redirect URL:', result.redirect_url);
+
+                showAlert('✅ Reindirizzamento a Biblioteca...', 'success');
+
+                // Apri in una nuova finestra/tab
+                window.location.href = result.redirect_url;
+
+            } catch (error) {
+                console.error('❌ [BIBLIOTECA SSO] Errore durante l\'accesso a Biblioteca:', error);
+                showAlert('❌ Errore di autenticazione. Riprova il login.', 'error');
+            }
         }
 
         // Carica dati fratello

@@ -29,6 +29,8 @@ const app = express();
 // ========== SSO CONFIGURATION ==========
 // Chiave segreta per la firma dei token JWT (Finanze SSO)
 const FINANZE_JWT_SECRET = process.env.FINANZE_JWT_SECRET || 'kilwinning_finanze_secret_key_2025_super_secure';
+// Chiave segreta per la firma dei token JWT (Biblioteca SSO)
+const BIBLIOTECA_JWT_SECRET = process.env.BIBLIOTECA_JWT_SECRET || 'kilwinning_biblioteca_secret_key_2025_super_secure';
 
 // ========== TRUST PROXY CONFIGURATION ==========
 // Abilita trust proxy per supportare X-Forwarded-* headers dietro reverse proxy
@@ -459,6 +461,86 @@ app.get('/api/fratelli/sso-finanze', (req, res) => {
 });
 
 console.log('✅ API SSO Finanze (/api/fratelli/sso-finanze) caricata correttamente');
+
+// ========================================
+// ✅ NUOVO ENDPOINT SSO BIBLIOTECA
+// ========================================
+
+// API: Genera token JWT per accesso SSO a Biblioteca
+app.get('/api/fratelli/sso-biblioteca', (req, res) => {
+    console.log('📚 [SSO BIBLIOTECA] Richiesta generazione token SSO');
+
+    try {
+        // Verifica autenticazione
+        if (!req.session || !req.session.user) {
+            console.log('❌ [SSO BIBLIOTECA] Tentativo di accesso senza autenticazione');
+            return res.status(401).json({
+                success: false,
+                error: 'Autenticazione richiesta',
+                message: 'Devi effettuare il login per accedere a Biblioteca'
+            });
+        }
+
+        // Estrai informazioni utente dalla sessione
+        const user = req.session.user;
+
+        // Validazione dati utente
+        if (!user.id || !user.username || !user.nome) {
+            console.log('❌ [SSO BIBLIOTECA] Dati utente incompleti');
+            return res.status(400).json({
+                success: false,
+                error: 'Dati utente incompleti',
+                message: 'Informazioni utente non valide'
+            });
+        }
+
+        // Determina il ruolo per Biblioteca
+        // Admin biblioteca: Paolo Giulio Gazzano (ID 16), Emiliano Menicucci (ID 12), Leonardo Lunetto (ID 6)
+        const BIBLIOTECA_ADMIN_IDS = [16, 12, 6];
+        const isBibliotecaAdmin = BIBLIOTECA_ADMIN_IDS.includes(user.id);
+        const role = isBibliotecaAdmin ? 'admin' : 'user';
+
+        // Crea payload JWT completo con tutte le informazioni necessarie per Biblioteca
+        const payload = {
+            userId: user.id,           // Nota: userId (non id) per compatibilità con Biblioteca
+            username: user.username,
+            nome: user.nome,
+            role: role,                // admin o user
+            grado: user.grado || 'Apprendista',
+            source: 'tornate'
+        };
+
+        // Genera JWT con scadenza di 5 minuti (sicurezza)
+        const token = jwt.sign(payload, BIBLIOTECA_JWT_SECRET, {
+            expiresIn: '5m',
+            issuer: 'tornate.loggiakilwinning.com',
+            audience: 'biblioteca.loggiakilwinning.com'
+        });
+
+        // Costruisci URL di destinazione con token
+        const redirectUrl = `https://biblioteca.loggiakilwinning.com/sso-login?token=${token}`;
+
+        console.log(`✅ [SSO BIBLIOTECA] Token generato per: ${user.nome} (@${user.username})`);
+        console.log(`📋 [SSO BIBLIOTECA] Role: ${role}, Grado: ${user.grado || 'Apprendista'}`);
+
+        // Restituisci risposta con URL di reindirizzamento
+        res.json({
+            success: true,
+            redirect_url: redirectUrl,
+            expiresIn: 300 // 5 minuti in secondi
+        });
+
+    } catch (error) {
+        console.error('❌ [SSO BIBLIOTECA] Errore generazione token:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Errore interno',
+            message: 'Errore nella generazione del token SSO'
+        });
+    }
+});
+
+console.log('✅ API SSO Biblioteca (/api/fratelli/sso-biblioteca) caricata correttamente');
 
 // ✅ API SSO: Genera token JWT per accesso a Finanze (VECCHIO ENDPOINT - MANTIENI PER COMPATIBILITÀ)
 app.get('/api/auth/generate-finanze-token', (req, res) => {
