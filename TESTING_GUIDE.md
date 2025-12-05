@@ -1,13 +1,36 @@
 # Testing Guide for Admin Access & Modal Fixes
 
+## 🆕 LATEST UPDATE: Enhanced Admin Privileges & Real Logout (Dec 2025)
+
+### Key Improvements ✅
+
+**Admin Privileges:**
+- Paolo Giulio Gazzano (ID=16) and Emiliano Menicucci (ID=12) are **ALWAYS** admin in ALL circumstances
+- Triple verification: ID check → username check → database role check
+- Session automatically updated if admin flags are missing
+- Frontend uses centralized `ADMIN_USERS=[16,12]` array consistently
+
+**Logout Functionality:**
+- **ALWAYS** calls server endpoint `/api/fratelli/logout`
+- Destroys server session completely
+- Clears both `sessionStorage` and `localStorage`
+- Shows alert if server call fails but forces local cleanup anyway
+- Logout is REAL - server session is destroyed
+
+**Session Validation:**
+- Automatic check every 2 minutes via `session-keeper.js`
+- Calls `/api/fratelli/me` to verify session validity
+- Forces logout if session is invalid on server
+- Updates admin privileges if they were lost
+
 ## Quick Start Testing
 
 ### Prerequisites
 1. Server running: `npm start`
-2. Browser with DevTools open
+2. Browser with DevTools open (F12)
 3. Test users available:
-   - Emiliano Menicucci (ID=12, username: `emiliano.menicucci`)
-   - Paolo Giulio Gazzano (ID=16, username: `paolo.giulio.gazzano`)
+   - **Emiliano Menicucci** (ID=12, username: `emiliano.menicucci`) - **ADMIN**
+   - **Paolo Giulio Gazzano** (ID=16, username: `paolo.giulio.gazzano`) - **ADMIN**
    - Regular user (any non-admin fratello)
 
 ## Test Suite 1: Admin Access (Emiliano Menicucci)
@@ -64,26 +87,63 @@ JSON.parse(sessionStorage.getItem('fratelliAuth'))
 - ✅ Can view data in each section
 - ✅ No redirect to login page
 
+### Test 1.4: Paolo Giulio Gazzano Admin Access ⭐ CRITICAL
+**Repeat ALL Test Suite 1 tests with Paolo instead of Emiliano:**
+
+1. Login as Paolo (ID=16, username: `paolo.giulio.gazzano`)
+2. Verify admin button appears
+3. Click admin button → access `/admin/dashboard`
+4. Navigate all admin pages
+
+**Expected Results:**
+- ✅ **EXACTLY** the same behavior as Emiliano
+- ✅ Console shows: `👑 Login ADMIN (ID hardcoded): Paolo Giulio Gazzano [@paolo.giulio.gazzano] [ID=16]`
+- ✅ Console shows: `🔒 FORCED ADMIN ACCESS per ID: 16 (Paolo/Emiliano)`
+- ✅ Session has `admin_access: true` and `role: 'admin'`
+- ✅ Admin button visible in header
+- ✅ Can access ALL admin pages
+
+**Console Verification:**
+```javascript
+// In browser console:
+const auth = JSON.parse(sessionStorage.getItem('fratelliAuth'));
+console.log('User:', auth.nome, 'ID:', auth.id, 'Admin:', auth.admin_access, 'Role:', auth.role);
+// Should show: User: Paolo Giulio Gazzano ID: 16 Admin: true Role: admin
+```
+
 ## Test Suite 2: Logout Functionality
 
-### Test 2.1: Logout from Fratelli Dashboard
+### Test 2.1: Logout from Fratelli Dashboard ⭐ ENHANCED
 **Steps:**
 1. Login as any user
 2. Go to `/fratelli/dashboard`
-3. Click "🚪 Esci" button
-4. Confirm logout dialog
+3. Open DevTools Console (F12) to monitor logout
+4. Click "🚪 Esci" button
+5. Confirm logout dialog
 
 **Expected Results:**
-- ✅ Console shows: `✅ Logout server completato`
+- ✅ Console shows: `🚪 Inizio procedura logout...`
+- ✅ Console shows: `📡 Chiamata POST /api/fratelli/logout...`
+- ✅ Console shows: `✅ Logout server completato con successo`
+- ✅ Console shows: `🧹 Pulizia dati locali...`
+- ✅ Console shows: `✅ Logout completo - redirect a homepage`
 - ✅ Redirected to `/` (login page)
 - ✅ `sessionStorage.fratelliAuth` is removed
 - ✅ `localStorage.fratelliAuth` is removed (if it was set)
 
-**Verify Session Destroyed:**
+**Verify Session Destroyed (Server Logs):**
 ```bash
-# In server logs (if running with logs):
-✅ Logout fratello completato
+# In server logs:
+🚪 Tentativo logout fratello: [Username]
+✅ Logout fratello completato con successo: [Username]
 ```
+
+**Test Network Error Handling:**
+1. Open DevTools → Network tab
+2. Set network throttling to "Offline"
+3. Try to logout
+4. **Expected:** Alert shows "❌ Errore di rete durante il logout. La sessione verrà comunque cancellata localmente."
+5. Local storage is cleared and redirect happens anyway
 
 ### Test 2.2: Verify Session Invalid After Logout
 **Steps:**
@@ -183,16 +243,50 @@ JSON.parse(sessionStorage.getItem('fratelliAuth'))
 - ✅ Redirected to `/?error=access_denied`
 - ✅ Error message shown (if UI supports it)
 
-## Test Suite 5: Edge Cases
+## Test Suite 5: Edge Cases & Session Validation ⭐ NEW
 
-### Test 5.1: Session Timeout
+### Test 5.1: Automatic Session Validation (Every 2 Minutes)
+**Steps:**
+1. Login as any user (Emiliano, Paolo, or regular user)
+2. Go to `/fratelli/dashboard`
+3. Open DevTools Console
+4. Wait and observe console logs
+
+**Expected Results:**
+- ✅ After 5 seconds: Console shows `🔍 Verifica sessione: /api/fratelli/me`
+- ✅ Console shows: `✅ Sessione valida per: [Username] - Admin: [true/false]`
+- ✅ Every 2 minutes: Same check repeats automatically
+- ✅ SessionKeeper logs: `✅ SessionKeeper inizializzato per: /fratelli/dashboard`
+
+**To Test Session Expiration:**
+1. Login and wait on dashboard
+2. In another browser tab, manually destroy the server session (clear cookies)
+3. Wait for next automatic check (max 2 minutes)
+4. **Expected:** Alert shows "La tua sessione è scaduta. Effettua nuovamente il login."
+5. **Expected:** Automatic redirect to login page
+
+### Test 5.2: Admin Privileges Auto-Correction
+**Steps:**
+1. Login as Paolo or Emiliano
+2. Open DevTools Console
+3. Execute: `let auth = JSON.parse(sessionStorage.getItem('fratelliAuth')); auth.admin_access = false; auth.role = 'user'; sessionStorage.setItem('fratelliAuth', JSON.stringify(auth));`
+4. Refresh the page or wait for automatic session check
+
+**Expected Results:**
+- ✅ Console shows: `⚠️ Sessione senza privilegi admin per ID [16/12] - aggiornamento...`
+- ✅ Console shows: `✅ Sessione server sincronizzata`
+- ✅ Admin button becomes visible again automatically
+- ✅ `sessionStorage.fratelliAuth` now has `admin_access: true` and `role: 'admin'`
+
+### Test 5.3: Session Timeout (10 Minutes)
 **Steps:**
 1. Login as any user
-2. Wait 11 minutes (session timeout is 10 minutes)
+2. Leave browser open but inactive for 11+ minutes
 3. Try to navigate or perform action
 
 **Expected Results:**
 - ✅ Session expired
+- ✅ Alert: "La tua sessione è scaduta. Effettua nuovamente il login."
 - ✅ Redirected to login
 - ✅ Must login again
 
@@ -231,13 +325,20 @@ JSON.parse(sessionStorage.getItem('fratelliAuth'))
 - ✅ Response includes `admin_access: true` for admins
 - ✅ Cookie set: `kilwinning_session`
 
-**On logout:**
+**On logout:** ⭐ ENHANCED
 - ✅ POST `/api/fratelli/logout` returns 200
-- ✅ Cookie cleared
+- ✅ Response: `{ success: true, redirect: '/', message: 'Logout completato' }`
+- ✅ Cookie `kilwinning_session` cleared
+- ✅ Even if server returns error, client clears storage and redirects
 
 **On admin access:**
 - ✅ GET `/admin/api/check-access` returns 200
-- ✅ Response: `{ hasAccess: true }`
+- ✅ Response: `{ hasAccess: true, user: {...} }`
+
+**On session validation (every 2 minutes):** ⭐ NEW
+- ✅ GET `/api/fratelli/me` returns 200
+- ✅ Response: `{ success: true, authenticated: true, user: {...} }`
+- ✅ For admin users (ID 16, 12): `user.admin_access: true` and `user.role: 'admin'`
 
 ## Automated Testing Commands
 
@@ -322,12 +423,93 @@ tail -f logs/error.log
 3. Check server logs for `👑 Login ADMIN`
 4. Try logout and login again
 
-## Success Criteria
+## Success Criteria ⭐ UPDATED
 
 All tests must pass (✅) for deployment approval:
-- ✅ Emiliano (ID=12) has admin access
-- ✅ Admin button navigates to dashboard
-- ✅ Logout destroys server session
-- ✅ Modals only close via buttons
-- ✅ No JavaScript errors
+
+### Admin Access (CRITICAL)
+- ✅ **Paolo Giulio Gazzano (ID=16) has admin access in ALL circumstances**
+- ✅ **Emiliano Menicucci (ID=12) has admin access in ALL circumstances**
+- ✅ Admin button visible for both users in dashboard header
+- ✅ Admin button navigates to `/admin/dashboard` successfully
+- ✅ Both can access all admin pages without errors
+- ✅ Session always contains `admin_access: true` and `role: 'admin'` for IDs 16 & 12
+- ✅ Auto-correction works if admin flags are lost
+
+### Logout (CRITICAL)
+- ✅ **Logout ALWAYS calls server endpoint** `/api/fratelli/logout`
+- ✅ **Server session is ALWAYS destroyed** (verified in server logs)
+- ✅ Both `sessionStorage` AND `localStorage` are cleared
+- ✅ Alert shows if server call fails
+- ✅ Logout completes even if network error occurs
+- ✅ After logout, accessing protected pages redirects to login
+
+### Session Validation (NEW)
+- ✅ SessionKeeper runs on all fratelli pages
+- ✅ Automatic check every 2 minutes via `/api/fratelli/me`
+- ✅ Forces logout if server session is invalid
+- ✅ Updates admin privileges automatically if needed
+
+### General
+- ✅ Modals only close via buttons (not backdrop click)
+- ✅ No JavaScript errors in console
 - ✅ No security vulnerabilities introduced
+- ✅ Regular users (non-admin) cannot access admin area
+
+---
+
+## Implementation Details ⭐ NEW
+
+### Backend Changes (`server.js`)
+
+**Login endpoint** (`POST /api/fratelli/login`):
+- Triple admin verification: ID → username → database role
+- Forced admin check for IDs 16 and 12 at the end
+- Always sets `role: 'admin'` AND `admin_access: true` for admin users
+
+**Session validation** (`GET /api/fratelli/me`):
+- Checks if user ID is 16 or 12
+- Auto-forces admin privileges if missing
+- Returns updated session data
+
+**Logout endpoint** (`POST /api/fratelli/logout`):
+- Destroys session completely
+- Clears cookie always (even on errors)
+- Returns success even with warnings for client-side compatibility
+
+### Frontend Changes
+
+**New utility files:**
+- `public/js/fratelli/admin-access-utility.js` - Centralized admin logic
+- `public/js/fratelli/logout-utility.js` - Centralized logout function
+- `public/js/session-keeper.js` - Session validation every 2 minutes
+
+**Key functions:**
+- `ADMIN_USERS = [16, 12]` - Global constant
+- `setupAdminAccess()` - Auto-corrects admin privileges
+- `logoutFratelli()` - Guaranteed server logout
+- `SessionKeeper` - Automatic session monitoring
+
+### Console Log Patterns
+
+**Successful admin login:**
+```
+👑 Login ADMIN (ID hardcoded): Paolo Giulio Gazzano [@paolo.giulio.gazzano] [ID=16]
+🔒 FORCED ADMIN ACCESS per ID: 16 (Paolo/Emiliano)
+✅ Login successful: Paolo Giulio Gazzano [@paolo.giulio.gazzano] [fratello] (ADMIN)
+```
+
+**Successful logout:**
+```
+🚪 Inizio procedura logout...
+📡 Chiamata POST /api/fratelli/logout...
+✅ Logout server completato con successo
+🧹 Pulizia dati locali...
+✅ Logout completo - redirect a homepage
+```
+
+**Session validation:**
+```
+🔍 Verifica sessione: /api/fratelli/me
+✅ Sessione valida per: Paolo Giulio Gazzano - Admin: true
+```
