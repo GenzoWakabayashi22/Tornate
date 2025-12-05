@@ -215,29 +215,43 @@ app.post('/api/fratelli/login', async (req, res) => {
         }
 
         // ========================================
-        // DETERMINA PRIVILEGI ADMIN
+        // DETERMINA PRIVILEGI ADMIN - LOGICA MIGLIORATA
         // ========================================
 
         let userRole = 'user';
         let hasAdminAccess = false;
 
-        // ✅ ADMIN HARDCODED (per sicurezza)
+        // ✅ ADMIN HARDCODED (per sicurezza massima)
         // Paolo Giulio Gazzano (ID=16) e Emiliano Menicucci (ID=12) sono SEMPRE admin
         const ADMIN_USERNAMES = ['paolo.giulio.gazzano', 'emiliano.menicucci'];
         const ADMIN_IDS = [16, 12]; // Paolo (16), Emiliano (12)
         
-        if (ADMIN_USERNAMES.includes(fratello.username) || ADMIN_IDS.includes(fratello.id)) {
+        // ✅ PRIORITÀ 1: Verifica ID (più sicuro e immutabile)
+        if (ADMIN_IDS.includes(fratello.id)) {
             userRole = 'admin';
             hasAdminAccess = true;
-            console.log('👑 Login ADMIN (hardcoded):', fratello.nome, `[@${fratello.username}]`, `[ID=${fratello.id}]`);
+            console.log('👑 Login ADMIN (ID hardcoded):', fratello.nome, `[@${fratello.username}]`, `[ID=${fratello.id}]`);
         }
-        // Oppure verifica dal database
+        // ✅ PRIORITÀ 2: Verifica username (fallback)
+        else if (ADMIN_USERNAMES.includes(fratello.username)) {
+            userRole = 'admin';
+            hasAdminAccess = true;
+            console.log('👑 Login ADMIN (username hardcoded):', fratello.nome, `[@${fratello.username}]`, `[ID=${fratello.id}]`);
+        }
+        // ✅ PRIORITÀ 3: Verifica dal database
         else if (fratello.role === 'admin') {
             userRole = 'admin';
             hasAdminAccess = true;
-            console.log('👑 Login ADMIN da database:', fratello.nome);
+            console.log('👑 Login ADMIN da database:', fratello.nome, `[ID=${fratello.id}]`);
         } else {
-            console.log('👤 Login USER:', fratello.nome);
+            console.log('👤 Login USER:', fratello.nome, `[ID=${fratello.id}]`);
+        }
+
+        // ✅ DOPPIA VERIFICA: Forza admin per ID 16 e 12 in TUTTE le circostanze
+        if (fratello.id === 16 || fratello.id === 12) {
+            userRole = 'admin';
+            hasAdminAccess = true;
+            console.log('🔒 FORCED ADMIN ACCESS per ID:', fratello.id, '(Paolo/Emiliano)');
         }
 
         // Crea sessione fratello
@@ -312,6 +326,19 @@ app.get('/api/fratelli/me', async (req, res) => {
             // Aggiorna ultima attività
             req.session.user.lastActivity = new Date().toISOString();
 
+            // ✅ VERIFICA E FORZA PRIVILEGI ADMIN per ID 16 e 12
+            const userId = req.session.user.id;
+            const ADMIN_IDS = [16, 12]; // Paolo (16), Emiliano (12)
+            
+            if (ADMIN_IDS.includes(userId)) {
+                // Forza admin_access e role per sicurezza
+                if (!req.session.user.admin_access || req.session.user.role !== 'admin') {
+                    console.log('🔒 FORCING admin privileges per ID:', userId);
+                    req.session.user.admin_access = true;
+                    req.session.user.role = 'admin';
+                }
+            }
+
             // ✅ SALVATAGGIO SESSIONE CON ERROR HANDLING
             req.session.save((err) => {
                 clearTimeout(timeout);
@@ -329,7 +356,8 @@ app.get('/api/fratelli/me', async (req, res) => {
                     return;
                 }
 
-                console.log('✅ [DEBUG] Sessione fratello valida per:', req.session.user.nome);
+                console.log('✅ [DEBUG] Sessione fratello valida per:', req.session.user.nome, 
+                            'Admin:', req.session.user.admin_access);
 
                 if (!res.headersSent) {
                     res.json({
@@ -371,20 +399,44 @@ app.get('/api/fratelli/me', async (req, res) => {
     }
 });
 
-// ✅ API: Logout fratello
+// ✅ API: Logout fratello - MIGLIORATO con gestione errori
 app.post('/api/fratelli/logout', (req, res) => {
-    console.log('🚪 Logout fratello:', req.session?.user?.nome);
+    const userName = req.session?.user?.nome || req.session?.user?.username || 'Utente sconosciuto';
+    console.log('🚪 Tentativo logout fratello:', userName);
 
+    // Verifica se esiste una sessione
+    if (!req.session) {
+        console.log('⚠️ Nessuna sessione da distruggere');
+        res.clearCookie('kilwinning_session');
+        return res.json({ 
+            success: true, 
+            redirect: '/',
+            message: 'Nessuna sessione attiva' 
+        });
+    }
+
+    // Distruggi la sessione
     req.session.destroy((err) => {
+        // Pulisci il cookie SEMPRE, anche in caso di errore
+        res.clearCookie('kilwinning_session');
+
         if (err) {
-            console.error('❌ Errore logout:', err);
-            return res.status(500).json({ success: false });
+            console.error('❌ Errore distruzione sessione:', err);
+            // Ritorna comunque success per permettere il logout lato client
+            return res.json({ 
+                success: true, 
+                redirect: '/',
+                warning: 'Sessione distrutta con warning',
+                error: err.message 
+            });
         }
 
-        res.clearCookie('kilwinning_session');
-        console.log('✅ Logout fratello completato');
-
-        res.json({ success: true, redirect: '/' });
+        console.log('✅ Logout fratello completato con successo:', userName);
+        res.json({ 
+            success: true, 
+            redirect: '/',
+            message: 'Logout completato' 
+        });
     });
 });
 

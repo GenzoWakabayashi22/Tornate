@@ -1,64 +1,76 @@
-// session-keeper.js - Mantiene viva la sessione admin
-// Aggiungi questo script a TUTTE le pagine admin
+// session-keeper.js - Mantiene viva la sessione per pagine admin e fratelli
+// Aggiungi questo script a TUTTE le pagine protette
 
 class SessionKeeper {
     constructor() {
         this.interval = null;
-        this.checkInterval = 2 * 60 * 1000; // Ogni 2 minuti
+        this.checkInterval = 2 * 60 * 1000; // Ogni 2 minuti (120 secondi)
         this.isActive = true;
+        this.isFratelliPage = window.location.pathname.startsWith('/fratelli');
+        this.isAdminPage = window.location.pathname.startsWith('/admin');
         
         this.startKeeping();
         this.setupEventListeners();
     }
     
     startKeeping() {
-        console.log('🔄 SessionKeeper avviato - check ogni', this.checkInterval / 1000, 'secondi');
+        const seconds = this.checkInterval / 1000;
+        console.log('🔄 SessionKeeper avviato - check ogni', seconds, 'secondi');
+        console.log('📍 Tipo pagina:', this.isFratelliPage ? 'Fratelli' : (this.isAdminPage ? 'Admin' : 'Unknown'));
         
         this.interval = setInterval(() => {
             if (this.isActive) {
-                this.extendSession();
+                this.checkSession();
             }
         }, this.checkInterval);
         
-        // Check immediato
-        this.checkSession();
+        // Check immediato dopo 5 secondi
+        setTimeout(() => this.checkSession(), 5000);
     }
     
     async checkSession() {
         try {
-            const response = await fetch('/auth/me');
+            // ✅ Usa l'endpoint corretto in base alla pagina
+            const endpoint = this.isFratelliPage ? '/api/fratelli/me' : '/api/fratelli/me';
+            
+            console.log('🔍 Verifica sessione:', endpoint);
+            
+            const response = await fetch(endpoint, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                console.log('❌ Sessione non valida (status:', response.status, ')');
+                this.redirectToLogin();
+                return;
+            }
+            
             const result = await response.json();
             
             if (!result.success || !result.authenticated) {
-                console.log('❌ Sessione non valida, redirect al login');
+                console.log('❌ Sessione non autenticata, redirect al login');
                 this.redirectToLogin();
             } else {
-                console.log('✅ Sessione valida per:', result.user.username);
-            }
-        } catch (error) {
-            console.warn('⚠️ Errore check sessione:', error);
-        }
-    }
-    
-    async extendSession() {
-        try {
-            const response = await fetch('/auth/extend', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
+                const userName = result.user?.nome || result.user?.username || 'Utente';
+                console.log('✅ Sessione valida per:', userName, '- Admin:', result.user?.admin_access);
+                
+                // ✅ Aggiorna sessionStorage con i dati più recenti
+                if (this.isFratelliPage && result.user) {
+                    const currentAuth = sessionStorage.getItem('fratelliAuth');
+                    if (currentAuth) {
+                        const auth = JSON.parse(currentAuth);
+                        // Aggiorna solo se necessario
+                        if (auth.admin_access !== result.user.admin_access) {
+                            console.log('🔄 Aggiornamento privilegi admin in sessionStorage');
+                            sessionStorage.setItem('fratelliAuth', JSON.stringify(result.user));
+                        }
+                    }
                 }
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                console.log('🔄 Sessione estesa automaticamente');
-            } else {
-                console.warn('⚠️ Impossibile estendere sessione');
-                this.redirectToLogin();
             }
         } catch (error) {
-            console.warn('⚠️ Errore estensione sessione:', error);
+            console.warn('⚠️ Errore check sessione:', error.message);
+            // Non forziamo il logout in caso di errore di rete
         }
     }
     
@@ -66,22 +78,32 @@ class SessionKeeper {
         // Pause durante inattività
         document.addEventListener('visibilitychange', () => {
             this.isActive = !document.hidden;
-            console.log('👁️ Pagina', document.hidden ? 'nascosta' : 'visibile', '- SessionKeeper', this.isActive ? 'attivo' : 'in pausa');
+            const status = this.isActive ? 'attivo' : 'in pausa';
+            console.log('👁️ Pagina', document.hidden ? 'nascosta' : 'visibile', '- SessionKeeper', status);
         });
         
-        // Extend su attività utente
-        ['click', 'keypress', 'scroll'].forEach(event => {
+        // Check sessione su attività utente (massimo 1 volta ogni 30 secondi)
+        ['click', 'keypress', 'scroll', 'touchstart'].forEach(event => {
             document.addEventListener(event, this.debounce(() => {
-                this.extendSession();
+                if (this.isActive) {
+                    this.checkSession();
+                }
             }, 30000)); // Max 1 volta ogni 30 secondi
         });
     }
     
     redirectToLogin() {
         this.stop();
-        if (confirm('Sessione scaduta. Vuoi effettuare nuovamente il login?')) {
-            window.location.href = '/admin';
-        }
+        
+        // Pulisci sessionStorage
+        sessionStorage.removeItem('fratelliAuth');
+        localStorage.removeItem('fratelliAuth');
+        
+        const message = 'La tua sessione è scaduta. Effettua nuovamente il login.';
+        alert(message);
+        
+        // Redirect alla homepage
+        window.location.href = '/';
     }
     
     stop() {
@@ -106,9 +128,13 @@ class SessionKeeper {
     }
 }
 
-// Auto-start solo nelle pagine admin
-if (window.location.pathname.startsWith('/admin')) {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.sessionKeeper = new SessionKeeper();
-    });
+// ✅ Auto-start nelle pagine protette (admin o fratelli)
+if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/fratelli')) {
+    // Skip solo per pagina di login
+    if (!window.location.pathname.includes('/login')) {
+        document.addEventListener('DOMContentLoaded', () => {
+            window.sessionKeeper = new SessionKeeper();
+            console.log('✅ SessionKeeper inizializzato per:', window.location.pathname);
+        });
+    }
 }
