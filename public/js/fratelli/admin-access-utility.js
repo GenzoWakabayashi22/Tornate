@@ -116,13 +116,33 @@ async function accessoAdmin() {
 
     // Verifica con il server che la sessione abbia privilegi admin
     try {
-        const response = await fetch('/admin/api/check-access', {
+        // ✅ Prima verifica la sessione generale
+        const meResponse = await fetch('/api/fratelli/me', {
             method: 'GET',
             credentials: 'include'
         });
         
-        if (response.ok) {
-            const data = await response.json();
+        if (!meResponse.ok) {
+            alert('❌ Sessione scaduta. Effettua nuovamente il login.');
+            window.location.href = '/';
+            return;
+        }
+
+        const meData = await meResponse.json();
+        if (!meData.authenticated || !meData.user || !meData.user.admin_access) {
+            alert('❌ Sessione senza privilegi admin. Effettua di nuovo il login.');
+            console.error('❌ User non ha admin_access:', meData.user);
+            return;
+        }
+
+        // ✅ Poi verifica l'accesso admin specifico
+        const adminResponse = await fetch('/admin/api/check-access', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (adminResponse.ok) {
+            const data = await adminResponse.json();
             if (data.hasAccess) {
                 console.log('✅ Accesso admin verificato, redirect...');
                 window.location.href = '/admin/dashboard';

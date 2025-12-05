@@ -226,19 +226,19 @@ app.post('/api/fratelli/login', async (req, res) => {
         const ADMIN_USERNAMES = ['paolo.giulio.gazzano', 'emiliano.menicucci'];
         const ADMIN_IDS = [16, 12]; // Paolo (16), Emiliano (12)
         
-        // ✅ PRIORITÀ 1: Verifica ID (più sicuro e immutabile)
+        // ✅ PRIORITÀ 1: Verifica ID (più sicuro e immutabile) - QUESTO È IL CHECK DEFINITIVO
         if (ADMIN_IDS.includes(fratello.id)) {
             userRole = 'admin';
             hasAdminAccess = true;
-            console.log('👑 Login ADMIN (ID hardcoded):', fratello.nome, `[@${fratello.username}]`, `[ID=${fratello.id}]`);
+            console.log('👑 Login ADMIN (ID hardcoded - DEFINITIVO):', fratello.nome, `[@${fratello.username}]`, `[ID=${fratello.id}]`);
         }
-        // ✅ PRIORITÀ 2: Verifica username (fallback)
+        // ✅ PRIORITÀ 2: Verifica username (fallback per casi edge)
         else if (ADMIN_USERNAMES.includes(fratello.username)) {
             userRole = 'admin';
             hasAdminAccess = true;
-            console.log('👑 Login ADMIN (username hardcoded):', fratello.nome, `[@${fratello.username}]`, `[ID=${fratello.id}]`);
+            console.log('👑 Login ADMIN (username hardcoded - fallback):', fratello.nome, `[@${fratello.username}]`, `[ID=${fratello.id}]`);
         }
-        // ✅ PRIORITÀ 3: Verifica dal database
+        // ✅ PRIORITÀ 3: Verifica dal database (per altri admin futuri)
         else if (fratello.role === 'admin') {
             userRole = 'admin';
             hasAdminAccess = true;
@@ -247,12 +247,8 @@ app.post('/api/fratelli/login', async (req, res) => {
             console.log('👤 Login USER:', fratello.nome, `[ID=${fratello.id}]`);
         }
 
-        // ✅ DOPPIA VERIFICA: Forza admin per ID 16 e 12 in TUTTE le circostanze
-        if (fratello.id === 16 || fratello.id === 12) {
-            userRole = 'admin';
-            hasAdminAccess = true;
-            console.log('🔒 FORCED ADMIN ACCESS per ID:', fratello.id, '(Paolo/Emiliano)');
-        }
+        // ✅ NOTA: Non serve doppio check perché il check ID è già definitivo sopra
+        // Il check su ADMIN_IDS.includes(fratello.id) copre già IDs 16 e 12
 
         // Crea sessione fratello
         req.session.user = {

@@ -30,8 +30,8 @@ class SessionKeeper {
     
     async checkSession() {
         try {
-            // ✅ Usa l'endpoint corretto in base alla pagina
-            const endpoint = this.isFratelliPage ? '/api/fratelli/me' : '/api/fratelli/me';
+            // ✅ Usa sempre /api/fratelli/me per verificare la sessione
+            const endpoint = '/api/fratelli/me';
             
             console.log('🔍 Verifica sessione:', endpoint);
             
