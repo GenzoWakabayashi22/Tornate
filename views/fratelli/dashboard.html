@@ -918,7 +918,11 @@ body {
             </div>
         </div>
     </footer>
-<script src="/js/error-manager.js"></script>
+    
+    <!-- ✅ Session Validation Script -->
+    <script src="/js/error-manager.js"></script>
+    <script src="/js/session-keeper.js"></script>
+    
     <script>
         // Dati fratello autenticato
         let fratelliAuth = null;
@@ -992,8 +996,8 @@ body {
             showAlert(`🏛️ Benvenuto, Fr∴ ${fratelliAuth.nome}!`, 'success');
         }
 
-        // Setup accesso admin
-        function setupAdminAccess() {
+        // Setup accesso admin - MIGLIORATO con verifica e aggiornamento sessione
+        async function setupAdminAccess() {
             const userId = parseInt(fratelliAuth.id);
             
             console.log('🔍 Setup Admin Access - User ID:', userId);
@@ -1001,10 +1005,32 @@ body {
             console.log('✅ Is Admin?', ADMIN_USERS.includes(userId));
 
             if (ADMIN_USERS.includes(userId)) {
-                // Mostra link admin nel footer
-                document.getElementById('adminFooterLink').style.display = 'block';
+                // ✅ VERIFICA E AGGIORNA SESSIONE se necessario
+                if (!fratelliAuth.admin_access || fratelliAuth.role !== 'admin') {
+                    console.log('⚠️ Sessione senza privilegi admin per ID', userId, '- aggiornamento...');
+                    fratelliAuth.admin_access = true;
+                    fratelliAuth.role = 'admin';
+                    sessionStorage.setItem('fratelliAuth', JSON.stringify(fratelliAuth));
+                    
+                    // Forza verifica sessione server per sincronizzare
+                    try {
+                        await fetch('/api/fratelli/me', {
+                            method: 'GET',
+                            credentials: 'include'
+                        });
+                        console.log('✅ Sessione server sincronizzata');
+                    } catch (error) {
+                        console.warn('⚠️ Errore sincronizzazione sessione:', error);
+                    }
+                }
 
-                // ✅ NUOVO: Mostra bottone Admin nell'header
+                // Mostra link admin nel footer
+                const adminFooterLink = document.getElementById('adminFooterLink');
+                if (adminFooterLink) {
+                    adminFooterLink.style.display = 'block';
+                }
+
+                // ✅ Mostra bottone Admin nell'header
                 const adminHeaderBtn = document.getElementById('adminHeaderBtn');
                 console.log('🔘 Admin Button Element:', adminHeaderBtn);
                 
@@ -1012,11 +1038,8 @@ body {
                     adminHeaderBtn.style.display = 'inline-flex';
                     console.log('✅ Admin button display set to inline-flex');
                 } else {
-                    console.error('❌ Admin button element NOT FOUND');
+                    console.error('❌ Admin button element NOT FOUND in DOM');
                 }
-
-                // ✅ RIMOSSO: createAdminSession() non più necessaria
-                // La sessione admin è già impostata dal login iniziale
             }
             
             // Verifica che il bottone Esci sia visibile
@@ -1714,30 +1737,54 @@ document.addEventListener('keydown', function(event) {
             }
         }
 
-        // Logout
+        // Logout - MIGLIORATO con gestione errori completa
         async function logout() {
-            if (confirm('Sei sicuro di voler uscire dall\'area riservata?')) {
-                try {
-                    // ✅ MIGLIORAMENTO: Chiama l'endpoint di logout sul server
-                    const response = await fetch('/api/fratelli/logout', {
-                        method: 'POST',
-                        credentials: 'include'
-                    });
-                    
-                    if (response.ok) {
-                        console.log('✅ Logout server completato');
-                    } else {
-                        console.error('⚠️ Errore logout server, procedo comunque');
-                    }
-                } catch (error) {
-                    console.error('⚠️ Errore chiamata logout:', error);
-                }
-                
-                // Rimuovi dati locali e reindirizza
-                sessionStorage.removeItem('fratelliAuth');
-                localStorage.removeItem('fratelliAuth'); // Rimuovi anche da localStorage se presente
-                window.location.href = '/';
+            if (!confirm('Sei sicuro di voler uscire dall\'area riservata?')) {
+                return;
             }
+
+            console.log('🚪 Inizio procedura logout...');
+            let serverLogoutSuccess = false;
+
+            try {
+                // ✅ OBBLIGATORIO: Chiama l'endpoint di logout sul server
+                console.log('📡 Chiamata POST /api/fratelli/logout...');
+                const response = await fetch('/api/fratelli/logout', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    console.log('✅ Logout server completato con successo');
+                    serverLogoutSuccess = true;
+                } else {
+                    console.error('⚠️ Risposta logout non OK:', response.status, data);
+                    alert('⚠️ Logout server non completato correttamente, procedo comunque');
+                }
+            } catch (error) {
+                console.error('❌ Errore chiamata logout:', error);
+                alert('❌ Errore di rete durante il logout. La sessione verrà comunque cancellata localmente.');
+            }
+            
+            // ✅ SEMPRE: Rimuovi dati locali (anche in caso di errore server)
+            console.log('🧹 Pulizia dati locali...');
+            sessionStorage.removeItem('fratelliAuth');
+            localStorage.removeItem('fratelliAuth');
+            
+            // ✅ Mostra messaggio appropriato
+            if (serverLogoutSuccess) {
+                console.log('✅ Logout completo - redirect a homepage');
+            } else {
+                console.log('⚠️ Logout forzato lato client - redirect a homepage');
+            }
+            
+            // Redirect alla homepage
+            window.location.href = '/';
         }
 
         // Mostra alert con stili migliorati
