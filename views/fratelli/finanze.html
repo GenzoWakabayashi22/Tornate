@@ -470,9 +470,27 @@
         }
 
         // Logout
-        function logout() {
+        async function logout() {
             if (confirm('Sei sicuro di voler uscire dall\'area riservata?')) {
+                try {
+                    // ✅ MIGLIORAMENTO: Chiama l'endpoint di logout sul server
+                    const response = await fetch('/api/fratelli/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    
+                    if (response.ok) {
+                        console.log('✅ Logout server completato');
+                    } else {
+                        console.error('⚠️ Errore logout server, procedo comunque');
+                    }
+                } catch (error) {
+                    console.error('⚠️ Errore chiamata logout:', error);
+                }
+                
+                // Rimuovi dati locali e reindirizza
                 sessionStorage.removeItem('fratelliAuth');
+                localStorage.removeItem('fratelliAuth'); // Rimuovi anche da localStorage se presente
                 window.location.href = '/';
             }
         }
