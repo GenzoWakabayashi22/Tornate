@@ -221,11 +221,15 @@ app.post('/api/fratelli/login', async (req, res) => {
         let userRole = 'user';
         let hasAdminAccess = false;
 
-        // Paolo Giulio Gazzano è SEMPRE admin (hardcoded per sicurezza)
-        if (fratello.username === 'paolo.giulio.gazzano') {
+        // ✅ ADMIN HARDCODED (per sicurezza)
+        // Paolo Giulio Gazzano (ID=16) e Emiliano Menicucci (ID=12) sono SEMPRE admin
+        const ADMIN_USERNAMES = ['paolo.giulio.gazzano', 'emiliano.menicucci'];
+        const ADMIN_IDS = [16, 12]; // Paolo (16), Emiliano (12)
+        
+        if (ADMIN_USERNAMES.includes(fratello.username) || ADMIN_IDS.includes(fratello.id)) {
             userRole = 'admin';
             hasAdminAccess = true;
-            console.log('👑 Login ADMIN: Paolo Giulio Gazzano');
+            console.log('👑 Login ADMIN (hardcoded):', fratello.nome, `[@${fratello.username}]`, `[ID=${fratello.id}]`);
         }
         // Oppure verifica dal database
         else if (fratello.role === 'admin') {

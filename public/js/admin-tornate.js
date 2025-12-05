@@ -805,10 +805,11 @@ function showError(message) {
     alert('❌ ' + message);
 }
 
-// Gestione click fuori dal modal
-window.onclick = function(event) {
-    const modal = document.getElementById('tornataModal');
-    if (event.target == modal) {
-        closeModal();
-    }
-}
+// ❌ RIMOSSO: Gestione click fuori dal modal
+// I modal devono chiudersi solo tramite il tasto X o pulsanti interni
+// window.onclick = function(event) {
+//     const modal = document.getElementById('tornataModal');
+//     if (event.target == modal) {
+//         closeModal();
+//     }
+// }
