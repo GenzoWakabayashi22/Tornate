@@ -553,15 +553,21 @@
             <div class="loading">Caricamento tornate...</div>
         </div>
     </div>
-<script src="/js/error-manager.js"></script>
+    
+    <!-- ✅ Utility Scripts -->
+    <script src="/js/error-manager.js"></script>
+    <script src="/js/fratelli/admin-access-utility.js"></script>
+    <script src="/js/fratelli/logout-utility.js"></script>
+    <script src="/js/session-keeper.js"></script>
+    
     <script>
         // Dati fratello autenticato
         let fratelliAuth = null;
         let tornateData = [];
         let tornateFiltered = [];
 
-        // ID dei fratelli che hanno accesso admin
-        const ADMIN_USERS = [16, 12]; // Paolo Giulio Gazzano (16), Emiliano Menicucci (12)
+        // ❌ REMOVED: ADMIN_USERS now in admin-access-utility.js (loaded above)
+        // const ADMIN_USERS = [16, 12]; // Paolo Giulio Gazzano (16), Emiliano Menicucci (12)
 
         // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
@@ -616,42 +622,10 @@
             console.log('🚪 Exit Button Visible:', exitBtn ? window.getComputedStyle(exitBtn).display : 'NOT FOUND');
         }
 
-        // Accesso admin
-        function accessoAdmin() {
-            const userId = parseInt(fratelliAuth.id);
-            if (!ADMIN_USERS.includes(userId)) {
-                alert('Non hai i privilegi per accedere all\'area amministrativa');
-                return;
-            }
-
-            window.location.href = '/admin/dashboard';
-        }
-
-        // Logout
-        async function logout() {
-            if (confirm('Sei sicuro di voler uscire dall\'area riservata?')) {
-                try {
-                    // ✅ MIGLIORAMENTO: Chiama l'endpoint di logout sul server
-                    const response = await fetch('/api/fratelli/logout', {
-                        method: 'POST',
-                        credentials: 'include'
-                    });
-                    
-                    if (response.ok) {
-                        console.log('✅ Logout server completato');
-                    } else {
-                        console.error('⚠️ Errore logout server, procedo comunque');
-                    }
-                } catch (error) {
-                    console.error('⚠️ Errore chiamata logout:', error);
-                }
-                
-                // Rimuovi dati locali e reindirizza
-                sessionStorage.removeItem('fratelliAuth');
-                localStorage.removeItem('fratelliAuth'); // Rimuovi anche da localStorage se presente
-                window.location.href = '/';
-            }
-        }
+        // ✅ REMOVED: accessoAdmin() and logout() now in utility files
+        // - accessoAdmin() is in admin-access-utility.js
+        // - logout() is in logout-utility.js
+        // Both are loaded at the top of this file
 
         // Setup filtri
         function setupFilters() {
