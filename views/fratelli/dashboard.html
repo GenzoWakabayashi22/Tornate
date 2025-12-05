@@ -1031,6 +1031,13 @@ body {
 
         // ✅ MIGLIORATO: Accesso admin con verifica più robusta
         async function accessoAdmin() {
+            // ✅ Verifica che fratelliAuth sia definito
+            if (!fratelliAuth || !fratelliAuth.id) {
+                alert('❌ Errore: Sessione non valida. Effettua nuovamente il login.');
+                window.location.href = '/';
+                return;
+            }
+            
             const userId = parseInt(fratelliAuth.id);
             
             console.log('🔍 Tentativo accesso admin per user ID:', userId);
